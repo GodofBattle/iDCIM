@@ -3,7 +3,7 @@ export default {
   head: {
     title: 'iDCIM',
     htmlAttrs: {
-      lang: 'en',
+      lang: 'kr',
     },
     meta: [
       { charset: 'utf-8' },
