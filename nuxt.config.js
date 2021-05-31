@@ -37,6 +37,11 @@ export default {
         '@nuxtjs/axios',
     ],
 
+    // by shkoh 2021.05.31: Sever Host 설정
+    server: {
+        host: '0',
+    },
+
     // by shkoh: 2021.05.31: Server Middleware 추가
     serverMiddleware: [{ path: '/api', handler: '~/api/app.js' }],
 
