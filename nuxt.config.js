@@ -43,7 +43,7 @@ export default {
     },
 
     // by shkoh: 2021.05.31: Server Middleware 추가
-    serverMiddleware: [{ path: '/api', handler: '~/api/app.js' }],
+    serverMiddleware: [{ path: '/api', handler: '~/api/app.ts' }],
 
     // Axios module configuration: https://go.nuxtjs.dev/config-axios
     axios: {},
