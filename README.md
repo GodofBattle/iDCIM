@@ -1,5 +1,7 @@
 # iDCIM
 
+Nuxt.js(typescript) + Express + GraphGL + PrimeVUE
+
 ## Build Setup
 
 ```bash
