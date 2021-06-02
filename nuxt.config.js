@@ -31,10 +31,17 @@ export default {
         '@nuxt/typescript-build',
     ],
 
+    primevue: {
+        theme: 'mdc-dark-indigo',
+        ripple: true,
+        components: ['Button'],
+    },
+
     // Modules: https://go.nuxtjs.dev/config-modules
     modules: [
         // https://go.nuxtjs.dev/axios
         '@nuxtjs/axios',
+        'primevue/nuxt',
     ],
 
     // by shkoh 2021.05.31: Sever Host 설정
@@ -49,5 +56,7 @@ export default {
     axios: {},
 
     // Build Configuration: https://go.nuxtjs.dev/config-build
-    build: {},
-}
+    build: {
+        transpile: ['primevue'],
+    },
+};

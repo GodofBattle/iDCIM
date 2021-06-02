@@ -13,7 +13,12 @@
     "dependencies": {
         "@nuxtjs/axios": "^5.13.1",
         "core-js": "^3.9.1",
-        "nuxt": "^2.15.3"
+        "express": "^4.17.1",
+        "express-graphql": "^0.12.0",
+        "graphql": "^15.5.0",
+        "nuxt": "^2.15.3",
+        "primeicons": "^4.1.0",
+        "primevue": "^2.3"
     },
     "devDependencies": {
         "@nuxt/types": "^2.15.3",

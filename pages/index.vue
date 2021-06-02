@@ -20,15 +20,30 @@
                 >
                     GitHub Plus
                 </a>
+                <Button
+                    label="BUTTON"
+                    class="p-button"
+                    @click="onClick($event)"
+                ></Button>
             </div>
         </div>
     </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 
-export default Vue.extend({})
+export default Vue.extend({
+    methods: {
+        onClick(evt: Event) {
+            this.$axios
+                .get('http://localhost:3000/api?query={user{name}}')
+                .then((data) => {
+                    console.info(data);
+                });
+        },
+    },
+});
 </script>
 
 <style>
