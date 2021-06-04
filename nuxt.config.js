@@ -17,7 +17,7 @@ export default {
     },
 
     // Global CSS: https://go.nuxtjs.dev/config-css
-    css: [],
+    css: ['primeflex/primeflex.css', '@assets/css/main.css'],
 
     // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
     plugins: [],
@@ -32,9 +32,26 @@ export default {
     ],
 
     primevue: {
-        theme: 'mdc-dark-indigo',
+        // theme: 'saga-blue',
+        theme: 'vela-blue',
+        // theme: 'arya-orange',
+        // theme: 'nova-vue',
+        // theme: 'luna-blue',
+        // theme: 'mdc-dark-indigo',
+        // theme: 'bootstrap4-light-blue',
+        // theme: 'bootstrap4-dark-blue',
         ripple: true,
-        components: ['Button'],
+        components: [
+            'ScrollPanel',
+            'Panel',
+            'Button',
+            'Sidebar',
+            'PanelMenu',
+            'MegaMenu',
+            'TieredMenu',
+            'Divider',
+            'Tag',
+        ],
     },
 
     // Modules: https://go.nuxtjs.dev/config-modules
@@ -47,6 +64,17 @@ export default {
     // by shkoh 2021.05.31: Sever Host 설정
     server: {
         host: '0',
+    },
+
+    router: {
+        base: '/dcim/',
+        routes: [
+            {
+                name: 'icomer',
+                path: '/icomer',
+                component: 'pages/icomer/index.vue',
+            },
+        ],
     },
 
     // by shkoh: 2021.05.31: Server Middleware 추가
