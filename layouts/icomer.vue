@@ -1,6 +1,6 @@
 <template>
     <div class="i-layout">
-        <aside class="i-head-left">
+        <aside v-if="isSidebar" class="i-head-left">
             <head-left :items="menuItems"></head-left>
         </aside>
         <article class="i-content">
@@ -11,17 +11,18 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import headLeft from '~/components/headLeft.vue';
 
 export default Vue.extend({
-    components: { headLeft },
     data: () => {
         return {
             menuItems: [
-                { label: 'HOME' },
+                { label: 'HOME', to: '/' },
                 { separator: true },
-                { label: '코드' },
-                { label: '센서코드' },
+                {
+                    label: '코드',
+                    to: '/icomer/code',
+                },
+                { label: '센서코드', to: '/icomer' },
                 { separator: true },
                 { label: '제품' },
                 { label: '인터페이스' },
@@ -34,8 +35,12 @@ export default Vue.extend({
                 { separator: true },
                 { label: '에디터' },
             ],
-            nowTime: '',
         };
+    },
+    computed: {
+        isSidebar() {
+            return this.$store.state.site.is_sidebar;
+        },
     },
 });
 </script>
@@ -53,5 +58,6 @@ export default Vue.extend({
 
 .i-content {
     flex: 11;
+    padding: 8px;
 }
 </style>

@@ -45,12 +45,11 @@ export default {
             'ScrollPanel',
             'Panel',
             'Button',
-            'Sidebar',
-            'PanelMenu',
-            'MegaMenu',
             'TieredMenu',
             'Divider',
             'Tag',
+            'Toolbar',
+            'OverlayPanel',
         ],
     },
 
@@ -70,9 +69,26 @@ export default {
         base: '/dcim/',
         routes: [
             {
-                name: 'icomer',
                 path: '/icomer',
-                component: 'pages/icomer/index.vue',
+                children: [
+                    {
+                        path: '/',
+                        name: 'icomer',
+                        component: 'pages/icomer/index.vue',
+                        meta: {
+                            title: '센서코드',
+                        },
+                    },
+                    {
+                        path: '/code',
+                        name: 'code',
+                        component: 'pages/icomer/code.vue',
+                        meta: {
+                            title: '코드',
+                            requireAuth: false,
+                        },
+                    },
+                ],
             },
         ],
     },
@@ -85,6 +101,6 @@ export default {
 
     // Build Configuration: https://go.nuxtjs.dev/config-build
     build: {
-        transpile: ['primevue'],
+        transpile: ['primevue', 'vuex-module-decorators'],
     },
 };
