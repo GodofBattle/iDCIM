@@ -1,0 +1,29 @@
+{
+   "name": "idcim-database-api-server",
+   "version": "0.1",
+   "description": "iDCIM apollo api server",
+   "devDependencies": {
+      "@types/express-jwt": "^6.0.2",
+      "@types/jsonwebtoken": "^8.5.4",
+      "@types/node": "^8.0.29",
+      "eslint": "^7.30.0",
+      "eslint-config-prettier": "^8.3.0",
+      "nodemon": "^2.0.12",
+      "prettier": "^2.3.2",
+      "ts-node": "3.3.0",
+      "typescript": "3.3.3333"
+   },
+   "dependencies": {
+      "apollo-server-express": "^2.25.2",
+      "express-jwt": "^6.0.0",
+      "jsonwebtoken": "^8.5.1",
+      "mysql2": "^2.2.5",
+      "reflect-metadata": "^0.1.10",
+      "type-graphql": "^1.1.1",
+      "typeorm": "0.2.34"
+   },
+   "scripts": {
+      "dev": "nodemon",
+      "start": "ts-node src/index.ts"
+   }
+}

@@ -1,0 +1,8 @@
+html {
+    font-size: 12px;
+    background: var(--surface-a);
+}
+
+body {
+    margin: 0;
+}
