@@ -1,5 +1,5 @@
 <template>
-    <div id="i-login-layout" class="p-p-6">
+    <div v-show="$sessionStorageLoaded" id="i-login-layout" class="p-p-6">
         <div class="p-grid p-jc-center vertical-container" style="height: 100%">
             <div class="p-col-2 p-as-center">
                 <Card class="i-login-card">
@@ -69,6 +69,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import gql from 'graphql-tag';
 
 export default Vue.extend({
     data() {
@@ -77,9 +78,55 @@ export default Vue.extend({
             password: ''
         };
     },
+    mounted() {
+        this.$store.dispatch('sessionStorage/SIGNOUT');
+    },
     methods: {
         async singIn() {
             const { username, password } = this.$data;
+
+            this.$apollo
+                .mutate({
+                    mutation: gql`
+                        mutation Login($userId: String!, $password: String!) {
+                            Login(userId: $userId, password: $password) {
+                                ROLE
+                                ACCESS_TOKEN
+                                REFRESH_TOKEN
+                                USER {
+                                    USER_ID
+                                    USER_GROUP_ID
+                                    NAME
+                                }
+                            }
+                        }
+                    `,
+                    variables: {
+                        userId: username,
+                        password
+                    }
+                })
+                .then(async ({ data: { Login } }) => {
+                    await this.$apolloHelpers.onLogin(Login.ACCESS_TOKEN);
+                    return Login;
+                })
+                .then(async ({ ROLE, ACCESS_TOKEN, REFRESH_TOKEN, USER }) => {
+                    await this.$store.dispatch('sessionStorage/SIGNIN', {
+                        role: ROLE,
+                        access_token: ACCESS_TOKEN,
+                        refresh_token: REFRESH_TOKEN,
+                        user_id: USER.USER_ID,
+                        user_group_id: USER.USER_GROUP_ID,
+                        user_name: USER.NAME
+                    });
+                })
+                .then(() => {
+                    this.$router.push('/icomer/code');
+                })
+                .catch((err) => {
+                    console.error(err);
+                    this.$toast.add('로그인에 실패했습니다');
+                });
         }
     }
 });

@@ -55,13 +55,13 @@ export default Vue.extend({
     },
     computed: {
         userName() {
-            const _user_name = this.$store.getters['user/userName'];
+            const _user_name = this.$store.state.sessionStorage.auth.user.name;
             return `${_user_name} 님`;
         }
     },
     methods: {
         toggleSidebar() {
-            this.$store.commit('sessionStorage/sidebarToggle');
+            this.$store.commit('sessionStorage/SIDEBARTOGGLE');
         },
         toggleUserSetting(event: Event) {
             const ele: any = this.$refs.userSettingPanel;
@@ -71,9 +71,9 @@ export default Vue.extend({
             this.showUserDialog = true;
         },
         logout() {
-            // this.$store.dispatch('user/logout').then(() => {
-            //     this.$router.push('/');
-            // });
+            this.$store.dispatch('sessionStorage/SIGNOUT').then(() => {
+                this.$router.push({ name: 'login' });
+            });
         }
     }
 });

@@ -1,5 +1,5 @@
 <template>
-    <div id="icomer" class="i-layout">
+    <div v-show="$sessionStorageLoaded" id="icomer" class="i-layout">
         <aside v-show="isSidebar" class="i-head-left">
             <head-left :items="menuItems"></head-left>
         </aside>
@@ -13,12 +13,6 @@
 import Vue from 'vue';
 
 export default Vue.extend({
-    asyncData({ store }) {
-        const ss = window.sessionStorage.getItem('sessionStorage');
-        console.info(ss);
-
-        store.commit('sessionStorage/sidebarToggle');
-    },
     data: () => {
         return {
             is_sidebar: true,
@@ -46,7 +40,7 @@ export default Vue.extend({
     },
     computed: {
         isSidebar() {
-            return this.$store.state.sessionStorage.is_sidebar;
+            return this.$store.state.sessionStorage.ui.is_sidebar;
         }
     }
 });

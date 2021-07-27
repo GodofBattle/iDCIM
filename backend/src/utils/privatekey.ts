@@ -1,0 +1,1 @@
+export const privateKey = 'icomer-iDCIM-connectors';

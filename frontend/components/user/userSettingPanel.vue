@@ -55,24 +55,24 @@ import Vue from 'vue';
 
 export default Vue.extend({
     props: {
-        visibleUserDialog: Boolean,
+        visibleUserDialog: Boolean
     },
     data() {
         return {
             userName: '',
             invalidMessageUserName: undefined as String | undefined,
-            isChangePassword: false as Boolean,
+            isChangePassword: false as Boolean
         };
     },
     computed: {
         showDialog: {
             get() {
-                this.userName = this.$store.getters['user/userName'];
+                this.userName = this.$store.state.sessionStorage.auth.user.name;
                 return this.visibleUserDialog;
             },
             set(new_val) {
                 this.$emit('update:visibleUserDialog', new_val);
-            },
+            }
         }
     },
     watch: {
@@ -84,7 +84,7 @@ export default Vue.extend({
             } else {
                 this.invalidMessageUserName = undefined;
             }
-        },
+        }
     },
     methods: {
         async applyUserInfo(event: Event) {

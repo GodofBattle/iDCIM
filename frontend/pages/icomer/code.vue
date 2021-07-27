@@ -2,11 +2,10 @@
     <div>
         <icomer-toolbar :title="title"></icomer-toolbar>
         <h1>iDCIM = {{ title }}</h1>
-        <h2 style="color: white">
-            {{ $sessionStorageLoaded }}
-        </h2>
-        <h2 style="color: white">
-            {{ $store.state.sessionStorage.is_sidebar }}
+        <h2
+            style="color: white; white-space: pre-wrap; overflow-wrap: anywhere"
+        >
+            {{ $store.state.sessionStorage }}
         </h2>
     </div>
 </template>
