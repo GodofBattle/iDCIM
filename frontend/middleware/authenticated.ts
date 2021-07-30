@@ -5,8 +5,7 @@ const authenticated: Middleware = async ({
     route,
     redirect,
     $apolloHelpers,
-    from,
-    app
+    from
 }) => {
     if (route.name === 'login') {
         const apollo_token = $apolloHelpers.getToken();

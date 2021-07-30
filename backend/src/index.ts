@@ -3,7 +3,7 @@ import "reflect-metadata";
 import { createServer, Server } from 'http';
 
 import express from 'express';
-import { ApolloServer, ApolloError } from 'apollo-server-express';
+import { ApolloServer } from 'apollo-server-express';
 
 import { createConnection } from "typeorm";
 import { buildSchemaSync } from 'type-graphql';
@@ -24,7 +24,15 @@ createConnection().then(async connection => {
 const app: express.Application = express();
 const server: ApolloServer = new ApolloServer({
     schema: schemas,
-    context: Auth
+    context: Auth,
+    subscriptions: {
+        onConnect: (connectionParams, webSocket, context) => {
+            if(connectionParams['Authorization']) {
+                return { authorization: connectionParams['Authorization'] };
+            }
+        },
+        path: '/wsapi'
+    }
 });
 
 app.use(express.json());
@@ -36,6 +44,8 @@ const ip = 'localhost';
 const api_server_port = 4000;
 
 const httpServer: Server = createServer(app);
+server.installSubscriptionHandlers(httpServer);
+
 httpServer.listen({ port: api_server_port }, () => {
     console.info(`Apollo API Server Start::${ip}:${api_server_port}`);
 });

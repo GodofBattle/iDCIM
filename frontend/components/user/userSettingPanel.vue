@@ -88,7 +88,10 @@ export default Vue.extend({
     },
     methods: {
         async applyUserInfo(event: Event) {
-            this.$store.dispatch('user/changeUserName', this.userName);
+            this.$store.dispatch(
+                'sessionStorage/CHANGEUSERNAME',
+                this.userName
+            );
         }
     }
 });

@@ -2,6 +2,8 @@ import gql from 'graphql-tag';
 import { $apolloClient } from '../plugins/apolloClient';
 import { $apolloHelper } from '../plugins/apolloHelper';
 
+let observer;
+
 export const state = () => ({
     ui: {
         is_sidebar: true
@@ -51,6 +53,13 @@ export const mutations = {
         state.auth.user.user_group_id = user_group_id;
         state.auth.user.name = user_name;
         state.auth.role = role;
+    },
+    CHANGEUSERNAME: (state, newName) => {
+        state.auth.user.name = newName;
+    },
+    REFRESHTOKEN: (state, { access_token, refresh_token }) => {
+        state.auth.access_token = access_token;
+        state.auth.refresh_token = refresh_token;
     }
 };
 
@@ -59,6 +68,8 @@ export const actions = {
         { commit },
         { role, access_token, refresh_token, user_id, user_name, user_group_id }
     ) => {
+        $apolloHelper.onLogin(access_token);
+
         commit('AUTHENTICATION', true);
         commit('SETAUTH', {
             role,
@@ -99,8 +110,7 @@ export const actions = {
                     });
                     resolve(User);
                 })
-                .catch(async (err) => {
-                    console.error(`-- ${err}`);
+                .catch(async () => {
                     await $apolloHelper.onLogout().then(() => {
                         commit('AUTHENTICATION', false);
                         commit('CLEARAUTH');
@@ -109,5 +119,27 @@ export const actions = {
                     });
                 });
         });
+    },
+    CHANGEUSERNAME: ({ commit, state }, new_user_name) => {
+        const mutateQuery = gql`
+            mutation UserName($userId: String!, $newName: String!) {
+                UserName(userId: $userId, newName: $newName)
+            }
+        `;
+
+        $apolloClient
+            .mutate({
+                mutation: mutateQuery,
+                variables: {
+                    userId: state.auth.user.user_id,
+                    newName: new_user_name
+                }
+            })
+            .then(({ data: { UserName } }) => {
+                commit('CHANGEUSERNAME', UserName);
+            })
+            .catch((error) => {
+                console.error(error.message);
+            });
     }
 };

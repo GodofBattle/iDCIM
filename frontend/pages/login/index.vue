@@ -63,7 +63,7 @@
                 </Card>
             </div>
         </div>
-        <Toast position="bottom-right" />
+        <Toast position="bottom-center" />
     </div>
 </template>
 
@@ -91,8 +91,10 @@ export default Vue.extend({
                         mutation Login($userId: String!, $password: String!) {
                             Login(userId: $userId, password: $password) {
                                 ROLE
-                                ACCESS_TOKEN
-                                REFRESH_TOKEN
+                                TOKEN {
+                                    ACCESS_TOKEN
+                                    REFRESH_TOKEN
+                                }
                                 USER {
                                     USER_ID
                                     USER_GROUP_ID
@@ -104,28 +106,39 @@ export default Vue.extend({
                     variables: {
                         userId: username,
                         password
+                    },
+                    errorPolicy: 'ignore'
+                })
+                .then(
+                    async ({
+                        data: {
+                            Login: {
+                                ROLE,
+                                TOKEN: { ACCESS_TOKEN, REFRESH_TOKEN },
+                                USER: { USER_ID, USER_GROUP_ID, NAME }
+                            }
+                        }
+                    }) => {
+                        await this.$store.dispatch('sessionStorage/SIGNIN', {
+                            role: ROLE,
+                            access_token: ACCESS_TOKEN,
+                            refresh_token: REFRESH_TOKEN,
+                            user_id: USER_ID,
+                            user_group_id: USER_GROUP_ID,
+                            user_name: NAME
+                        });
                     }
-                })
-                .then(async ({ data: { Login } }) => {
-                    await this.$apolloHelpers.onLogin(Login.ACCESS_TOKEN);
-                    return Login;
-                })
-                .then(async ({ ROLE, ACCESS_TOKEN, REFRESH_TOKEN, USER }) => {
-                    await this.$store.dispatch('sessionStorage/SIGNIN', {
-                        role: ROLE,
-                        access_token: ACCESS_TOKEN,
-                        refresh_token: REFRESH_TOKEN,
-                        user_id: USER.USER_ID,
-                        user_group_id: USER.USER_GROUP_ID,
-                        user_name: USER.NAME
-                    });
-                })
+                )
                 .then(() => {
                     this.$router.push('/icomer/code');
                 })
-                .catch((err) => {
-                    console.error(err);
-                    this.$toast.add('로그인에 실패했습니다');
+                .catch(() => {
+                    this.$toast.add({
+                        severity: 'info',
+                        summary: '로그인 실패',
+                        detail: 'ID 혹은 패스워드를 확인하세요',
+                        life: 1500
+                    });
                 });
         }
     }
