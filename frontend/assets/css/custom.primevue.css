@@ -1,3 +1,7 @@
 .p-dialog-maximized .p-dialog-content {
     width: 100vw !important;
 }
+
+.p-tooltip {
+    z-index: 500;
+}

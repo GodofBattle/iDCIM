@@ -9,12 +9,15 @@ import { createConnection } from "typeorm";
 import { buildSchemaSync } from 'type-graphql';
 
 import { UserResolver } from './resolver/user';
+import { CodeResolver } from './resolver/code';
+import { SensorCodeResolver } from './resolver/sensorCode';
+
 import Auth from './utils/auth'
 
 const graphql_path = '/api';
 
 const schemas = buildSchemaSync({
-    resolvers: [ UserResolver ],
+    resolvers: [ UserResolver, CodeResolver, SensorCodeResolver ],
 });
 
 createConnection().then(async connection => {

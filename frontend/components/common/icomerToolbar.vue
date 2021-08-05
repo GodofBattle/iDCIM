@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div id="i-toolbar">
         <Toolbar>
             <template #left>
                 <Button

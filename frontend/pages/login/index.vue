@@ -11,7 +11,7 @@
                         <div class="p-text-center">login</div>
                     </template>
                     <template #content>
-                        <form>
+                        <form @submit.stop.prevent="singIn">
                             <div class="p-fluid p-input-filled">
                                 <div class="p-field">
                                     <label for="userid">User ID</label>
@@ -47,19 +47,18 @@
                                         class="p-error"
                                     ></small>
                                 </div>
+                                <div class="p-field p-pt-3">
+                                    <Button
+                                        type="submit"
+                                        label="Sign In"
+                                        icon="pi pi-sign-in"
+                                    >
+                                    </Button>
+                                </div>
                             </div>
                         </form>
                     </template>
-                    <template #footer>
-                        <div class="p-fluid">
-                            <Button
-                                label="Sign In"
-                                icon="pi pi-sign-in"
-                                @click="singIn"
-                            >
-                            </Button>
-                        </div>
-                    </template>
+                    <template #footer></template>
                 </Card>
             </div>
         </div>

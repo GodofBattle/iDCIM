@@ -107,8 +107,13 @@ export default {
             'TieredMenu',
             'Toolbar',
             'Card',
-            'Toast'
-        ]
+            'Toast',
+            'DataView',
+            'DataTable',
+            'Column',
+            'ColumnGroup'
+        ],
+        directives: ['Tooltip']
     },
 
     // by shkoh 20210709: DCIM route
@@ -130,6 +135,14 @@ export default {
                         component: 'pages/icomer/code.vue',
                         meta: {
                             title: '코드'
+                        }
+                    },
+                    {
+                        path: '/sensor',
+                        name: 'sensor',
+                        component: 'pages/icomer/sensor.vue',
+                        meta: {
+                            title: '센서코드'
                         }
                     }
                 ]

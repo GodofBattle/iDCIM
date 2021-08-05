@@ -60,7 +60,7 @@ export default Vue.extend({
                     label: '코드',
                     to: '/icomer/code'
                 },
-                { label: '센서코드' },
+                { label: '센서코드', to: '/icomer/sensor' },
                 { separator: true },
                 { label: '제품' },
                 { label: '인터페이스' },
