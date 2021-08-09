@@ -2,13 +2,78 @@
     <div>
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
         <ScrollPanel class="i-sensor-code-content">
-            <DataTable :value="sensorCodes">
-                <Column field="CODE" header="코드"></Column>
-                <Column field="NAME" header="센서명"></Column>
-                <Column field="TYPE" header="분류"></Column>
-                <Column field="UNIT" header="단위"></Column>
-                <Column field="IS_DISP_CONV" header="환산지수 사용"></Column>
-            </DataTable>
+            <div class="p-col-6 p-pl-2 p-pr-2">
+                <DataTable :value="sensorCodes" class="p-datatable-striped">
+                    <template #header>
+                        <div>
+                            <Button
+                                icon="pi pi-plus"
+                                label="ADD"
+                                class="
+                                    p-field p-button-outlined p-button-secondary
+                                "
+                                @click="addSensorCode"
+                            />
+                        </div>
+                    </template>
+                    <Column
+                        field="CODE"
+                        header="코드"
+                        header-style="width: 3em;"
+                    ></Column>
+                    <Column
+                        field="NAME"
+                        header="센서명"
+                        header-style="width: 6em;"
+                    ></Column>
+                    <Column
+                        field="TYPE"
+                        header="분류"
+                        header-style="width: 2em;"
+                    ></Column>
+                    <Column
+                        field="UNIT"
+                        header="단위"
+                        header-style="width: 2em;"
+                    ></Column>
+                    <Column
+                        field="IS_DISP_CONV"
+                        header="환산지수 사용"
+                        header-style="width: 2em;"
+                    >
+                        <template #body="slotProps">
+                            <InputSwitch
+                                :value="
+                                    isSwitchConvert(slotProps.data.IS_DISP_CONV)
+                                "
+                                :disabled="true"
+                            />
+                        </template>
+                    </Column>
+                    <Column v-if="false" field="REMARK"></Column>
+                    <Column
+                        header-style="width: 2em;"
+                        body-style="text-align: center;"
+                    >
+                        <template #body="slotProps">
+                            <Button
+                                icon="pi pi-pencil"
+                                class="
+                                    p-field p-button-outlined p-button-secondary
+                                "
+                                label="EDIT"
+                                @click="updateSensorCode(slotProps.data)"
+                            />
+                        </template>
+                    </Column>
+                </DataTable>
+            </div>
+            <sensor-code-setting-panel
+                :is-edit="isEdit"
+                :visible-sensor-code-dialog.sync="showSensorCodeDialog"
+                :sensor-code-data.sync="sensorCodeData"
+            >
+            </sensor-code-setting-panel>
         </ScrollPanel>
     </div>
 </template>
@@ -28,6 +93,7 @@ export default Vue.extend({
                         TYPE
                         UNIT
                         IS_DISP_CONV
+                        REMARK
                     }
                 }
             `,
@@ -43,15 +109,40 @@ export default Vue.extend({
             default: '센서코드'
         }
     },
-    data: () => {
+    data() {
         return {
-            sensorCodes: []
+            sensorCodes: [],
+            showSensorCodeDialog: false,
+            sensorCodeData: {},
+            isEdit: false
         };
     },
     head() {
         return {
             title: `[iDCIM] 구축계정 - ${this.title}`
         };
+    },
+    methods: {
+        isSwitchConvert(IS_DISP_CONV: number) {
+            return IS_DISP_CONV === 1;
+        },
+        addSensorCode() {
+            this.isEdit = false;
+            this.sensorCodeData = {
+                CODE: '',
+                NAME: '',
+                TYPE: 'A',
+                UNIT: '',
+                IS_DISP_CONV: 0,
+                REMARK: ''
+            };
+            this.showSensorCodeDialog = true;
+        },
+        updateSensorCode(sensorCode: object) {
+            this.isEdit = true;
+            this.sensorCodeData = sensorCode;
+            this.showSensorCodeDialog = true;
+        }
     }
 });
 </script>

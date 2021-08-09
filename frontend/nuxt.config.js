@@ -38,7 +38,8 @@ export default {
             '@/components',
             '@/components/common',
             '@/components/custom',
-            '@/components/user'
+            '@/components/user',
+            '@/components/sensor'
         ]
     },
 
@@ -95,6 +96,11 @@ export default {
         ripple: true,
         components: [
             'Button',
+            'Card',
+            'Column',
+            'ColumnGroup',
+            'DataTable',
+            'DataView',
             'Divider',
             'InputSwitch',
             'InputText',
@@ -103,15 +109,12 @@ export default {
             'Password',
             'PickList',
             'ScrollPanel',
+            'SelectButton',
             'Tag',
+            'Textarea',
             'TieredMenu',
             'Toolbar',
-            'Card',
-            'Toast',
-            'DataView',
-            'DataTable',
-            'Column',
-            'ColumnGroup'
+            'Toast'
         ],
         directives: ['Tooltip']
     },
