@@ -57,7 +57,7 @@
                 ></InputText>
             </div>
             <div class="p-field-checkbox">
-                <InputSwitch id="is_disp_conv" :value="is_disp_conv">
+                <InputSwitch id="is_disp_conv" v-model="is_disp_conv">
                 </InputSwitch>
                 <label for="is_disp_conv">환산지수 사용여부</label>
             </div>
@@ -66,7 +66,7 @@
                 <label for="remark">설명</label>
                 <Textarea
                     id="remark"
-                    :value="remark"
+                    v-model="remark"
                     :auto-resize="false"
                     rows="6"
                     style="resize: none"
@@ -102,7 +102,8 @@ export default Vue.extend({
             types: [
                 { name: 'Analog', value: 'A' },
                 { name: 'Digital', value: 'D' }
-            ]
+            ],
+            subTitle: ''
         };
     },
     computed: {
@@ -117,18 +118,6 @@ export default Vue.extend({
         title: {
             get(): string {
                 return `센서코드 ${this.isEdit ? '수정' : '추가'}`;
-            }
-        },
-        subTitle: {
-            get(): string {
-                if (
-                    this.sensorCodeData.hasOwnProperty('CODE') &&
-                    this.sensorCodeData.hasOwnProperty('NAME')
-                ) {
-                    return `${this.sensorCodeData.CODE.toString()} | ${this.sensorCodeData.NAME.toString()} 정보를 수정합니다`;
-                } else {
-                    return ``;
-                }
             }
         },
         code: {
@@ -192,10 +181,11 @@ export default Vue.extend({
                     : false;
             },
             set(new_is_disp_conv: boolean) {
+                console.info(new_is_disp_conv);
                 this.$emit(
                     'update:sensorCodeData',
                     Object.assign(this.sensorCodeData, {
-                        IS_DISP_CONV: new_is_disp_conv
+                        IS_DISP_CONV: new_is_disp_conv ? 1 : 0
                     })
                 );
             }
@@ -211,6 +201,23 @@ export default Vue.extend({
                     'update:sensorCodeData',
                     Object.assign(this.sensorCodeData, { REMARK: new_remark })
                 );
+            }
+        }
+    },
+    watch: {
+        sensorCodeData() {
+            this.subTitle = this.setSubTitle();
+        }
+    },
+    methods: {
+        setSubTitle() {
+            if (
+                this.sensorCodeData.hasOwnProperty('CODE') &&
+                this.sensorCodeData.hasOwnProperty('NAME')
+            ) {
+                return `${this.sensorCodeData.CODE.toString()} | ${this.sensorCodeData.NAME.toString()} 정보를 수정합니다`;
+            } else {
+                return ``;
             }
         }
     }
