@@ -81,7 +81,8 @@ export const actions = {
         });
     },
     SIGNOUT: ({ commit }) => {
-        $apolloHelper.onLogout();
+        // by shkoh 20210817: 토큰이 존재하는 경우에 logout을 수행함
+        if ($apolloHelper.getToken()) $apolloHelper.onLogout();
 
         commit('AUTHENTICATION', false);
         commit('CLEARAUTH');

@@ -12,15 +12,38 @@ import { UserResolver } from './resolver/user';
 import { CodeResolver } from './resolver/code';
 import { SensorCodeResolver } from './resolver/sensorCode';
 
-import Auth from './utils/auth'
+import Auth from './utils/auth';
 
 const graphql_path = '/api';
 
 const schemas = buildSchemaSync({
-    resolvers: [ UserResolver, CodeResolver, SensorCodeResolver ],
+    resolvers: [UserResolver, CodeResolver, SensorCodeResolver],
 });
 
-createConnection().then(async connection => {
+createConnection({
+    type: 'mariadb',
+    host: process.env.DB_HOST || 'localhost',
+    port: Number(process.env.DB_PORT) || 3306,
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    synchronize: false,
+    logging: true,
+    entities: [
+        'src/entity/**/*.ts'
+    ],
+    migrations: [
+        'src/migration/**/*.ts'
+    ],
+    subscribers: [
+        'src/subscriber/**/*.ts'
+    ],
+    cli: {
+        entitiesDir: 'src/entity',
+        migrationsDir: 'src/migration',
+        subscribersDir: 'src/subscriber'
+    }
+}).then(async connection => {
     console.info(`api db connection: ${connection.isConnected}`);
 }).catch(error => console.log(error));
 
@@ -30,7 +53,7 @@ const server: ApolloServer = new ApolloServer({
     context: Auth,
     subscriptions: {
         onConnect: (connectionParams, webSocket, context) => {
-            if(connectionParams['Authorization']) {
+            if (connectionParams['Authorization']) {
                 return { authorization: connectionParams['Authorization'] };
             }
         },
@@ -43,8 +66,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(server.getMiddleware({ path: graphql_path, cors: { credentials: false } }));
 
 
-const ip = 'localhost';
-const api_server_port = 4000;
+const ip = process.env.API_HOST || 'localhost';
+const api_server_port = process.env.API_PORT || 4000;
 
 const httpServer: Server = createServer(app);
 server.installSubscriptionHandlers(httpServer);

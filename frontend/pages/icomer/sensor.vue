@@ -1,5 +1,6 @@
 <template>
     <div>
+        <Toast position="top-center" />
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
         <ScrollPanel class="i-sensor-code-content">
             <div class="p-col-6 p-pl-2 p-pr-2">
@@ -72,6 +73,9 @@
                 :is-edit="isEdit"
                 :visible-sensor-code-dialog.sync="showSensorCodeDialog"
                 :sensor-code-data.sync="sensorCodeData"
+                :sensor-codes="sensorCodes"
+                @toastMessage="toastMessage"
+                @refresh="refresh"
             >
             </sensor-code-setting-panel>
         </ScrollPanel>
@@ -99,27 +103,27 @@ export default Vue.extend({
             `,
             update: ({ SensorCodes }) => {
                 return SensorCodes;
-            }
-        }
+            },
+        },
     },
     layout: 'icomer',
     props: {
         title: {
             type: String,
-            default: '센서코드'
-        }
+            default: '센서코드',
+        },
     },
     data() {
         return {
             sensorCodes: [],
             showSensorCodeDialog: false,
             sensorCodeData: {},
-            isEdit: false
+            isEdit: false,
         };
     },
     head() {
         return {
-            title: `[iDCIM] 구축계정 - ${this.title}`
+            title: `[iDCIM] 구축계정 - ${this.title}`,
         };
     },
     methods: {
@@ -134,7 +138,7 @@ export default Vue.extend({
                 TYPE: 'A',
                 UNIT: '',
                 IS_DISP_CONV: 0,
-                REMARK: ''
+                REMARK: '',
             };
             this.showSensorCodeDialog = true;
         },
@@ -142,8 +146,19 @@ export default Vue.extend({
             this.isEdit = true;
             this.sensorCodeData = sensorCode;
             this.showSensorCodeDialog = true;
-        }
-    }
+        },
+        toastMessage(data: any) {
+            this.$toast.add({
+                severity: data.severity,
+                summary: data.summary,
+                detail: data.detail,
+                life: data.life,
+            });
+        },
+        refresh() {
+            this.$apollo.queries.sensorCodes.refresh();
+        },
+    },
 });
 </script>
 

@@ -1,6 +1,10 @@
 {
-    "ignore": [ "node_modules" ],
-    "watch": [ "src" ],
-    "exec": "ts-node src/index.ts",
+    "ignore": [
+        "node_modules"
+    ],
+    "watch": [
+        "src"
+    ],
+    "exec": "DOTENV_CONFIG_PATH=../.env ts-node -r dotenv/config src/index.ts",
     "ext": "ts"
 }

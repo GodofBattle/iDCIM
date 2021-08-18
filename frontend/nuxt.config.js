@@ -1,8 +1,16 @@
+require('dotenv').config({ path: __dirname + '/../.env' });
+
 export default {
     // by shkoh 20210709: Server Side Rendering
     target: 'server',
     // by shkoh 20210709: Server-side rendering enabled
     ssr: true,
+
+    // by shkoh 20210817: Nuxt 환경변수
+    env: {
+        API_HOST: process.env.API_HOST,
+        API_PORT: process.env.API_PORT
+    },
 
     // Global page headers: https://go.nuxtjs.dev/config-head
     head: {

@@ -2,7 +2,7 @@ import { Context } from '@nuxt/types';
 import { from } from 'apollo-link';
 import { onError } from 'apollo-link-error';
 
-const configuer = ({}: Context) => {
+const configuer = ({ env }: Context) => {
     const apolloError = onError(({ graphQLErrors, networkError }) => {
         if (graphQLErrors) {
             for (const err of graphQLErrors) {
@@ -18,8 +18,8 @@ const configuer = ({}: Context) => {
     return {
         link: from([apolloError]),
         ssr: true,
-        httpEndpoint: 'http://10.10.20.29:4000/api',
-        wsEndpoint: 'ws://10.10.20.29:4000/wsapi',
+        httpEndpoint: `http://${env.API_HOST}:${env.API_PORT}/api`,
+        wsEndpoint: `ws://${env.API_HOST}:${env.API_PORT}/wsapi`,
         httpLinkOptions: {
             credentials: 'same-origin'
         }
