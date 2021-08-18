@@ -155,6 +155,14 @@ export default {
                         meta: {
                             title: '센서코드'
                         }
+                    },
+                    {
+                        path: '/product',
+                        name: 'product',
+                        component: 'pages/icomer/product.vue',
+                        meta: {
+                            title: '제품'
+                        }
                     }
                 ]
             }
