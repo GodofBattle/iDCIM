@@ -61,7 +61,7 @@ export class SensorCodeResolver {
             // by shkoh 20210818: 전달받은 인자들 중에서 반드시 필요한 인자들만 적용함
             const update_data = {};
             for (const [key, value] of Object.entries({ CODE, NAME, TYPE, UNIT, IS_DISP_CONV, REMARK })) {
-                if (value) update_data[key] = value;
+                if (value !== undefined) update_data[key] = value;
             }
 
             const result = await getRepository(pd_sensor_code).update({ CODE: ID }, update_data);

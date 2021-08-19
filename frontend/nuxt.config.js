@@ -47,7 +47,8 @@ export default {
             '@/components/common',
             '@/components/custom',
             '@/components/user',
-            '@/components/sensor'
+            '@/components/sensor',
+            '@/components/tree'
         ]
     },
 
@@ -122,7 +123,8 @@ export default {
             'Textarea',
             'TieredMenu',
             'Toolbar',
-            'Toast'
+            'Toast',
+            'Tree'
         ],
         directives: ['Tooltip']
     },

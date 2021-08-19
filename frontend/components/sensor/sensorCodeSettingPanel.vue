@@ -91,8 +91,8 @@
                     label="적용"
                     icon="pi pi-check"
                     style="width: 100%"
-                    @click="setSensorCode"
                     :disabled="applyDisabled"
+                    @click="setSensorCode"
                 ></Button>
             </div>
         </template>
@@ -108,7 +108,7 @@ export default Vue.extend({
         isEdit: Boolean,
         visibleSensorCodeDialog: Boolean,
         sensorCodeData: Object,
-        sensorCodes: Array,
+        sensorCodes: Array
     },
     data() {
         return {
@@ -118,7 +118,7 @@ export default Vue.extend({
             invalidMessageRemark: undefined as String | undefined,
             types: [
                 { name: 'Analog', value: 'A' },
-                { name: 'Digital', value: 'D' },
+                { name: 'Digital', value: 'D' }
             ],
             subTitle: '',
             CODE: '',
@@ -126,7 +126,7 @@ export default Vue.extend({
             TYPE: 'A',
             UNIT: '',
             IS_DISP_CONV: 0,
-            REMARK: '',
+            REMARK: ''
         };
     },
     computed: {
@@ -136,12 +136,12 @@ export default Vue.extend({
             },
             set(is_show: Boolean) {
                 this.$emit('update:visibleSensorCodeDialog', is_show);
-            },
+            }
         },
         title: {
             get(): string {
                 return `센서코드 ${this.isEdit ? '수정' : '추가'}`;
-            },
+            }
         },
         is_disp_conv: {
             get(): boolean {
@@ -149,7 +149,8 @@ export default Vue.extend({
             },
             set(value: boolean) {
                 this.IS_DISP_CONV = value ? 1 : 0;
-            },
+                console.info(this.IS_DISP_CONV);
+            }
         },
         applyDisabled() {
             let is_disabled = true;
@@ -164,7 +165,7 @@ export default Vue.extend({
             );
 
             return is_disabled === true;
-        },
+        }
     },
     watch: {
         CODE(_code) {
@@ -204,7 +205,7 @@ export default Vue.extend({
             } else {
                 this.invalidMessageRemark = undefined;
             }
-        },
+        }
     },
     methods: {
         setSubTitle() {
@@ -240,7 +241,7 @@ export default Vue.extend({
                     severity: 'warn',
                     summary: '센서코드 유효성 실패',
                     detail: '센서코드 내용을 확인하세요',
-                    life: 2000,
+                    life: 2000
                 });
                 return;
             }
@@ -279,8 +280,8 @@ export default Vue.extend({
                         TYPE: this.TYPE,
                         UNIT: this.UNIT,
                         IS_DISP_CONV: this.IS_DISP_CONV,
-                        REMARK: this.REMARK,
-                    },
+                        REMARK: this.REMARK
+                    }
                 })
                 .then(() => {
                     this.$emit('refresh');
@@ -292,21 +293,26 @@ export default Vue.extend({
                         severity: 'error',
                         summary: '센서코드 적용 실패',
                         detail: error.message,
-                        life: 2000,
+                        life: 2000
                     });
                 });
         },
         updateSensorCode() {
-            let variables = {
-                ID: this.sensorCodeData.CODE,
+            const variables = {
+                ID: this.sensorCodeData.CODE as string,
                 CODE: this.CODE,
                 NAME: this.NAME,
-                TYPE: this.TYPE,
+                TYPE: this.TYPE
             };
 
-            ['UNIT', 'IS_DISP_CONV', 'REMART'].forEach((key) => {
+            ['UNIT', 'IS_DISP_CONV', 'REMARK'].forEach((key: string) => {
                 if (this.$data[key] !== this.sensorCodeData[key]) {
-                    Object.defineProperty(variables, key, this.$data[key]);
+                    Object.defineProperty(variables, key, {
+                        value: this.$data[key],
+                        configurable: true,
+                        enumerable: true,
+                        writable: true
+                    });
                 }
             });
 
@@ -333,7 +339,7 @@ export default Vue.extend({
                             )
                         }
                     `,
-                    variables: variables,
+                    variables
                 })
                 .then(() => {
                     this.$emit('refresh');
@@ -345,10 +351,10 @@ export default Vue.extend({
                         severity: 'error',
                         summary: '센서코드 적용 실패',
                         detail: error.message,
-                        life: 2000,
+                        life: 2000
                     });
                 });
-        },
-    },
+        }
+    }
 });
 </script>
