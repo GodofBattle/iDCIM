@@ -48,7 +48,8 @@ export default {
             '@/components/custom',
             '@/components/user',
             '@/components/sensor',
-            '@/components/tree'
+            '@/components/tree',
+            '@/components/manufacturer',
         ]
     },
 
@@ -111,6 +112,7 @@ export default {
             'DataTable',
             'DataView',
             'Divider',
+            'InputMask',
             'InputSwitch',
             'InputText',
             'OverlayPanel',
