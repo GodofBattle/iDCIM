@@ -26,6 +26,6 @@
    },
    "scripts": {
       "dev": "nodemon",
-      "start": "ts-node src/index.ts"
+      "start": "DOTENV_CONFIG_PATH=../.env ts-node -r dotenv/config src/index.ts"
    }
 }
