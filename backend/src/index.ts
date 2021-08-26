@@ -5,19 +5,21 @@ import { createServer, Server } from 'http';
 import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
 
-import { createConnection } from "typeorm";
+import { createConnection, getConnection } from "typeorm";
 import { buildSchemaSync } from 'type-graphql';
+import { ApolloServerLoaderPlugin } from 'type-graphql-dataloader';
 
 import { UserResolver } from './resolver/user';
 import { CodeResolver } from './resolver/code';
 import { SensorCodeResolver } from './resolver/sensorCode';
+import { PredefinedProductResolver } from './resolver/predefinedProduct';
 
 import Auth from './utils/auth';
 
 const graphql_path = '/api';
 
 const schemas = buildSchemaSync({
-    resolvers: [UserResolver, CodeResolver, SensorCodeResolver],
+    resolvers: [UserResolver, CodeResolver, SensorCodeResolver, PredefinedProductResolver],
 });
 
 createConnection({
@@ -58,7 +60,10 @@ const server: ApolloServer = new ApolloServer({
             }
         },
         path: '/wsapi'
-    }
+    },
+    plugins: [
+        ApolloServerLoaderPlugin({ typeormGetConnection: getConnection })
+    ]
 });
 
 app.use(express.json());

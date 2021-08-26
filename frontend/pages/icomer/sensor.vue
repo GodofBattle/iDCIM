@@ -1,6 +1,5 @@
 <template>
     <div>
-        <Toast position="top-center" />
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
         <ScrollPanel class="i-sensor-code-content">
             <div class="p-col-6 p-pl-2 p-pr-2">
@@ -74,7 +73,6 @@
                 :visible-sensor-code-dialog.sync="showSensorCodeDialog"
                 :sensor-code-data.sync="sensorCodeData"
                 :sensor-codes="sensorCodes"
-                @toastMessage="toastMessage"
                 @refresh="refresh"
             >
             </sensor-code-setting-panel>
@@ -146,14 +144,6 @@ export default Vue.extend({
             this.isEdit = true;
             this.sensorCodeData = sensorCode;
             this.showSensorCodeDialog = true;
-        },
-        toastMessage(data: any) {
-            this.$toast.add({
-                severity: data.severity,
-                summary: data.summary,
-                detail: data.detail,
-                life: data.life,
-            });
         },
         refresh() {
             this.$apollo.queries.sensorCodes.refresh();

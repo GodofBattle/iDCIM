@@ -21,6 +21,7 @@
                     aria-describedby="name-help"
                     autocomplete="off"
                     :class="{ 'p-invalid': invalidMessage.NAME }"
+                    @input="validateName"
                 ></InputText>
                 <small id="name-help" class="p-error">
                     {{ invalidMessage.NAME }}
@@ -35,6 +36,7 @@
                     aria-describedby="addr-help"
                     autocomplete="off"
                     :class="{ 'p-invalid': invalidMessage.ADDR }"
+                    @input="validateAddress"
                 ></InputText>
                 <small id="addr-help" class="p-error">
                     {{ invalidMessage.ADDR }}
@@ -42,15 +44,72 @@
             </div>
             <div class="p-field">
                 <label for="phone">대표번호</label>
-                <InputText
+                <i-input-text-phone
                     id="phone"
-                    v-model="phoneNumber"
                     type="text"
                     aria-describedby="phone-help"
                     autocomplete="off"
+                    v-model="addData.PHONE"
                     placeholder="공백없이 숫자만 입력"
-                    @keydown="convertPhoneNumber"
+                ></i-input-text-phone>
+            </div>
+            <div class="p-field">
+                <label for="fax">팩스번호</label>
+                <i-input-text-phone
+                    id="fax"
+                    type="text"
+                    aria-describedby="fax-help"
+                    autocomplete="off"
+                    v-model="addData.FAX"
+                    placeholder="공백없이 숫자만 입력"
+                ></i-input-text-phone>
+            </div>
+            <div class="p-field">
+                <label for="email">이메일</label>
+                <InputText
+                    id="email"
+                    type="email"
+                    aria-describedby="email-help"
+                    autocomplete="off"
+                    v-model="addData.EMAIL"
+                    placeholder="Email Address"
+                    @input="validateEmail"
+                    :class="{ 'p-invalid': invalidMessage.EMAIL }"
                 ></InputText>
+                <small id="email-help" class="p-error">
+                    {{ invalidMessage.EMAIL }}
+                </small>
+            </div>
+            <div class="p-field">
+                <label for="url">홈페이지</label>
+                <InputText
+                    id="url"
+                    type="url"
+                    aria-describedby="url-help"
+                    autocomplete="off"
+                    v-model="addData.URL"
+                    placeholder="제조사 홈페이지 주소"
+                    @input="validateUrl"
+                    :class="{ 'p-invalid': invalidMessage.URL }"
+                ></InputText>
+                <small id="url-help" class="p-error">
+                    {{ invalidMessage.URL }}
+                </small>
+            </div>
+            <div class="p-field">
+                <label for="remark">설명</label>
+                <Textarea
+                    id="remark"
+                    v-model="addData.REMARK"
+                    :auto-resize="false"
+                    rows="6"
+                    style="resize: none"
+                    :class="{ 'p-invalid': invalidMessage.REMARK }"
+                    @input="validateRemark"
+                />
+                <small id="remark-help" class="p-error">
+                    {{ invalidMessage.REMARK }}
+                </small>
             </div>
         </div>
 
@@ -61,6 +120,7 @@
                     icon="pi pi-plus"
                     style="width: 100%"
                     :disabled="addDisabled"
+                    @click="addManufacturer"
                 ></Button>
             </div>
         </template>
@@ -69,6 +129,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import gql from 'graphql-tag';
 
 export default Vue.extend({
     props: {
@@ -89,7 +150,12 @@ export default Vue.extend({
                 NAME: undefined as String | undefined,
                 ADDR: undefined as String | undefined,
                 PHONE: undefined as String | undefined,
+                EMAIL: undefined as String | undefined,
+                URL: undefined as String | undefined,
+                REMARK: undefined as String | undefined,
             },
+            emailReg:
+                /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/,
         };
     },
     computed: {
@@ -99,16 +165,6 @@ export default Vue.extend({
             },
             set(is_show: Boolean) {
                 this.$emit('update:visibleAddManufacturerDialog', is_show);
-            },
-        },
-        phoneNumber: {
-            get(): string {
-                console.info(3);
-                return this.addData.PHONE;
-            },
-            set(new_val: string) {
-                console.info(2);
-                this.addData.PHONE = new_val;
             },
         },
         addDisabled() {
@@ -122,42 +178,139 @@ export default Vue.extend({
     methods: {
         onDialogHide() {
             // by shkoh 20210820: Dialog가 닫힐 때, addData Object를 초기화한다
-            Object.keys(this.addData).forEach((key) => {
-                Object.defineProperty(this.addData, key, {
-                    value: '',
-                    configurable: true,
-                    enumerable: true,
-                    writable: true,
+            this.addData.NAME = '';
+            this.addData.ADDR = '';
+            this.addData.PHONE = '';
+            this.addData.FAX = '';
+            this.addData.EMAIL = '';
+            this.addData.URL = '';
+            this.addData.REMARK = '';
+
+            this.invalidMessage.NAME = undefined;
+            this.invalidMessage.ADDR = undefined;
+            this.invalidMessage.PHONE = undefined;
+            this.invalidMessage.EMAIL = undefined;
+            this.invalidMessage.URL = undefined;
+            this.invalidMessage.REMARK = undefined;
+        },
+        validateName(input: InputEvent) {
+            const _input = input.toString();
+            if (_input.length > 32) {
+                this.invalidMessage.NAME = '제조사명은 32자 이하입니다';
+            } else {
+                this.invalidMessage.NAME = undefined;
+            }
+        },
+        validateAddress(input: InputEvent) {
+            const _input = input.toString();
+            if (_input.length > 100) {
+                this.invalidMessage.ADDR = '주소는 100자 이하입니다';
+            } else {
+                this.invalidMessage.ADDR = undefined;
+            }
+        },
+        validateEmail(input: InputEvent) {
+            const _input = input.toString();
+
+            if (_input.length > 64) {
+                this.invalidMessage.EMAIL = '이메일은 64자 이하입니다';
+            } else if (_input.length > 0 && !this.emailReg.test(_input)) {
+                this.invalidMessage.EMAIL = '이메일 형식이 아닙니다';
+            } else {
+                this.invalidMessage.EMAIL = undefined;
+            }
+        },
+        validateUrl(input: InputEvent) {
+            const _input = input.toString();
+            const regex = RegExp(
+                '(https?:\\/\\/)?((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|((\\d{1,3}\\.){3}\\d{1,3}))(\\:\\d+)?(\\/[-a-z\\d%_.~+@]*)*(\\?[;&a-z\\d%_.~+=-@]*)?(\\#[-a-z\\d_@]*)?$',
+                'i'
+            );
+            if (_input.length > 80) {
+                this.invalidMessage.URL = 'URL은 80자 이하입니다';
+            } else if (_input.length > 0 && !regex.test(_input)) {
+                this.invalidMessage.URL = 'URL 형식이 아닙니다';
+            } else {
+                this.invalidMessage.URL = undefined;
+            }
+        },
+        validateRemark(input: InputEvent) {
+            const _input = input.toString();
+            if (_input.length > 256) {
+                this.invalidMessage.REMARK = '설명은 256자 이하입니다';
+            } else {
+                this.invalidMessage.REMARK = undefined;
+            }
+        },
+        validationCheck() {
+            let is_valid = true;
+            for (const valid of Object.values(this.invalidMessage)) {
+                if (valid) {
+                    is_valid = false;
+                    return;
+                }
+            }
+
+            return is_valid;
+        },
+        addManufacturer() {
+            if (!this.validationCheck()) {
+                this.$toast.add({
+                    severity: 'warn',
+                    summary: '제조사 유효성 실패',
+                    detail: '제조사 내용을 확인하세요',
+                    life: 2000,
                 });
-            });
-        },
-        convertPhoneNumber(event: KeyboardEvent) {
-            console.info(1);
-            console.info(event);
+                return;
+            }
 
-            // event.preventDefault();
-            // const insert_key = event.code.includes('Digit') ? event.key : '';
-            // if (insert_key !== '') {
-            //     this.addData.PHONE += insert_key;
-            // }
-        },
-    },
-    watch: {
-        addData: {
-            deep: true,
-            handler(new_data) {
-                if (new_data.NAME.length > 32) {
-                    this.invalidMessage.NAME = '제조사명은 32자 이하입니다';
-                } else {
-                    this.invalidMessage.NAME = undefined;
-                }
+            this.$apollo
+                .mutate({
+                    mutation: gql`
+                        mutation AddManufacturer(
+                            $NAME: String!
+                            $ADDR: String
+                            $PHONE: String
+                            $FAX: String
+                            $EMAIL: String
+                            $URL: String
+                            $REMARK: String
+                        ) {
+                            AddManufacturer(
+                                NAME: $NAME
+                                ADDR: $ADDR
+                                PHONE: $PHONE
+                                FAX: $FAX
+                                EMAIL: $EMAIL
+                                URL: $URL
+                                REMARK: $REMARK
+                            )
+                        }
+                    `,
+                    variables: this.addData,
+                })
+                .then(() => {
+                    this.$toast.add({
+                        severity: 'success',
+                        summary: '제조사 추가',
+                        detail: `${this.addData.NAME} 추가완료`,
+                        life: 1500,
+                    });
 
-                if (new_data.ADDR.length > 100) {
-                    this.invalidMessage.ADDR = '주소는 100자 이하입니다';
-                } else {
-                    this.invalidMessage.ADDR = undefined;
-                }
-            },
+                    this.$emit('refresh');
+
+                    this.showDialog = false;
+                })
+                .catch((error) => {
+                    console.error(error);
+
+                    this.$toast.add({
+                        severity: 'error',
+                        summary: '제조사 추가 실패',
+                        detail: error.message,
+                        life: 2000,
+                    });
+                });
         },
     },
 });

@@ -4,7 +4,6 @@ import { getRepository, UpdateResult } from "typeorm";
 
 import { pd_sensor_code } from '../entity/database/pd_sensor_code'
 
-
 @Resolver()
 export class SensorCodeResolver {
     @Query(() => [pd_sensor_code])

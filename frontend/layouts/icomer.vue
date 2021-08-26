@@ -6,6 +6,7 @@
         <article class="i-content">
             <Nuxt />
         </article>
+        <Toast position="top-center" />
     </div>
 </template>
 
