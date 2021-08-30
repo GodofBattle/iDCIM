@@ -1,4 +1,4 @@
-import { Field, ObjectType, Int, ArgsType } from "type-graphql";
+import { Field, ObjectType, ID, ArgsType } from "type-graphql";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { TypeormLoader } from 'type-graphql-dataloader';
 
@@ -7,7 +7,7 @@ import { pd_product } from './pd_product'
 @ObjectType()
 @Entity({ synchronize: false })
 export class pd_manufacturer {
-    @Field(() => Int!)
+    @Field(() => ID!)
     @PrimaryGeneratedColumn('increment', { type: 'int', comment: '아이디' })
     ID: number;
 

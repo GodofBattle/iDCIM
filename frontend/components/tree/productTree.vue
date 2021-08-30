@@ -1,10 +1,11 @@
 <template>
+    <!-- <div v-show="showTree"> -->
     <div>
         <Tree
             :value="nodes"
             :filter="true"
             selection-mode="single"
-            v-if="showTree"
+            @node-select="onSelect"
         >
             <template #Manufacturer="slotProps">
                 <div class="p-d-flex">
@@ -50,6 +51,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
+import { Map, List, fromJS } from 'immutable';
 
 export default Vue.extend({
     apollo: {
@@ -80,37 +82,67 @@ export default Vue.extend({
                     }
                 }
             `,
+            manual: true,
             update: ({ Manufacturers }) => {
+                console.info('update');
                 return Manufacturers;
             },
-            fetchPolicy: 'no-cache',
-            result: ({ data, loading }) => {
-                if (!loading) {
-                    const { Manufacturers } = data;
-                    for (const node of Manufacturers) {
-                        if (node.hasOwnProperty('children'))
-                            node.children.push({
-                                type: 'addProduct',
-                                selectable: false,
-                            });
-                    }
 
-                    Manufacturers.push({
-                        type: 'addManufacturer',
-                        selectable: false,
+            prefetch: false,
+            fetchPolicy: 'network-only',
+            result({ data, loading }) {
+                if (!loading) {
+                    console.info(data);
+
+                    const manufacturer = fromJS(data.Manufacturers);
+                    console.info(manufacturer.getIn([]));
+
+                    manufacturer.forEach((node: Map<String, any>) => {
+                        console.info(node.get('children'));
                     });
+
+                    const m2 = manufacturer.withMutations((list: any) => {
+                        list.push({
+                            type: 'addManufacturer',
+                            selectable: false
+                        });
+                    });
+                    console.info(manufacturer);
+
+                    this.nodes = m2.toJS();
+                    console.info(this.nodes);
+
+                    // const manufacuturers: any[] = List(
+                    //     data.Manufacturers
+                    // ).toArray();
+
+                    // for (const node of manufacuturers) {
+                    //     if (node.hasOwnProperty('children'))
+                    //         node.children.push({
+                    //             type: 'addProduct',
+                    //             selectable: false
+                    //         });
+                    // }
+
+                    // manufacuturers.push({
+                    //     type: 'addManufacturer',
+                    //     selectable: false
+                    // });
+
+                    // this.nodes = manufacuturers;
                 }
-            },
-        },
+            }
+        }
     },
     data: () => ({
         nodes: [] as Array<any>,
-        showAddManufacturerDialog: false,
+        showAddManufacturerDialog: false
     }),
     computed: {
-        showTree() {
-            return this.nodes.length > 0;
-        },
+        // showTree() {
+        //     console.info('showTree');
+        //     return this.nodes.length > 0;
+        // }
     },
     methods: {
         addManufacturer() {
@@ -119,7 +151,10 @@ export default Vue.extend({
         manufacturerTreeRefresh() {
             this.$apollo.queries.nodes.refresh();
         },
-    },
+        onSelect(node: any) {
+            this.$emit('select', { type: node.type, id: node.key });
+        }
+    }
 });
 </script>
 

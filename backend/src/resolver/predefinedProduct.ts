@@ -1,5 +1,5 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
-import { Args, Ctx, Mutation, Query, Resolver, PubSub, Publisher } from "type-graphql";
+import { Args, Ctx, Mutation, Query, Resolver, PubSub, Publisher, Arg, Int } from "type-graphql";
 import { getRepository } from "typeorm";
 
 import { pd_manufacturer, pd_manufacturer_args } from '../entity/database/pd_manufacturer';
@@ -37,6 +37,19 @@ export class PredefinedProductResolver {
 
         try {
             return (await getRepository(pd_manufacturer).find({ order: { NAME: 'ASC' } }));
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => pd_manufacturer)
+    async Manufacturer(@Arg('ID') manufacturer_id: number, @Ctx() ctx: any) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return (await getRepository(pd_manufacturer).findOne({ where: { ID: manufacturer_id } }));
         } catch (err) {
             throw new SchemaError(err.message);
         }

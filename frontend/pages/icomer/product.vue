@@ -3,10 +3,16 @@
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
         <div class="p-d-flex i-product-content">
             <div class="p-col-2">
+                <product-tree @select="onSelectTreeNode" />
                 <product-tree />
             </div>
             <div class="p-col-10">
-                <h1>Content</h1>
+                <!-- <div v-show="viewType === 'Manufacturer'">
+                    <manufacturer-panel :manufacturer-id="id" />
+                </div>
+                <div v-show="viewType === 'Product'">
+                    <h2 style="color: #eee">Content -- Product</h2>
+                </div> -->
             </div>
         </div>
     </div>
@@ -23,11 +29,18 @@ export default Vue.extend({
             default: '제품'
         }
     },
-    data() {
-        return {};
-    },
+    data: () => ({
+        id: -1,
+        viewType: ''
+    }),
     head() {
         return { title: `[iDCIM] 구축계정 - ${this.title}` };
+    },
+    methods: {
+        onSelectTreeNode({ type = '', id = -1 }) {
+            this.viewType = type;
+            this.id = id;
+        }
     }
 });
 </script>
