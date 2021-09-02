@@ -1,8 +1,7 @@
 <template>
-    <!-- <div v-show="showTree"> -->
     <div>
         <Tree
-            :value="nodes"
+            :value="manufacturers"
             :filter="true"
             selection-mode="single"
             @node-select="onSelect"
@@ -51,11 +50,12 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
-import { Map, List, fromJS } from 'immutable';
+import { Map, fromJS } from 'immutable';
+import { eventBus } from '@/plugins/primevue.confirmEventBus';
 
 export default Vue.extend({
     apollo: {
-        nodes: {
+        manufacturers: {
             query: gql`
                 query {
                     Manufacturers {
@@ -82,79 +82,66 @@ export default Vue.extend({
                     }
                 }
             `,
-            manual: true,
-            update: ({ Manufacturers }) => {
-                console.info('update');
+            fetchResults: true,
+            manual: false,
+            prefetch: false,
+            fetchPolicy: 'cache-and-network',
+            update({ Manufacturers }) {
+                // by shkoh 20210902: Tree에 제조사와 제품 [추가] 버튼을 넣음
+                this.insertAddButtons(Manufacturers);
+
                 return Manufacturers;
             },
-
-            prefetch: false,
-            fetchPolicy: 'network-only',
-            result({ data, loading }) {
-                if (!loading) {
-                    console.info(data);
-
-                    const manufacturer = fromJS(data.Manufacturers);
-                    console.info(manufacturer.getIn([]));
-
-                    manufacturer.forEach((node: Map<String, any>) => {
-                        console.info(node.get('children'));
-                    });
-
-                    const m2 = manufacturer.withMutations((list: any) => {
-                        list.push({
-                            type: 'addManufacturer',
-                            selectable: false
-                        });
-                    });
-                    console.info(manufacturer);
-
-                    this.nodes = m2.toJS();
-                    console.info(this.nodes);
-
-                    // const manufacuturers: any[] = List(
-                    //     data.Manufacturers
-                    // ).toArray();
-
-                    // for (const node of manufacuturers) {
-                    //     if (node.hasOwnProperty('children'))
-                    //         node.children.push({
-                    //             type: 'addProduct',
-                    //             selectable: false
-                    //         });
-                    // }
-
-                    // manufacuturers.push({
-                    //     type: 'addManufacturer',
-                    //     selectable: false
-                    // });
-
-                    // this.nodes = manufacuturers;
-                }
-            }
-        }
+        },
+    },
+    mounted() {
+        eventBus.$on('refreshProductTree', () => {
+            this.manufacturerTreeRefresh();
+        });
+    },
+    beforeDestroy() {
+        eventBus.$off('refreshProductTree');
     },
     data: () => ({
-        nodes: [] as Array<any>,
-        showAddManufacturerDialog: false
+        manufacturers: [] as Array<any>,
+        showAddManufacturerDialog: false,
     }),
-    computed: {
-        // showTree() {
-        //     console.info('showTree');
-        //     return this.nodes.length > 0;
-        // }
-    },
     methods: {
         addManufacturer() {
             this.showAddManufacturerDialog = true;
         },
         manufacturerTreeRefresh() {
-            this.$apollo.queries.nodes.refresh();
+            this.$apollo.queries.manufacturers.refresh();
         },
         onSelect(node: any) {
-            this.$emit('select', { type: node.type, id: node.key });
-        }
-    }
+            this.$emit('select', { type: node.type, id: Number(node.key) });
+        },
+        insertAddButtons(data: Array<any>) {
+            // by shkoh 20210902: API 서버로부터 받은 데이터에서 제조사인 경우에 하위 노드에 [제품 추가] 버튼 생성
+            data.forEach((datum) => {
+                if (datum.type === 'Manufacturer') {
+                    if (
+                        !datum.children.some(
+                            (p: any) => p.type === 'addProduct'
+                        )
+                    ) {
+                        datum.children.push({
+                            type: 'addProduct',
+                            selectable: false,
+                        });
+                    }
+                }
+            });
+
+            // by shkoh 20210902: API 서버로부터 받은 데이터에서 마지막에 [제조사 추가] 버튼 생성
+            if (!data.some((datum: any) => datum.type === 'addManufacturer')) {
+                data.push({
+                    type: 'addManufacturer',
+                    selectable: false,
+                });
+            }
+        },
+    },
 });
 </script>
 

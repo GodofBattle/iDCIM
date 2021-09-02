@@ -7,6 +7,7 @@
             <Nuxt />
         </article>
         <Toast position="top-center" />
+        <i-confirm-dialog group="deleteConfirmDialog" />
     </div>
 </template>
 

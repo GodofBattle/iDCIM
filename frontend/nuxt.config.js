@@ -38,7 +38,12 @@ export default {
     ],
 
     // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-    plugins: ['@/plugins/apolloClient.ts', '@/plugins/apolloHelper.ts', '@/plugins/useToast.primevue.ts'],
+    plugins: [
+        '@/plugins/apolloClient.ts',
+        '@/plugins/apolloHelper.ts',
+        '@/plugins/primevue.toastService.ts',
+        { src: '@/plugins/primevue.confirmEventBus.ts', mode: 'client' },
+    ],
 
     // Auto import components: https://go.nuxtjs.dev/config-components
     components: {

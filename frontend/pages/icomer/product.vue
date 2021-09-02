@@ -4,15 +4,14 @@
         <div class="p-d-flex i-product-content">
             <div class="p-col-2">
                 <product-tree @select="onSelectTreeNode" />
-                <product-tree />
             </div>
             <div class="p-col-10">
-                <!-- <div v-show="viewType === 'Manufacturer'">
+                <div v-show="viewType === 'Manufacturer'">
                     <manufacturer-panel :manufacturer-id="id" />
                 </div>
                 <div v-show="viewType === 'Product'">
                     <h2 style="color: #eee">Content -- Product</h2>
-                </div> -->
+                </div>
             </div>
         </div>
     </div>
@@ -26,12 +25,12 @@ export default Vue.extend({
     props: {
         title: {
             type: String,
-            default: '제품'
-        }
+            default: '제품',
+        },
     },
     data: () => ({
         id: -1,
-        viewType: ''
+        viewType: '',
     }),
     head() {
         return { title: `[iDCIM] 구축계정 - ${this.title}` };
@@ -40,8 +39,8 @@ export default Vue.extend({
         onSelectTreeNode({ type = '', id = -1 }) {
             this.viewType = type;
             this.id = id;
-        }
-    }
+        },
+    },
 });
 </script>
 

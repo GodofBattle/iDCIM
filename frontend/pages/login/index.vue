@@ -11,7 +11,7 @@
                         <div class="p-text-center">login</div>
                     </template>
                     <template #content>
-                        <form @submit.stop.prevent="singIn">
+                        <form @submit.stop.prevent="signIn">
                             <div class="p-fluid p-input-filled">
                                 <div class="p-field">
                                     <label for="userid">User ID</label>
@@ -74,14 +74,14 @@ export default Vue.extend({
     data() {
         return {
             username: '',
-            password: ''
+            password: '',
         };
     },
     mounted() {
         this.$store.dispatch('sessionStorage/SIGNOUT');
     },
     methods: {
-        async singIn() {
+        async signIn() {
             const { username, password } = this.$data;
 
             this.$apollo
@@ -104,9 +104,9 @@ export default Vue.extend({
                     `,
                     variables: {
                         userId: username,
-                        password
+                        password,
                     },
-                    errorPolicy: 'ignore'
+                    errorPolicy: 'ignore',
                 })
                 .then(
                     async ({
@@ -114,9 +114,9 @@ export default Vue.extend({
                             Login: {
                                 ROLE,
                                 TOKEN: { ACCESS_TOKEN, REFRESH_TOKEN },
-                                USER: { USER_ID, USER_GROUP_ID, NAME }
-                            }
-                        }
+                                USER: { USER_ID, USER_GROUP_ID, NAME },
+                            },
+                        },
                     }) => {
                         await this.$store.dispatch('sessionStorage/SIGNIN', {
                             role: ROLE,
@@ -124,7 +124,7 @@ export default Vue.extend({
                             refresh_token: REFRESH_TOKEN,
                             user_id: USER_ID,
                             user_group_id: USER_GROUP_ID,
-                            user_name: NAME
+                            user_name: NAME,
                         });
                     }
                 )
@@ -136,11 +136,11 @@ export default Vue.extend({
                         severity: 'info',
                         summary: '로그인 실패',
                         detail: 'ID 혹은 패스워드를 확인하세요',
-                        life: 1500
+                        life: 1500,
                     });
                 });
-        }
-    }
+        },
+    },
 });
 </script>
 

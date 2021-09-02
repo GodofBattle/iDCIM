@@ -55,21 +55,21 @@ export class pd_manufacturer_args {
     @Field(() => String!)
     NAME: string;
 
-    @Field(() => String!, { nullable: true })
+    @Field(() => String, { nullable: true })
     ADDR?: string | undefined;
 
-    @Field(() => String!, { nullable: true })
+    @Field(() => String, { nullable: true })
     PHONE?: string | undefined;
 
-    @Field(() => String!, { nullable: true })
+    @Field(() => String, { nullable: true })
     FAX?: string | undefined;
 
-    @Field(() => String!, { nullable: true })
+    @Field(() => String, { nullable: true })
     EMAIL?: string | undefined;
 
-    @Field(() => String!, { nullable: true })
+    @Field(() => String, { nullable: true })
     URL?: string | undefined;
 
-    @Field(() => String!, { nullable: true })
+    @Field(() => String, { nullable: true })
     REMARK?: string | undefined;
 }
