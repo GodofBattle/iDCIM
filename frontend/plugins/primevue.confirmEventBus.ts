@@ -1,4 +1,4 @@
-import Vue, { PluginFunction } from 'vue';
+import { eventBus } from '@/plugins/vueEventBus';
 import { Plugin } from '@nuxt/types';
 
 interface ConfirmDialogMethods {
@@ -11,9 +11,8 @@ declare module 'vue/types/vue' {
         $confirmDialog: ConfirmDialogMethods;
     }
 }
-export const eventBus = new Vue();
 
-const install: Plugin = ({ }, inject) => {
+const install: Plugin = ({}, inject) => {
     const confirmDialogMethods: ConfirmDialogMethods = {
         require: (options: JSON) => {
             eventBus.$emit('confirmDialog', options);
@@ -21,9 +20,9 @@ const install: Plugin = ({ }, inject) => {
         close: () => {
             eventBus.$emit('closeConfirmDialog');
         }
-    }
+    };
 
     inject('confirmDialog', confirmDialogMethods);
-}
+};
 
 export default install;

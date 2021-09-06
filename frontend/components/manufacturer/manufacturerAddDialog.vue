@@ -1,3 +1,4 @@
+x
 <template>
     <i-dialog
         :visible.sync="showDialog"
@@ -46,10 +47,10 @@
                 <label for="phone">대표번호</label>
                 <i-input-text-phone
                     id="phone"
+                    v-model="addData.PHONE"
                     type="text"
                     aria-describedby="phone-help"
                     autocomplete="off"
-                    v-model="addData.PHONE"
                     placeholder="공백없이 숫자만 입력"
                 ></i-input-text-phone>
             </div>
@@ -57,10 +58,10 @@
                 <label for="fax">팩스번호</label>
                 <i-input-text-phone
                     id="fax"
+                    v-model="addData.FAX"
                     type="text"
                     aria-describedby="fax-help"
                     autocomplete="off"
-                    v-model="addData.FAX"
                     placeholder="공백없이 숫자만 입력"
                 ></i-input-text-phone>
             </div>
@@ -68,13 +69,13 @@
                 <label for="email">이메일</label>
                 <InputText
                     id="email"
+                    v-model="addData.EMAIL"
                     type="email"
                     aria-describedby="email-help"
                     autocomplete="off"
-                    v-model="addData.EMAIL"
                     placeholder="Email Address"
-                    @input="validateEmail"
                     :class="{ 'p-invalid': invalidMessage.EMAIL }"
+                    @input="validateEmail"
                 ></InputText>
                 <small id="email-help" class="p-error">
                     {{ invalidMessage.EMAIL }}
@@ -84,13 +85,13 @@
                 <label for="url">홈페이지</label>
                 <InputText
                     id="url"
+                    v-model="addData.URL"
                     type="url"
                     aria-describedby="url-help"
                     autocomplete="off"
-                    v-model="addData.URL"
                     placeholder="제조사 홈페이지 주소"
-                    @input="validateUrl"
                     :class="{ 'p-invalid': invalidMessage.URL }"
+                    @input="validateUrl"
                 ></InputText>
                 <small id="url-help" class="p-error">
                     {{ invalidMessage.URL }}
@@ -133,7 +134,7 @@ import gql from 'graphql-tag';
 
 export default Vue.extend({
     props: {
-        visibleAddManufacturerDialog: Boolean,
+        visibleAddManufacturerDialog: Boolean
     },
     data() {
         return {
@@ -144,7 +145,7 @@ export default Vue.extend({
                 FAX: '',
                 EMAIL: '',
                 URL: '',
-                REMARK: '',
+                REMARK: ''
             },
             invalidMessage: {
                 NAME: undefined as String | undefined,
@@ -152,10 +153,10 @@ export default Vue.extend({
                 PHONE: undefined as String | undefined,
                 EMAIL: undefined as String | undefined,
                 URL: undefined as String | undefined,
-                REMARK: undefined as String | undefined,
+                REMARK: undefined as String | undefined
             },
             emailReg:
-                /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/,
+                /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/
         };
     },
     computed: {
@@ -165,7 +166,7 @@ export default Vue.extend({
             },
             set(is_show: Boolean) {
                 this.$emit('update:visibleAddManufacturerDialog', is_show);
-            },
+            }
         },
         addDisabled() {
             let is_disabled = true;
@@ -173,7 +174,7 @@ export default Vue.extend({
             if (this.addData.NAME.length > 0) is_disabled = false;
 
             return is_disabled === true;
-        },
+        }
     },
     methods: {
         onDialogHide() {
@@ -259,7 +260,7 @@ export default Vue.extend({
                     severity: 'warn',
                     summary: '제조사 유효성 실패',
                     detail: '제조사 내용을 확인하세요',
-                    life: 2000,
+                    life: 2000
                 });
                 return;
             }
@@ -287,14 +288,14 @@ export default Vue.extend({
                             )
                         }
                     `,
-                    variables: this.addData,
+                    variables: this.addData
                 })
                 .then(() => {
                     this.$toast.add({
                         severity: 'success',
                         summary: '제조사 추가',
                         detail: `${this.addData.NAME} 추가완료`,
-                        life: 1500,
+                        life: 1500
                     });
 
                     this.$emit('refresh');
@@ -308,10 +309,10 @@ export default Vue.extend({
                         severity: 'error',
                         summary: '제조사 추가 실패',
                         detail: error.message,
-                        life: 2000,
+                        life: 2000
                     });
                 });
-        },
-    },
+        }
+    }
 });
 </script>

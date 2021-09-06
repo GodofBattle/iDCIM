@@ -58,6 +58,28 @@ export class PredefinedProductResolver {
         }
     }
 
+    @Mutation(() => Boolean)
+    async DeleteManufacturer(
+        @Arg('ID', () => ID) ID: number,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if (!ID) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+
+            const result = await getRepository(pd_manufacturer).delete(ID);
+            return result.affected > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
     @Query(() => [pd_manufacturer])
     async Manufacturers(@Ctx() ctx: any) {
         if (!ctx.isAuth) {

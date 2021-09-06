@@ -42,7 +42,8 @@ export default {
         '@/plugins/apolloClient.ts',
         '@/plugins/apolloHelper.ts',
         '@/plugins/primevue.toastService.ts',
-        { src: '@/plugins/primevue.confirmEventBus.ts', mode: 'client' },
+        '@/plugins/vueEventBus.ts',
+        { src: '@/plugins/primevue.confirmEventBus.ts', mode: 'client' }
     ],
 
     // Auto import components: https://go.nuxtjs.dev/config-components
@@ -55,6 +56,7 @@ export default {
             '@/components/sensor',
             '@/components/tree',
             '@/components/manufacturer',
+            '@/components/product'
         ]
     },
 
@@ -110,6 +112,7 @@ export default {
         // theme: 'bootstrap4-dark-blue',
         ripple: true,
         components: [
+            'AutoComplete',
             'Button',
             'Card',
             'Column',
@@ -117,6 +120,7 @@ export default {
             'DataTable',
             'DataView',
             'Divider',
+            'DropDown',
             'InputMask',
             'InputSwitch',
             'InputText',

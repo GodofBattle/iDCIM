@@ -13,13 +13,14 @@ import { UserResolver } from './resolver/user';
 import { CodeResolver } from './resolver/code';
 import { SensorCodeResolver } from './resolver/sensorCode';
 import { PredefinedProductResolver } from './resolver/predefinedProduct';
+import { PredefinedAssetResolver } from './resolver/predefineAsset';
 
 import Auth from './utils/auth';
 
 const graphql_path = '/api';
 
 const schemas = buildSchemaSync({
-    resolvers: [UserResolver, CodeResolver, SensorCodeResolver, PredefinedProductResolver],
+    resolvers: [UserResolver, CodeResolver, SensorCodeResolver, PredefinedProductResolver, PredefinedAssetResolver],
 });
 
 createConnection({

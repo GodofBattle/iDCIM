@@ -32,26 +32,33 @@
                     @click="addManufacturer"
                 ></Button>
             </template>
-            <template #addProduct>
+            <template #addProduct="slotProps">
                 <Button
                     class="p-button-info p-button-sm p-py-1"
                     label="[제품] 추가"
                     icon="pi pi-plus"
+                    @click="addProduct(slotProps.node)"
                 ></Button>
             </template>
         </Tree>
-        <manufacturer-add-panel
+        <manufacturer-add-dialog
             :visible-add-manufacturer-dialog.sync="showAddManufacturerDialog"
-            @refresh="manufacturerTreeRefresh"
-        ></manufacturer-add-panel>
+            @refresh="treeRefresh"
+        ></manufacturer-add-dialog>
+        <product-add-dialog
+            :visible-add-product-dialog.sync="showAddProductDialog"
+            :manufacturer-id="manufacturerId"
+            :manufacturer-name="manufacturerName"
+            @refresh="treeRefresh"
+        >
+        </product-add-dialog>
     </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
-import { Map, fromJS } from 'immutable';
-import { eventBus } from '@/plugins/primevue.confirmEventBus';
+import { eventBus } from '@/plugins/vueEventBus';
 
 export default Vue.extend({
     apollo: {
@@ -91,26 +98,34 @@ export default Vue.extend({
                 this.insertAddButtons(Manufacturers);
 
                 return Manufacturers;
-            },
-        },
+            }
+        }
     },
+    data: () => ({
+        manufacturers: [] as Array<any>,
+        showAddManufacturerDialog: false,
+        showAddProductDialog: false,
+        manufacturerId: -1,
+        manufacturerName: ''
+    }),
     mounted() {
         eventBus.$on('refreshProductTree', () => {
-            this.manufacturerTreeRefresh();
+            this.treeRefresh();
         });
     },
     beforeDestroy() {
         eventBus.$off('refreshProductTree');
     },
-    data: () => ({
-        manufacturers: [] as Array<any>,
-        showAddManufacturerDialog: false,
-    }),
     methods: {
         addManufacturer() {
             this.showAddManufacturerDialog = true;
         },
-        manufacturerTreeRefresh() {
+        addProduct(node: any) {
+            this.showAddProductDialog = true;
+            this.manufacturerId = Number(node.pId);
+            this.manufacturerName = node.pName;
+        },
+        treeRefresh() {
             this.$apollo.queries.manufacturers.refresh();
         },
         onSelect(node: any) {
@@ -128,6 +143,8 @@ export default Vue.extend({
                         datum.children.push({
                             type: 'addProduct',
                             selectable: false,
+                            pId: datum.key,
+                            pName: datum.label
                         });
                     }
                 }
@@ -137,11 +154,11 @@ export default Vue.extend({
             if (!data.some((datum: any) => datum.type === 'addManufacturer')) {
                 data.push({
                     type: 'addManufacturer',
-                    selectable: false,
+                    selectable: false
                 });
             }
-        },
-    },
+        }
+    }
 });
 </script>
 

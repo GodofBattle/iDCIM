@@ -57,10 +57,10 @@
                     <label for="phone">대표번호</label>
                     <i-input-text-phone
                         id="phone"
+                        v-model="newData.PHONE"
                         type="text"
                         aria-describedby="phone-help"
                         autocomplete="off"
-                        v-model="newData.PHONE"
                         placeholder="공백없이 숫자만 입력"
                     ></i-input-text-phone>
                 </div>
@@ -68,10 +68,10 @@
                     <label for="fax">팩스번호</label>
                     <i-input-text-phone
                         id="fax"
+                        v-model="newData.FAX"
                         type="text"
                         aria-describedby="fax-help"
                         autocomplete="off"
-                        v-model="newData.FAX"
                         placeholder="공백없이 숫자만 입력"
                     ></i-input-text-phone>
                 </div>
@@ -79,13 +79,13 @@
                     <label for="email">이메일</label>
                     <InputText
                         id="email"
+                        v-model="newData.EMAIL"
                         type="email"
                         aria-describedby="email-help"
                         autocomplete="off"
-                        v-model="newData.EMAIL"
                         placeholder="Email Address"
-                        @input="validateEmail"
                         :class="{ 'p-invalid': invalidMessage.EMAIL }"
+                        @input="validateEmail"
                     ></InputText>
                     <small id="email-help" class="p-error">
                         {{ invalidMessage.EMAIL }}
@@ -95,13 +95,13 @@
                     <label for="url">홈페이지</label>
                     <InputText
                         id="url"
+                        v-model="newData.URL"
                         type="url"
                         aria-describedby="url-help"
                         autocomplete="off"
-                        v-model="newData.URL"
                         placeholder="제조사 홈페이지 주소"
-                        @input="validateUrl"
                         :class="{ 'p-invalid': invalidMessage.URL }"
+                        @input="validateUrl"
                     ></InputText>
                     <small id="url-help" class="p-error">
                         {{ invalidMessage.URL }}
@@ -130,7 +130,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
-import { eventBus } from '@/plugins/primevue.confirmEventBus';
+import { eventBus } from '@/plugins/vueEventBus';
 
 type Manufacturer = {
     [index: string]: string;
@@ -167,7 +167,7 @@ export default Vue.extend({
             update: (data) => data.Manufacturer,
             variables() {
                 return {
-                    ID: this.manufacturerId < 0 ? -1 : this.manufacturerId,
+                    ID: this.manufacturerId < 0 ? -1 : this.manufacturerId
                 };
             },
             result({ data, loading }) {
@@ -177,19 +177,49 @@ export default Vue.extend({
                     // by shkoh 20210831: Tree에서 제품을 선택하지 않은 경우에 API 서버로부터 NULL을 받기 때문에 예외처리를 해줘야 한다
                     if (Manufacturer) {
                         // by shkoh 20210831: API 서버로부터 받은 값을 토대로 사전에 수정이 필요한 값으로 복사함
-                        for (let key of Object.keys(this.newData)) {
+                        for (const key of Object.keys(this.newData)) {
                             this.newData[key] = Manufacturer[key];
                         }
                     }
                 }
-            },
-        },
+            }
+        }
     },
     props: {
         manufacturerId: {
-            type: Number,
-        },
+            type: Number
+        }
     },
+    data: () => ({
+        manufacturerData: {
+            NAME: '',
+            ADDR: '',
+            PHONE: '',
+            FAX: '',
+            EMAIL: '',
+            URL: '',
+            REMARK: ''
+        } as Manufacturer,
+        newData: {
+            NAME: '',
+            ADDR: '',
+            PHONE: '',
+            FAX: '',
+            EMAIL: '',
+            URL: '',
+            REMARK: ''
+        } as Manufacturer,
+        invalidMessage: {
+            NAME: undefined as String | undefined,
+            ADDR: undefined as String | undefined,
+            PHONE: undefined as String | undefined,
+            EMAIL: undefined as String | undefined,
+            URL: undefined as String | undefined,
+            REMARK: undefined as String | undefined
+        },
+        emailReg:
+            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/
+    }),
     computed: {
         manufacturerName() {
             return this.manufacturerData ? this.manufacturerData.NAME : '';
@@ -201,7 +231,7 @@ export default Vue.extend({
             if (this.manufacturerData === null) return true;
 
             // by shkoh 20210831: API로부터 받은 데이터와 작성자가 수정하기 위한 데이터를 비교
-            for (let key of Object.keys(this.newData)) {
+            for (const key of Object.keys(this.newData)) {
                 // by shkoh 20210831: 새롭게 변경된 값들 중에서 동일한 key의 값을 비교하여 해당 값이 다른 경우에 저장 가능 상태로 변경함
                 const is_modified = Object.entries(this.manufacturerData).some(
                     ([k, v]) => k === key && v !== this.newData[key]
@@ -214,38 +244,8 @@ export default Vue.extend({
             }
 
             return is_disabled;
-        },
+        }
     },
-    data: () => ({
-        manufacturerData: {
-            NAME: '',
-            ADDR: '',
-            PHONE: '',
-            FAX: '',
-            EMAIL: '',
-            URL: '',
-            REMARK: '',
-        } as Manufacturer,
-        newData: {
-            NAME: '',
-            ADDR: '',
-            PHONE: '',
-            FAX: '',
-            EMAIL: '',
-            URL: '',
-            REMARK: '',
-        } as Manufacturer,
-        invalidMessage: {
-            NAME: undefined as String | undefined,
-            ADDR: undefined as String | undefined,
-            PHONE: undefined as String | undefined,
-            EMAIL: undefined as String | undefined,
-            URL: undefined as String | undefined,
-            REMARK: undefined as String | undefined,
-        },
-        emailReg:
-            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/,
-    }),
     methods: {
         validateName(input: InputEvent) {
             const _input = input.toString();
@@ -318,14 +318,14 @@ export default Vue.extend({
                     severity: 'warn',
                     summary: '제조사 유효성 실패',
                     detail: '제조사 내용을 확인하세요',
-                    life: 2000,
+                    life: 2000
                 });
                 return;
             }
 
             const variables = {
                 ID: this.manufacturerId,
-                NAME: this.newData.NAME,
+                NAME: this.newData.NAME
             };
 
             ['ADDR', 'PHONE', 'FAX', 'EMAIL', 'URL', 'REMARK'].forEach(
@@ -335,7 +335,7 @@ export default Vue.extend({
                             value: this.newData[key],
                             configurable: true,
                             enumerable: true,
-                            writable: true,
+                            writable: true
                         });
                     }
                 }
@@ -366,7 +366,7 @@ export default Vue.extend({
                             )
                         }
                     `,
-                    variables,
+                    variables
                 })
                 .then(() => {
                     eventBus.$emit('refreshProductTree');
@@ -379,7 +379,7 @@ export default Vue.extend({
                         severity: 'error',
                         summary: '제조사 변경 실패',
                         detail: error.message,
-                        life: 2000,
+                        life: 2000
                     });
                 });
         },
@@ -393,24 +393,35 @@ export default Vue.extend({
                 acceptClass: 'p-button-danger',
                 blockScroll: false,
                 accept: () => {
-                    this.$toast.add({
-                        severity: 'info',
-                        summary: 'accept',
-                        detail: 'click to accept',
-                        life: 1500,
-                    });
-                },
-                reject: () => {
-                    this.$toast.add({
-                        severity: 'error',
-                        summary: 'reject',
-                        detail: 'click to reject',
-                        life: 3300,
-                    });
-                },
+                    this.delete();
+                }
             });
         },
-    },
+        delete() {
+            this.$apollo
+                .mutate({
+                    mutation: gql`
+                        mutation {
+                            DeleteManufacturer(ID: ${this.manufacturerId})
+                        }
+                    `
+                })
+                .then(() => {
+                    eventBus.$emit('refreshProductTree');
+                    this.$emit('reset');
+                })
+                .catch((error) => {
+                    console.error(error);
+
+                    this.$toast.add({
+                        severity: 'error',
+                        summary: '제조사 삭제 실패',
+                        detail: error.message,
+                        life: 2000
+                    });
+                });
+        }
+    }
 });
 </script>
 
