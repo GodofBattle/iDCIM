@@ -35,6 +35,7 @@
                     aria-describedby="name-help"
                     autocomplete="off"
                     :class="{ 'p-invalid': invalidMessage.NAME }"
+                    @input="validateName"
                 ></InputText>
                 <small id="name-help" class="p-error">
                     {{ invalidMessage.NAME }}
@@ -49,6 +50,7 @@
                     aria-describedby="model-name-help"
                     autocomplete="off"
                     :class="{ 'p-invalid': invalidMessage.MODEL_NAME }"
+                    @input="validateModelName"
                 ></InputText>
                 <small id="model-name-help" class="p-error">
                     {{ invalidMessage.MODEL_NAME }}
@@ -77,6 +79,7 @@
                     label="추가"
                     icon="pi pi-plus"
                     style="width: 100%"
+                    :disabled="addButtonDisabled"
                     @click="addProduct"
                 ></Button>
             </div>
@@ -87,6 +90,14 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
+
+type Product = {
+    [index: string]: string;
+    ASSET_CD: string;
+    NAME: string;
+    MODEL_NAME: string;
+    REMARK: string;
+};
 
 export default Vue.extend({
     apollo: {
@@ -101,27 +112,27 @@ export default Vue.extend({
             `,
             update: ({ PredefinedAssetCodes }) => {
                 return PredefinedAssetCodes;
-            }
-        }
+            },
+        },
     },
     props: {
         manufacturerId: Number,
         manufacturerName: String,
-        visibleAddProductDialog: Boolean
+        visibleAddProductDialog: Boolean,
     },
     data: () => ({
         newData: {
             ASSET_CD: '',
             NAME: '',
             MODEL_NAME: '',
-            REMARK: ''
-        },
+            REMARK: '',
+        } as Product,
         invalidMessage: {
             NAME: undefined as string | undefined,
             MODEL_NAME: undefined as string | undefined,
-            REMARK: undefined as string | undefined
+            REMARK: undefined as string | undefined,
         },
-        assetCodeList: [] as Array<any>
+        assetCodeList: [] as Array<any>,
     }),
     computed: {
         showDialog: {
@@ -130,13 +141,24 @@ export default Vue.extend({
             },
             set(is_show: Boolean) {
                 this.$emit('update:visibleAddProductDialog', is_show);
-            }
+            },
         },
         subTitle: {
             get(): string {
                 return `${this.manufacturerName} 제품을 추가합니다`;
-            }
-        }
+            },
+        },
+        addButtonDisabled: {
+            get(): boolean {
+                let is_disabled = false;
+
+                ['ASSET_CD', 'NAME', 'MODEL_NAME'].forEach((key) => {
+                    if (this.newData[key].length < 2) is_disabled = true;
+                });
+
+                return is_disabled;
+            },
+        },
     },
     methods: {
         onDialogHide() {
@@ -150,14 +172,107 @@ export default Vue.extend({
             this.invalidMessage.MODEL_NAME = '';
             this.invalidMessage.REMARK = '';
         },
-        addProduct() {
-            this.$toast.add({
-                severity: 'info',
-                summary: 'addProduct',
-                life: 1000
-            });
+        validationCheck() {
+            let is_valid = true;
+
+            for (const valid of Object.values(this.invalidMessage)) {
+                if (valid) {
+                    is_valid = false;
+                    return;
+                }
+            }
+
+            return is_valid;
         },
-        validateRemark(input: InputEvent) {}
-    }
+        addProduct() {
+            if (!this.validationCheck()) {
+                this.$toast.add({
+                    severity: 'warn',
+                    summary: '제품 유효성 실패',
+                    detail: '제품 내용을 확인하세요',
+                    life: 2000,
+                });
+                return;
+            }
+
+            this.$apollo
+                .mutate({
+                    mutation: gql`
+                        mutation AddProduct(
+                            $MANUFACTURER_ID: Int!
+                            $NAME: String
+                            $ASSET_CD: String
+                            $MODEL_NAME: String
+                            $REMARK: String
+                        ) {
+                            AddProduct(
+                                MANUFACTURER_ID: $MANUFACTURER_ID
+                                NAME: $NAME
+                                ASSET_CD: $ASSET_CD
+                                MODEL_NAME: $MODEL_NAME
+                                REMARK: $REMARK
+                            )
+                        }
+                    `,
+                    variables: {
+                        MANUFACTURER_ID: this.manufacturerId,
+                        NAME: this.newData.NAME,
+                        ASSET_CD: this.newData.ASSET_CD,
+                        MODEL_NAME: this.newData.MODEL_NAME,
+                        REMARK: this.newData.REMARK,
+                    },
+                })
+                .then(() => {
+                    this.$toast.add({
+                        severity: 'success',
+                        summary: '제품 추가',
+                        detail: `${this.newData.NAME} 추가완료`,
+                        life: 1500,
+                    });
+
+                    this.$emit('refresh');
+
+                    this.showDialog = false;
+                })
+                .catch((error) => {
+                    console.error(error);
+
+                    this.$toast.add({
+                        severity: 'error',
+                        summary: '제품 추가 실패',
+                        detail: error.message,
+                        life: 2000,
+                    });
+                });
+        },
+        validateName(input: InputEvent) {
+            const _input = input.toString();
+            if (_input.length > 64) {
+                this.invalidMessage.NAME = '제품명은 64자 이하입니다';
+            } else if (_input.length < 2) {
+                this.invalidMessage.NAME = '제품명은 1자 이상입니다';
+            } else {
+                this.invalidMessage.NAME = undefined;
+            }
+        },
+        validateModelName(input: InputEvent) {
+            const _input = input.toString();
+            if (_input.length > 32) {
+                this.invalidMessage.MODEL_NAME = '모델명은 64자 이하입니다';
+            } else if (_input.length < 2) {
+                this.invalidMessage.MODEL_NAME = '모델명은 1자 이상입니다';
+            } else {
+                this.invalidMessage.MODEL_NAME = undefined;
+            }
+        },
+        validateRemark(input: InputEvent) {
+            const _input = input.toString();
+            if (_input.length > 256) {
+                this.invalidMessage.REMARK = '설명은 256자 이하입니다';
+            } else {
+                this.invalidMessage.REMARK = undefined;
+            }
+        },
+    },
 });
 </script>

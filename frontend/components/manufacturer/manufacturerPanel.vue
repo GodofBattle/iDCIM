@@ -167,7 +167,7 @@ export default Vue.extend({
             update: (data) => data.Manufacturer,
             variables() {
                 return {
-                    ID: this.manufacturerId < 0 ? -1 : this.manufacturerId
+                    ID: this.manufacturerId < 0 ? -1 : this.manufacturerId,
                 };
             },
             result({ data, loading }) {
@@ -180,15 +180,21 @@ export default Vue.extend({
                         for (const key of Object.keys(this.newData)) {
                             this.newData[key] = Manufacturer[key];
                         }
+
+                        // by shkoh 20210906: 제품존재 여부 판단
+                        if (Manufacturer.PRODUCTS.length > 0)
+                            this.hasChild = true;
+                        else if (Manufacturer.PRODUCTS.length === 0)
+                            this.hasChild = false;
                     }
                 }
-            }
-        }
+            },
+        },
     },
     props: {
         manufacturerId: {
-            type: Number
-        }
+            type: Number,
+        },
     },
     data: () => ({
         manufacturerData: {
@@ -198,7 +204,7 @@ export default Vue.extend({
             FAX: '',
             EMAIL: '',
             URL: '',
-            REMARK: ''
+            REMARK: '',
         } as Manufacturer,
         newData: {
             NAME: '',
@@ -207,7 +213,7 @@ export default Vue.extend({
             FAX: '',
             EMAIL: '',
             URL: '',
-            REMARK: ''
+            REMARK: '',
         } as Manufacturer,
         invalidMessage: {
             NAME: undefined as String | undefined,
@@ -215,10 +221,11 @@ export default Vue.extend({
             PHONE: undefined as String | undefined,
             EMAIL: undefined as String | undefined,
             URL: undefined as String | undefined,
-            REMARK: undefined as String | undefined
+            REMARK: undefined as String | undefined,
         },
         emailReg:
-            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/
+            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/,
+        hasChild: false,
     }),
     computed: {
         manufacturerName() {
@@ -244,7 +251,7 @@ export default Vue.extend({
             }
 
             return is_disabled;
-        }
+        },
     },
     methods: {
         validateName(input: InputEvent) {
@@ -318,14 +325,14 @@ export default Vue.extend({
                     severity: 'warn',
                     summary: '제조사 유효성 실패',
                     detail: '제조사 내용을 확인하세요',
-                    life: 2000
+                    life: 2000,
                 });
                 return;
             }
 
             const variables = {
                 ID: this.manufacturerId,
-                NAME: this.newData.NAME
+                NAME: this.newData.NAME,
             };
 
             ['ADDR', 'PHONE', 'FAX', 'EMAIL', 'URL', 'REMARK'].forEach(
@@ -335,7 +342,7 @@ export default Vue.extend({
                             value: this.newData[key],
                             configurable: true,
                             enumerable: true,
-                            writable: true
+                            writable: true,
                         });
                     }
                 }
@@ -366,7 +373,7 @@ export default Vue.extend({
                             )
                         }
                     `,
-                    variables
+                    variables,
                 })
                 .then(() => {
                     eventBus.$emit('refreshProductTree');
@@ -379,11 +386,15 @@ export default Vue.extend({
                         severity: 'error',
                         summary: '제조사 변경 실패',
                         detail: error.message,
-                        life: 2000
+                        life: 2000,
                     });
                 });
         },
         deleteManufacturer() {
+            console.info(this.hasChild);
+            // by shkoh 20210906: 삭제하기 전에 데이터 갱신
+            this.$apollo.queries.manufacturerData.refresh();
+
             this.$confirmDialog.require({
                 group: 'deleteConfirmDialog',
                 message: `[${this.manufacturerName}] 제조사를 삭제하시겠습니까?\n제품이 등록되지 않은 제조사만 삭제가 가능합니다.`,
@@ -393,8 +404,18 @@ export default Vue.extend({
                 acceptClass: 'p-button-danger',
                 blockScroll: false,
                 accept: () => {
-                    this.delete();
-                }
+                    console.info(this.hasChild);
+                    if (this.hasChild) {
+                        this.$toast.add({
+                            severity: 'warn',
+                            summary: '제조사 삭제 불가',
+                            detail: `${this.manufacturerName} 제조사 제품이 존재합니다`,
+                            life: 1000,
+                        });
+                    } else {
+                        this.delete();
+                    }
+                },
             });
         },
         delete() {
@@ -404,7 +425,7 @@ export default Vue.extend({
                         mutation {
                             DeleteManufacturer(ID: ${this.manufacturerId})
                         }
-                    `
+                    `,
                 })
                 .then(() => {
                     eventBus.$emit('refreshProductTree');
@@ -417,11 +438,11 @@ export default Vue.extend({
                         severity: 'error',
                         summary: '제조사 삭제 실패',
                         detail: error.message,
-                        life: 2000
+                        life: 2000,
                     });
                 });
-        }
-    }
+        },
+    },
 });
 </script>
 
