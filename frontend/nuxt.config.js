@@ -39,6 +39,7 @@ export default {
 
     // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
     plugins: [
+        '@/plugins/nuxt-class-component.js',
         '@/plugins/apolloClient.ts',
         '@/plugins/apolloHelper.ts',
         '@/plugins/primevue.toastService.ts',
@@ -115,12 +116,15 @@ export default {
             'AutoComplete',
             'Button',
             'Card',
+            'Checkbox',
             'Column',
             'ColumnGroup',
             'DataTable',
             'DataView',
             'Divider',
             'DropDown',
+            'FileUpload',
+            'Inplace',
             'InputMask',
             'InputSwitch',
             'InputText',

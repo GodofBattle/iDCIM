@@ -23,6 +23,7 @@
         "primeflex": "^2.0.0",
         "primeicons": "^4.1.0",
         "primevue": "^2.4.2",
+        "vue-class-component": "^7.2.6",
         "vuex-module-decorators": "^1.0.1"
     },
     "devDependencies": {

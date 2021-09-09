@@ -8,19 +8,21 @@ import { ApolloServer } from 'apollo-server-express';
 import { createConnection, getConnection } from "typeorm";
 import { buildSchemaSync } from 'type-graphql';
 import { ApolloServerLoaderPlugin } from 'type-graphql-dataloader';
+import { graphqlUploadExpress } from 'graphql-upload';
 
 import { UserResolver } from './resolver/user';
 import { CodeResolver } from './resolver/code';
 import { SensorCodeResolver } from './resolver/sensorCode';
 import { PredefinedProductResolver } from './resolver/predefinedProduct';
 import { PredefinedAssetResolver } from './resolver/predefineAsset';
+import { FileResolver } from './resolver/file';
 
 import Auth from './utils/auth';
 
 const graphql_path = '/api';
 
 const schemas = buildSchemaSync({
-    resolvers: [UserResolver, CodeResolver, SensorCodeResolver, PredefinedProductResolver, PredefinedAssetResolver],
+    resolvers: [UserResolver, CodeResolver, SensorCodeResolver, PredefinedProductResolver, PredefinedAssetResolver, FileResolver],
 });
 
 createConnection({
@@ -52,6 +54,7 @@ createConnection({
 
 const app: express.Application = express();
 const server: ApolloServer = new ApolloServer({
+    uploads: false,
     schema: schemas,
     context: Auth,
     subscriptions: {
@@ -69,6 +72,7 @@ const server: ApolloServer = new ApolloServer({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
 app.use(server.getMiddleware({ path: graphql_path, cors: { credentials: false } }));
 
 

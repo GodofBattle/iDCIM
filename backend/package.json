@@ -4,6 +4,7 @@
    "description": "iDCIM apollo api server",
    "devDependencies": {
       "@types/express-jwt": "^6.0.2",
+      "@types/graphql-upload": "^8.0.7",
       "@types/jsonwebtoken": "^8.5.4",
       "@types/node": "^8.0.29",
       "eslint": "^7.30.0",
@@ -18,6 +19,7 @@
       "dotenv": "^10.0.0",
       "express-jwt": "^6.0.0",
       "graphql": "^15.5.1",
+      "graphql-upload": "^12.0.0",
       "jsonwebtoken": "^8.5.1",
       "mysql2": "^2.2.5",
       "reflect-metadata": "^0.1.10",

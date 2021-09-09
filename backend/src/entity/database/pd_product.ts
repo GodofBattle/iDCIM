@@ -31,6 +31,10 @@ export class pd_product {
     @Column({ type: 'longtext', nullable: true, default: null, comment: '부가정보(스펙)' })
     INFO: string;
 
+    @Field(() => Int, { nullable: true })
+    @Column({ type: 'int', nullable: true, default: null, comment: '이미지파일아이디(PD_FILE.ID)' })
+    IMAGE_FILE_ID: number;
+
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256, default: null, comment: '설명' })
     REMARK: string;
