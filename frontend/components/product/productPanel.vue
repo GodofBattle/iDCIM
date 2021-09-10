@@ -77,20 +77,37 @@
                     </div>
 
                     <div v-if="chkImageFileField">
-                        <FileUpload
-                            name="IMAGE_FILE"
-                            mode="basic"
-                            :customUpload="true"
-                            @uploader="imageFileUpload"
-                            accept="image/*"
-                            :maxFileSize="10 * 1024 * 1024"
-                            chooseLabel="이미지 추가"
-                            :disabled="!chkImageFileField"
-                            :auto="true"
-                        />
+                        <div class="p-d-flex">
+                            <div class="p-mr-1" style="width: 100%">
+                                <i-file-upload
+                                    ref="imageFileUploader"
+                                    name="IMAGE_FILE"
+                                    mode="basic"
+                                    :custom-upload="true"
+                                    accept="image/*"
+                                    :max-file-size="10 * 1024 * 1024"
+                                    choose-label="이미지 추가"
+                                    :disabled="!chkImageFileField"
+                                    :auto="true"
+                                    @uploader="imageFileUpload"
+                                />
+                            </div>
+                            <div>
+                                <Button
+                                    icon="pi pi-times"
+                                    class="
+                                        p-button-rounded
+                                        p-button-danger
+                                        p-button-text
+                                    "
+                                    @click="imageFileClear"
+                                />
+                            </div>
+                        </div>
                         <img class="p-mt-2 product-image" :src="image_file" />
                     </div>
                 </div>
+                <Divider />
                 <div class="p-field">
                     <label for="remark">설명</label>
                     <Textarea
@@ -113,18 +130,17 @@
                     <DataTable
                         :value="productInfo"
                         class="p-datatable-sm"
-                        :reorderableColumns="true"
-                        editMode="cell"
+                        edit-mode="cell"
                         @row-reorder="onRowReorder"
                     >
                         <Column
-                            :rowReorder="true"
-                            headerStyle="width: 2rem;"
+                            :row-reorder="true"
+                            header-style="width: 2rem;"
                         ></Column>
                         <Column
                             field="key"
-                            headerStyle="width: 30%;"
-                            bodyStyle="overflow-wrap: break-word"
+                            header-style="width: 30%;"
+                            body-style="overflow-wrap: break-word"
                         >
                             <template #editor="slotProps">
                                 <InputText
@@ -137,7 +153,7 @@
                         </Column>
                         <Column
                             field="value"
-                            bodyStyle="overflow-wrap: break-word"
+                            body-style="overflow-wrap: break-word"
                         >
                             <template #editor="slotProps">
                                 <InputText
@@ -148,6 +164,22 @@
                                 ></InputText>
                             </template>
                         </Column>
+                        <Column
+                            :row-reorder="false"
+                            header-style="width: 3rem;"
+                        >
+                            <template #body="slotProps">
+                                <Button
+                                    icon="pi pi-times"
+                                    class="
+                                        p-button-rounded
+                                        p-button-danger
+                                        p-button-text
+                                    "
+                                    @click="deleteProductInfo(slotProps.index)"
+                                ></Button>
+                            </template>
+                        </Column>
                     </DataTable>
                     <Button
                         class="p-mt-2"
@@ -155,7 +187,7 @@
                         :style="{
                             width: '20px',
                             height: '20px',
-                            padding: '0px',
+                            padding: '0px'
                         }"
                         @click="addProductInfo"
                     ></Button>
@@ -167,8 +199,9 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import Component from '@/plugins/nuxt-class-component';
 import gql from 'graphql-tag';
+import iFileUpload from '../custom/iFileUpload.vue';
+import Component from '@/plugins/nuxt-class-component';
 
 type Product = {
     [index: string]: string | number | undefined;
@@ -180,9 +213,15 @@ type Product = {
     REMARK: string;
 };
 
-@Component({
+@Component<ProductPanel>({
+    components: { iFileUpload },
     props: {
-        productId: Number,
+        productId: Number
+    },
+    watch: {
+        productInfo(_info: any[]) {
+            this.parseProductInfo(_info);
+        }
     },
     apollo: {
         productData: {
@@ -199,13 +238,17 @@ type Product = {
                 }
             `,
             prefetch: false,
-            update: (data) => data.Product,
-            variables() {
+            update: ({ Product }: any) => {
+                if (Product.INFO === null) Product.INFO = '';
+
+                return Product;
+            },
+            variables(): any {
                 return {
-                    ID: this.productId < 0 ? -1 : this.productId,
+                    ID: this.productId < 0 ? -1 : this.productId
                 };
             },
-            result({ data, loading }) {
+            result({ data, loading }: any) {
                 if (!loading) {
                     const { Product } = data;
 
@@ -213,7 +256,7 @@ type Product = {
                         this.apolloFetch(Product);
                     }
                 }
-            },
+            }
         },
         assetCodeList: {
             query: gql`
@@ -224,11 +267,9 @@ type Product = {
                     }
                 }
             `,
-            update: ({ PredefinedAssetCodes }) => {
-                return PredefinedAssetCodes;
-            },
-        },
-    },
+            update: ({ PredefinedAssetCodes }: any) => PredefinedAssetCodes
+        }
+    }
 })
 export default class ProductPanel extends Vue {
     productData: Product = {
@@ -237,7 +278,7 @@ export default class ProductPanel extends Vue {
         MODEL_NAME: '',
         INFO: '',
         IMAGE_FILE_ID: undefined,
-        REMARK: '',
+        REMARK: ''
     };
 
     newProductData: Product = {
@@ -246,13 +287,13 @@ export default class ProductPanel extends Vue {
         MODEL_NAME: '',
         INFO: '',
         IMAGE_FILE_ID: undefined,
-        REMARK: '',
+        REMARK: ''
     };
 
     invalidMessage = {
         NAME: undefined as String | undefined,
         MODEL_NAME: undefined as String | undefined,
-        REMARK: undefined as String | undefined,
+        REMARK: undefined as String | undefined
     };
 
     assetCodeList: Array<any> = [];
@@ -265,6 +306,13 @@ export default class ProductPanel extends Vue {
         for (const key of Object.keys(this.newProductData)) {
             this.newProductData[key] = product[key];
         }
+
+        // by shkoh 20210910: Apollo Server로부터 값을 받아올 때 이미지 파일 소스도 초기화함
+        this.image_file = '';
+    }
+
+    parseProductInfo(info: any[]): void {
+        this.newProductData.INFO = info.length > 0 ? JSON.stringify(info) : '';
     }
 
     get productName(): string {
@@ -273,12 +321,25 @@ export default class ProductPanel extends Vue {
 
     get applyButtonDisabled(): Boolean {
         let is_disabled = true;
+
+        // by shkoh 20210910: API로부터 받은 제품정보와 작성자가 수정했을 경우의 데이터를 비교
+        for (const key of Object.keys(this.newProductData)) {
+            const is_modified = Object.entries(this.productData).some(
+                ([k, v]) => k === key && v !== this.newProductData[key]
+            );
+
+            if (is_modified) {
+                is_disabled = false;
+                break;
+            }
+        }
+
         return is_disabled;
     }
 
     // by shkoh 20210909: Image File
     get chkImageFileField(): boolean {
-        return this.newProductData?.IMAGE_FILE_ID ? true : false;
+        return !!this.newProductData?.IMAGE_FILE_ID;
     }
 
     set chkImageFileField(flag: boolean) {
@@ -289,7 +350,7 @@ export default class ProductPanel extends Vue {
         this.$toast.add({
             severity: 'info',
             summary: 'updateProduct',
-            life: 1000,
+            life: 1000
         });
     }
 
@@ -297,7 +358,7 @@ export default class ProductPanel extends Vue {
         this.$toast.add({
             severity: 'info',
             summary: 'deleteProduct',
-            life: 1000,
+            life: 1000
         });
     }
 
@@ -306,7 +367,11 @@ export default class ProductPanel extends Vue {
     validateRemark(input: InputEvent) {}
 
     addProductInfo() {
-        this.productInfo.push({ key: '(key)', value: '(value)' });
+        this.productInfo.push({ key: 'key', value: 'value' });
+    }
+
+    deleteProductInfo(idx: number) {
+        this.productInfo.splice(idx, 1);
     }
 
     onRowReorder(event: any) {
@@ -314,27 +379,31 @@ export default class ProductPanel extends Vue {
     }
 
     imageFileUpload(event: any) {
-        console.info(event);
-
+        console.info('uploader');
         this.image_file = event.files[0].objectURL;
 
-        this.$apollo
-            .mutate({
-                mutation: gql`
-                    mutation AddFile($FILE: Upload!) {
-                        AddFile(FILE: $FILE)
-                    }
-                `,
-                variables: {
-                    FILE: event.files[0],
-                },
-            })
-            .then((result) => {
-                console.info(result);
-            })
-            .catch((error) => {
-                console.error(error);
-            });
+        // this.$apollo
+        //     .mutate({
+        //         mutation: gql`
+        //             mutation AddFile($FILE: Upload!) {
+        //                 AddFile(FILE: $FILE)
+        //             }
+        //         `,
+        //         variables: {
+        //             FILE: event.files[0],
+        //         },
+        //     })
+        //     .then((result) => {
+        //         console.info(result);
+        //     })
+        //     .catch((error) => {
+        //         console.error(error);
+        //     });
+    }
+
+    imageFileClear() {
+        this.$refs.imageFileUploader.clear();
+        this.image_file = '';
     }
 }
 </script>

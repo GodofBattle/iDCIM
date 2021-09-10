@@ -249,7 +249,6 @@ export default Vue.extend({
                     break;
                 }
             }
-
             return is_disabled;
         },
     },

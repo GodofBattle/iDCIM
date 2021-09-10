@@ -9,7 +9,7 @@
                 <div v-if="viewType === 'Manufacturer'">
                     <manufacturer-panel :manufacturer-id="id" @reset="reset" />
                 </div>
-                <div v-if="viewType === 'Product'">
+                <div v-else-if="viewType === 'Product'">
                     <product-panel :product-id="id" @reset="reset" />
                 </div>
             </div>
