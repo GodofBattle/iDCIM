@@ -22,7 +22,14 @@ import Auth from './utils/auth';
 const graphql_path = '/api';
 
 const schemas = buildSchemaSync({
-    resolvers: [UserResolver, CodeResolver, SensorCodeResolver, PredefinedProductResolver, PredefinedAssetResolver, FileResolver],
+    resolvers: [
+        UserResolver,
+        CodeResolver,
+        SensorCodeResolver,
+        PredefinedProductResolver,
+        PredefinedAssetResolver,
+        FileResolver
+    ],
 });
 
 createConnection({

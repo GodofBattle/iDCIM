@@ -13,7 +13,8 @@ Component.registerHooks([
     'middleware',
     'scrollToTop',
     'transition',
-    'validate'
+    'validate',
+    'refs'
 ]);
 
 export default Component;

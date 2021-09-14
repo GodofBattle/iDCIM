@@ -1,7 +1,7 @@
-import { Field, ObjectType, Int, Args, ArgsType } from "type-graphql";
+import { Field, ObjectType, Int, ArgsType } from "type-graphql";
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
 
-import { pd_manufacturer } from './pd_manufacturer'
+import { pd_manufacturer } from './pd_manufacturer';
 
 @ObjectType()
 @Entity({ synchronize: false, orderBy: { NAME: 'ASC' } })
@@ -33,11 +33,11 @@ export class pd_product {
 
     @Field(() => Int, { nullable: true })
     @Column({ type: 'int', nullable: true, default: null, comment: '이미지파일아이디(PD_FILE.ID)' })
-    IMAGE_FILE_ID: number;
+    IMAGE_FILE_ID?: number;
 
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256, default: null, comment: '설명' })
-    REMARK: string;
+    REMARK?: string;
 
     @ManyToOne(() => pd_manufacturer, (manufacturer) => manufacturer.PRODUCTS, { createForeignKeyConstraints: false })
     @JoinColumn({ name: 'MANUFACTURER_ID', referencedColumnName: 'ID' })
@@ -51,17 +51,23 @@ export class pd_product {
 
 @ArgsType()
 export class pd_product_args {
-    @Field(() => Int!)
+    @Field(() => Int!, { nullable: false })
     MANUFACTURER_ID: number;
 
     @Field(() => String!, { nullable: true })
     ASSET_CD: string;
 
     @Field(() => String, { nullable: true })
-    NAME: string | undefined;
+    NAME: string;
 
     @Field(() => String, { nullable: true })
-    MODEL_NAME: string | undefined;
+    MODEL_NAME: string;
+
+    @Field(() => String, { nullable: true })
+    INFO: string | undefined;
+
+    @Field(() => Int, { nullable: true })
+    IMAGE_FILE_ID: number | undefined;
 
     @Field(() => String, { nullable: true })
     REMARK: string | undefined;

@@ -95,12 +95,9 @@
         v-else-if="isBasic"
         class="p-fileupload p-fileupload-basic p-component"
     >
-        <FileUploadMessage
-            v-for="msg of messages"
-            :key="msg"
-            severity="error"
-            >{{ msg }}</FileUploadMessage
-        >
+        <FileUploadMessage v-for="msg of messages" :key="msg" severity="error">
+            {{ msg }}
+        </FileUploadMessage>
         <span
             v-ripple
             :class="basicChooseButtonClass"
@@ -124,18 +121,29 @@
                 @blur="onBlur"
             />
         </span>
+        <FileUploadButton
+            v-if="showCancelButton"
+            class="p-button-rounded p-button-danger p-button-text"
+            icon="pi pi-times"
+            :disabled="cancelDisabled"
+            style="width: 2.357rem"
+            @click="clear"
+        />
     </div>
 </template>
 
 <script>
-import { compileFunction } from 'vm';
 import Message from 'primevue/message';
+import Button from 'primevue/button';
+import ProgressBar from 'primevue/progressbar';
 import Ripple from 'primevue/ripple';
 import DomHandler from 'primevue/utils/DomHandler';
 
 export default {
     components: {
-        FileUploadMessage: Message
+        FileUploadMessage: Message,
+        FileUploadButton: Button,
+        FileUploadProgressBar: ProgressBar
     },
     directives: {
         ripple: Ripple
@@ -249,7 +257,8 @@ export default {
                 {
                     'p-fileupload-choose-selected': this.hasFiles,
                     'p-disabled': this.disabled,
-                    'p-focus': this.focused
+                    'p-focus': this.focused,
+                    'p-has-cancelbutton': this.showCancelButton
                 }
             ];
         },
@@ -272,8 +281,32 @@ export default {
         hasFiles() {
             return this.files && this.files.length > 0;
         },
+        chooseDisabled() {
+            return (
+                this.disabled ||
+                (this.fileLimit &&
+                    this.fileLimit <=
+                        this.files.length + this.uploadedFileCount)
+            );
+        },
+        uploadDisabled() {
+            return (
+                this.disabled ||
+                !this.hasFiles ||
+                (this.fileLimit && this.fileLimit < this.files.length)
+            );
+        },
+        cancelDisabled() {
+            return this.disabled || !this.hasFiles;
+        },
         chooseButtonLabel() {
             return this.chooseLabel || this.$primevue.config.locale.choose;
+        },
+        uploadButtonLabel() {
+            return this.uploadLabel || this.$primevue.config.locale.upload;
+        },
+        cancelButtonLabel() {
+            return this.cancelLabel || this.$primevue.config.locale.cancel;
         }
     },
     methods: {
@@ -283,7 +316,6 @@ export default {
         },
         upload() {
             if (this.customUpload) {
-                console.info('upload');
                 if (this.fileLimit) {
                     this.uploadedFileCount += this.files.length;
                 }
@@ -355,7 +387,6 @@ export default {
             }
         },
         onFileSelect(event) {
-            console.info('fileSelect');
             if (
                 event.type !== 'drop' &&
                 this.isIE11() &&
@@ -370,6 +401,7 @@ export default {
             const files = event.dataTransfer
                 ? event.dataTransfer.files
                 : event.target.files;
+
             for (const file of files) {
                 if (!this.isFileSelected(file)) {
                     if (this.validate(file)) {
@@ -411,7 +443,7 @@ export default {
             if (this.files && this.files.length) {
                 for (const sFile of this.files) {
                     if (
-                        sFile.name + sFile.type + s.File.size ===
+                        sFile.name + sFile.type + sFile.size ===
                         file.name + file.type + file.size
                     )
                         return true;
@@ -575,6 +607,35 @@ export default {
                         this.fileLimit.toString()
                     )
                 );
+            }
+        },
+        forceInsertFile(file) {
+            // by shkoh 20210914: 강제 데이터 삽입을 추가 구현함
+            this.messages = [];
+            this.files = [];
+
+            if (!this.isFileSelected(file)) {
+                if (this.validate(file)) {
+                    if (this.isImage(file)) {
+                        file.objectURL = window.URL.createObjectURL(file);
+                    }
+
+                    this.files.push(file);
+                }
+            }
+
+            if (this.fileLimit) {
+                this.checkFileLimit();
+            }
+
+            if (this.auto && this.hasFiles && !this.isFileLimitExceeded()) {
+                this.upload();
+            }
+
+            if (this.isIE11()) {
+                this.clearIEInput();
+            } else {
+                this.clearInputElement();
             }
         }
     }

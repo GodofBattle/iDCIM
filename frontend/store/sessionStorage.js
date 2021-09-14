@@ -2,8 +2,6 @@ import gql from 'graphql-tag';
 import { $apolloClient } from '../plugins/apolloClient';
 import { $apolloHelper } from '../plugins/apolloHelper';
 
-let observer;
-
 export const state = () => ({
     ui: {
         is_sidebar: true

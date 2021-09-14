@@ -12,7 +12,7 @@ export class pd_file {
     @Column({ type: 'varchar', length: 128, nullable: false, comment: '파일명' })
     NAME: string;
 
-    @Field(() => File)
+    @Field(() => String)
     @Column({ type: 'mediumblob', nullable: true, default: null, comment: '데이터(16M 한도)' })
     DATA: Buffer;
 

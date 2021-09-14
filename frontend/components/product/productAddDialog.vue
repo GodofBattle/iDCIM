@@ -112,27 +112,27 @@ export default Vue.extend({
             `,
             update: ({ PredefinedAssetCodes }) => {
                 return PredefinedAssetCodes;
-            },
-        },
+            }
+        }
     },
     props: {
         manufacturerId: Number,
         manufacturerName: String,
-        visibleAddProductDialog: Boolean,
+        visibleAddProductDialog: Boolean
     },
     data: () => ({
         newData: {
             ASSET_CD: '',
             NAME: '',
             MODEL_NAME: '',
-            REMARK: '',
+            REMARK: ''
         } as Product,
         invalidMessage: {
             NAME: undefined as string | undefined,
             MODEL_NAME: undefined as string | undefined,
-            REMARK: undefined as string | undefined,
+            REMARK: undefined as string | undefined
         },
-        assetCodeList: [] as Array<any>,
+        assetCodeList: [] as Array<any>
     }),
     computed: {
         showDialog: {
@@ -141,12 +141,12 @@ export default Vue.extend({
             },
             set(is_show: Boolean) {
                 this.$emit('update:visibleAddProductDialog', is_show);
-            },
+            }
         },
         subTitle: {
             get(): string {
                 return `${this.manufacturerName} 제품을 추가합니다`;
-            },
+            }
         },
         addButtonDisabled: {
             get(): boolean {
@@ -157,8 +157,8 @@ export default Vue.extend({
                 });
 
                 return is_disabled;
-            },
-        },
+            }
+        }
     },
     methods: {
         onDialogHide() {
@@ -190,7 +190,7 @@ export default Vue.extend({
                     severity: 'warn',
                     summary: '제품 유효성 실패',
                     detail: '제품 내용을 확인하세요',
-                    life: 2000,
+                    life: 2000
                 });
                 return;
             }
@@ -219,15 +219,15 @@ export default Vue.extend({
                         NAME: this.newData.NAME,
                         ASSET_CD: this.newData.ASSET_CD,
                         MODEL_NAME: this.newData.MODEL_NAME,
-                        REMARK: this.newData.REMARK,
-                    },
+                        REMARK: this.newData.REMARK
+                    }
                 })
                 .then(() => {
                     this.$toast.add({
                         severity: 'success',
                         summary: '제품 추가',
                         detail: `${this.newData.NAME} 추가완료`,
-                        life: 1500,
+                        life: 1500
                     });
 
                     this.$emit('refresh');
@@ -241,7 +241,7 @@ export default Vue.extend({
                         severity: 'error',
                         summary: '제품 추가 실패',
                         detail: error.message,
-                        life: 2000,
+                        life: 2000
                     });
                 });
         },
@@ -258,7 +258,7 @@ export default Vue.extend({
         validateModelName(input: InputEvent) {
             const _input = input.toString();
             if (_input.length > 32) {
-                this.invalidMessage.MODEL_NAME = '모델명은 64자 이하입니다';
+                this.invalidMessage.MODEL_NAME = '모델명은 32자 이하입니다';
             } else if (_input.length < 2) {
                 this.invalidMessage.MODEL_NAME = '모델명은 1자 이상입니다';
             } else {
@@ -272,7 +272,7 @@ export default Vue.extend({
             } else {
                 this.invalidMessage.REMARK = undefined;
             }
-        },
-    },
+        }
+    }
 });
 </script>
