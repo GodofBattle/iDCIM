@@ -182,7 +182,7 @@
                         :style="{
                             width: '20px',
                             height: '20px',
-                            padding: '0px'
+                            padding: '0px',
                         }"
                         @click="addProductInfo"
                     ></Button>
@@ -213,12 +213,12 @@ type Product = {
 @Component<ProductPanel>({
     components: { iFileUpload },
     props: {
-        productId: Number
+        productId: Number,
     },
     watch: {
         productInfo(_info: any[]) {
             this.parseProductInfo(_info);
-        }
+        },
     },
     apollo: {
         productData: {
@@ -244,7 +244,7 @@ type Product = {
             },
             variables(): any {
                 return {
-                    ID: this.productId < 0 ? -1 : this.productId
+                    ID: this.productId < 0 ? -1 : this.productId,
                 };
             },
             result({ data, loading }: any) {
@@ -255,7 +255,7 @@ type Product = {
                         this.apolloFetch(Product);
                     }
                 }
-            }
+            },
         },
         assetCodeList: {
             query: gql`
@@ -266,9 +266,9 @@ type Product = {
                     }
                 }
             `,
-            update: ({ PredefinedAssetCodes }: any) => PredefinedAssetCodes
-        }
-    }
+            update: ({ PredefinedAssetCodes }: any) => PredefinedAssetCodes,
+        },
+    },
 })
 export default class ProductPanel extends Vue {
     $refs!: {
@@ -283,7 +283,7 @@ export default class ProductPanel extends Vue {
         INFO: '',
         IMAGE_FILE_ID: undefined,
         REMARK: '',
-        IMAGE_FILE: undefined
+        IMAGE_FILE: undefined,
     };
 
     newProductData: Product = {
@@ -294,13 +294,13 @@ export default class ProductPanel extends Vue {
         INFO: '',
         IMAGE_FILE_ID: undefined,
         REMARK: '',
-        IMAGE_FILE: undefined
+        IMAGE_FILE: undefined,
     };
 
     invalidMessage = {
         NAME: undefined as String | undefined,
         MODEL_NAME: undefined as String | undefined,
-        REMARK: undefined as String | undefined
+        REMARK: undefined as String | undefined,
     };
 
     assetCodeList: Array<any> = [];
@@ -363,7 +363,7 @@ export default class ProductPanel extends Vue {
                 severity: 'warn',
                 summary: '제품 유효성 실패',
                 detail: '제품 내용을 확인하세요',
-                life: 2000
+                life: 2000,
             });
             return;
         }
@@ -373,7 +373,7 @@ export default class ProductPanel extends Vue {
             MANUFACTURER_ID: this.newProductData.MANUFACTURER_ID,
             ASSET_CD: this.newProductData.ASSET_CD,
             NAME: this.newProductData.NAME,
-            MODEL_NAME: this.newProductData.MODEL_NAME
+            MODEL_NAME: this.newProductData.MODEL_NAME,
         };
 
         ['INFO', 'REMARK'].forEach((key: string) => {
@@ -382,7 +382,7 @@ export default class ProductPanel extends Vue {
                     value: this.newProductData[key],
                     configurable: true,
                     enumerable: true,
-                    writable: true
+                    writable: true,
                 });
             }
         });
@@ -396,7 +396,7 @@ export default class ProductPanel extends Vue {
                 value: this.productData.IMAGE_FILE_ID,
                 configurable: true,
                 enumerable: true,
-                writable: true
+                writable: true,
             });
         }
 
@@ -405,11 +405,13 @@ export default class ProductPanel extends Vue {
                 value: this.image_file_blob,
                 configurable: true,
                 enumerable: true,
-                writable: true
+                writable: true,
             });
         }
 
         console.info(variables);
+
+        this.$nuxt.$loading.start();
 
         this.$apollo
             .mutate({
@@ -438,7 +440,7 @@ export default class ProductPanel extends Vue {
                         )
                     }
                 `,
-                variables
+                variables,
             })
             .then(() => {
                 this.productDataRefresh();
@@ -447,7 +449,7 @@ export default class ProductPanel extends Vue {
                     severity: 'info',
                     summary: '제품 변경 완료',
                     detail: `${this.newProductData.NAME} 제품 변경`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -457,8 +459,11 @@ export default class ProductPanel extends Vue {
                     severity: 'error',
                     summary: '제품 변경 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
             });
     }
 
@@ -466,7 +471,7 @@ export default class ProductPanel extends Vue {
         this.$toast.add({
             severity: 'info',
             summary: 'deleteProduct',
-            life: 1000
+            life: 1000,
         });
     }
 
@@ -546,11 +551,11 @@ export default class ProductPanel extends Vue {
                 query {
                     PdFile(ID: ${ID}) {
                         FILE_NAME
-                        DATA
                         MIMETYPE
+                        DATA
                     }
                 }
-            `
+            `,
             })
             .then(({ data }) => {
                 const pd_file = data.PdFile;
@@ -566,7 +571,7 @@ export default class ProductPanel extends Vue {
                         [buf.buffer],
                         pd_file.FILE_NAME,
                         {
-                            type: pd_file.MIMETYPE
+                            type: pd_file.MIMETYPE,
                         }
                     );
 
@@ -582,7 +587,7 @@ export default class ProductPanel extends Vue {
                     severity: 'error',
                     summary: '파일 로드 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             });
     }

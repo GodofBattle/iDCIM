@@ -143,95 +143,95 @@ export default {
     components: {
         FileUploadMessage: Message,
         FileUploadButton: Button,
-        FileUploadProgressBar: ProgressBar
+        FileUploadProgressBar: ProgressBar,
     },
     directives: {
-        ripple: Ripple
+        ripple: Ripple,
     },
     props: {
         name: {
             type: String,
-            default: null
+            default: null,
         },
         url: {
             type: String,
-            default: null
+            default: null,
         },
         mode: {
             type: String,
-            default: 'advanced'
+            default: 'advanced',
         },
         multiple: {
             type: Boolean,
-            default: false
+            default: false,
         },
         accept: {
             type: String,
-            default: null
+            default: null,
         },
         disabled: {
             type: Boolean,
-            default: false
+            default: false,
         },
         auto: {
             type: Boolean,
-            default: false
+            default: false,
         },
         maxFileSize: {
             type: Number,
-            default: null
+            default: null,
         },
         invalidFileSizeMessage: {
             type: String,
             default:
-                '{0}: Invalid file size, file size should be smaller than {1}.'
+                '{0}: Invalid file size, file size should be smaller than {1}.',
         },
         invalidFileTypeMessage: {
             type: String,
-            default: '{0}: Invalid file type, allowed file types: {1}.'
+            default: '{0}: Invalid file type, allowed file types: {1}.',
         },
         fileLimit: {
             type: Number,
-            default: null
+            default: null,
         },
         invalidFileLimitMessage: {
             type: String,
-            default: 'Maximum number of files exceeded, limit is {0} at most.'
+            default: 'Maximum number of files exceeded, limit is {0} at most.',
         },
         withCredentials: {
             type: Boolean,
-            default: false
+            default: false,
         },
         previewWidth: {
             type: Number,
-            default: 50
+            default: 50,
         },
         chooseLabel: {
             type: String,
-            default: null
+            default: null,
         },
         uploadLabel: {
             type: String,
-            default: null
+            default: null,
         },
         cancelLabel: {
             type: String,
-            default: null
+            default: null,
         },
         customUpload: {
             type: Boolean,
-            default: false
+            default: false,
         },
         showUploadButton: {
             type: Boolean,
-            default: true
+            default: true,
         },
         showCancelButton: {
             type: Boolean,
-            default: true
+            default: true,
         },
         buttonStyle: null,
-        buttonClass: null
+        buttonClass: null,
     },
     duplicateIEEvent: false,
     data() {
@@ -240,7 +240,7 @@ export default {
             files: [],
             focused: false,
             uploadedFileCount: 0,
-            progress: null
+            progress: null,
         };
     },
     computed: {
@@ -258,8 +258,8 @@ export default {
                     'p-fileupload-choose-selected': this.hasFiles,
                     'p-disabled': this.disabled,
                     'p-focus': this.focused,
-                    'p-has-cancelbutton': this.showCancelButton
-                }
+                    'p-has-cancelbutton': this.showCancelButton,
+                },
             ];
         },
         basicChooseButtonIconClass() {
@@ -267,8 +267,8 @@ export default {
                 'p-button-icon p-button-icon-left pi',
                 {
                     'pi-plus': !this.hasFiles || this.auto,
-                    'pi-upload': this.hasFiles && !this.auto
-                }
+                    'pi-upload': this.hasFiles && !this.auto,
+                },
             ];
         },
         basicChooseButtonLabel() {
@@ -307,7 +307,7 @@ export default {
         },
         cancelButtonLabel() {
             return this.cancelLabel || this.$primevue.config.locale.cancel;
-        }
+        },
     },
     methods: {
         onBasicUploaderClick() {
@@ -340,7 +340,7 @@ export default {
 
                     this.$emit('progress', {
                         originalEvent: event,
-                        progress: this.progress
+                        progress: this.progress,
                     });
                 });
 
@@ -355,12 +355,12 @@ export default {
 
                             this.$emit('upload', {
                                 xhr,
-                                files: this.files
+                                files: this.files,
                             });
                         } else {
                             this.$emit('error', {
                                 xhr,
-                                files: this.files
+                                files: this.files,
                             });
                         }
 
@@ -634,11 +634,11 @@ export default {
 
             if (this.isIE11()) {
                 this.clearIEInput();
-            } else {
+            } else if (this.isAdvanced) {
                 this.clearInputElement();
             }
-        }
-    }
+        },
+    },
 };
 </script>
 
