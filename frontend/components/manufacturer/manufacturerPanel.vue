@@ -397,7 +397,6 @@ export default Vue.extend({
                 });
         },
         deleteManufacturer() {
-            console.info(this.hasChild);
             // by shkoh 20210906: 삭제하기 전에 데이터 갱신
             this.$apollo.queries.manufacturerData.refresh();
 
@@ -410,7 +409,6 @@ export default Vue.extend({
                 acceptClass: 'p-button-danger',
                 blockScroll: false,
                 accept: () => {
-                    console.info(this.hasChild);
                     if (this.hasChild) {
                         this.$toast.add({
                             severity: 'warn',
@@ -434,6 +432,12 @@ export default Vue.extend({
                     `
                 })
                 .then(() => {
+                    this.$toast.add({
+                        severity: 'success',
+                        summary: `${this.manufacturerName} 삭제 완료`,
+                        life: 1500
+                    });
+
                     eventBus.$emit('refreshProductTree');
                     this.$emit('reset');
                 })

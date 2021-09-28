@@ -219,4 +219,39 @@ export class PredefinedProductResolver {
             throw new SchemaError(err.message);
         }
     }
+
+    @Mutation(() => Boolean)
+    async DeleteProduct(
+        @Arg('ID', () => ID) ID: number,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if (!ID) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            
+            // by shkoh 20210928: 미구현. 추후에 product의 존재여부를 파악하여 삭제를 막음
+            // const hasChild = await getRepository(pd_product).count({ where: { MANUFACTURER_ID: ID } });
+
+            // if (hasChild > 0) {
+            //     throw new SchemaError('제품이 존재합니다');
+            // }
+
+            // by shkoh 20210928: Product 삭제 시 관련된 다른 정보(매뉴얼 파일, 제품 파일)들도 함께 삭제
+            const product = await getRepository(pd_product).findOne(ID);
+
+            if(product.IMAGE_FILE_ID) await getRepository(pd_file).delete({ ID: product.IMAGE_FILE_ID });
+            if(product.MANUAL_FILE_ID) await getRepository(pd_file).delete({ ID: product.MANUAL_FILE_ID });
+
+            const result = await getRepository(pd_product).delete(ID);
+            return result.affected > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
 }

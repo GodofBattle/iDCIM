@@ -626,11 +626,51 @@ export default class ProductPanel extends Vue {
     }
 
     deleteProduct() {
-        this.$toast.add({
-            severity: 'info',
-            summary: 'deleteProduct',
-            life: 1000
+        // by shkoh 20210928: 삭제하기 전에 데이터 갱신
+        this.productDataRefresh();
+
+        this.$confirmDialog.require({
+            group: 'deleteConfirmDialog',
+            message: `[${this.productName}] 제품을 삭제하시겠습니까?\n사이트에서 해당 제품이 등록되어 있다면 삭제가 불가합니다.(미구현)`,
+            header: `제품 ${this.productName} 삭제`,
+            position: 'top',
+            icon: 'pi pi-exclamation-triangle',
+            acceptClass: 'p-button-danger',
+            blockScroll: false,
+            accept: () => {
+                this.delete();
+            }
         });
+    }
+
+    delete() {
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation {
+                        DeleteProduct(ID: ${Number(this.$props.productId)})
+                    }
+                `
+            })
+            .then(() => {
+                this.$toast.add({
+                    severity: 'success',
+                    summary: `${this.productName} 삭제 완료`,
+                    life: 1500
+                });
+
+                eventBus.$emit('refreshProductTree');
+                this.$emit('reset');
+            })
+            .catch((error) => {
+                console.error(error);
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '제품 삭제 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            });
     }
 
     validationCheck() {
