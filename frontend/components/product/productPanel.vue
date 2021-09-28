@@ -72,6 +72,54 @@
                 <div class="p-field">
                     <div class="p-field-check">
                         <Checkbox
+                            id="manual-file"
+                            v-model="chkManualFileField"
+                            class="p-mr-1"
+                            :binary="true"
+                        >
+                        </Checkbox>
+                        <label for="manual-file">제품 매뉴얼</label>
+
+                        <div v-if="chkManualFileField" class="p-mt-2">
+                            <div class="p-d-flex">
+                                <div class="p-mr-1" style="width: 100%">
+                                    <i-file-upload
+                                        ref="manualFileUploader"
+                                        name="MANUAL_FILE"
+                                        mode="basic"
+                                        accept=""
+                                        choose-label="매뉴얼 추가"
+                                        :custom-upload="true"
+                                        :max-file-size="100 * 1024 * 1024"
+                                        :auto="true"
+                                        :show-cancel-button="true"
+                                        @uploader="manualFileUpload"
+                                        @clear="manualFileClear"
+                                    />
+                                </div>
+                            </div>
+                            <Button
+                                v-if="manual_file_name.length > 0"
+                                class="
+                                    p-mt-2
+                                    p-text-left
+                                    p-button-sm
+                                    p-button-outlined
+                                    p-button-secondary
+                                "
+                                :label="manual_file_name"
+                                icon="pi pi-download"
+                                @click="manualFileDownload"
+                            ></Button>
+                        </div>
+                    </div>
+                </div>
+
+                <Divider />
+
+                <div class="p-field">
+                    <div class="p-field-check">
+                        <Checkbox
                             id="image-file"
                             v-model="chkImageFileField"
                             class="p-mr-1"
@@ -91,7 +139,6 @@
                                     accept="image/*"
                                     :max-file-size="10 * 1024 * 1024"
                                     choose-label="이미지 추가"
-                                    :disabled="!chkImageFileField"
                                     :auto="true"
                                     :show-cancel-button="true"
                                     @uploader="imageFileUpload"
@@ -102,7 +149,9 @@
                         <img class="p-mt-2 product-image" :src="image_file" />
                     </div>
                 </div>
+
                 <Divider />
+
                 <div class="p-field">
                     <label for="remark">설명</label>
                     <Textarea
@@ -127,6 +176,7 @@
                         class="p-datatable-sm"
                         edit-mode="cell"
                         @row-reorder="onRowReorder"
+                        @cell-edit-complete="onCellEditComplete"
                     >
                         <Column
                             :row-reorder="true"
@@ -182,7 +232,7 @@
                         :style="{
                             width: '20px',
                             height: '20px',
-                            padding: '0px',
+                            padding: '0px'
                         }"
                         @click="addProductInfo"
                     ></Button>
@@ -197,28 +247,45 @@ import Vue from 'vue';
 import gql from 'graphql-tag';
 import iFileUpload from '../custom/iFileUpload.vue';
 import Component from '@/plugins/nuxt-class-component';
+import { eventBus } from '@/plugins/vueEventBus';
 
 type Product = {
-    [index: string]: string | number | undefined;
+    [index: string]: string | number | undefined | null;
     MANUFACTURER_ID: number;
     ASSET_CD: string;
     NAME: string;
     MODEL_NAME: string;
-    IMAGE_FILE_ID: number | undefined;
+    MANUAL_FILE_ID: number | undefined | null;
+    IMAGE_FILE_ID: number | undefined | null;
     INFO: string;
     REMARK: string;
     IMAGE_FILE: any;
+    MANUAL_FILE: any;
 };
 
 @Component<ProductPanel>({
     components: { iFileUpload },
     props: {
-        productId: Number,
+        productId: Number
     },
     watch: {
         productInfo(_info: any[]) {
             this.parseProductInfo(_info);
         },
+        chkImageFileField(_is_show) {
+            if (_is_show) {
+                this.loadImageFile();
+            } else {
+                this.newProductData.IMAGE_FILE_ID = null;
+            }
+        },
+        chkManualFileField(_is_show) {
+            if (_is_show) {
+                this.loadManualFile();
+            } else {
+                this.newProductData.MANUAL_FILE_ID = null;
+            }
+        }
     },
     apollo: {
         productData: {
@@ -232,6 +299,7 @@ type Product = {
                         MODEL_NAME
                         INFO
                         IMAGE_FILE_ID
+                        MANUAL_FILE_ID
                         REMARK
                     }
                 }
@@ -244,7 +312,7 @@ type Product = {
             },
             variables(): any {
                 return {
-                    ID: this.productId < 0 ? -1 : this.productId,
+                    ID: this.productId < 0 ? -1 : this.productId
                 };
             },
             result({ data, loading }: any) {
@@ -255,7 +323,7 @@ type Product = {
                         this.apolloFetch(Product);
                     }
                 }
-            },
+            }
         },
         assetCodeList: {
             query: gql`
@@ -266,12 +334,13 @@ type Product = {
                     }
                 }
             `,
-            update: ({ PredefinedAssetCodes }: any) => PredefinedAssetCodes,
-        },
-    },
+            update: ({ PredefinedAssetCodes }: any) => PredefinedAssetCodes
+        }
+    }
 })
 export default class ProductPanel extends Vue {
     $refs!: {
+        manualFileUploader: any;
         imageFileUploader: any;
     };
 
@@ -282,8 +351,10 @@ export default class ProductPanel extends Vue {
         MODEL_NAME: '',
         INFO: '',
         IMAGE_FILE_ID: undefined,
+        MANUAL_FILE_ID: undefined,
         REMARK: '',
         IMAGE_FILE: undefined,
+        MANUAL_FILE: undefined
     };
 
     newProductData: Product = {
@@ -293,14 +364,16 @@ export default class ProductPanel extends Vue {
         MODEL_NAME: '',
         INFO: '',
         IMAGE_FILE_ID: undefined,
+        MANUAL_FILE_ID: undefined,
         REMARK: '',
         IMAGE_FILE: undefined,
+        MANUAL_FILE: undefined
     };
 
     invalidMessage = {
         NAME: undefined as String | undefined,
         MODEL_NAME: undefined as String | undefined,
-        REMARK: undefined as String | undefined,
+        REMARK: undefined as String | undefined
     };
 
     assetCodeList: Array<any> = [];
@@ -312,6 +385,11 @@ export default class ProductPanel extends Vue {
     chkImageFileField = false;
     imageFileUploader = null;
 
+    manual_file_name = '';
+    manual_file_blob: any = undefined;
+    chkManualFileField = false;
+    manualFileUploader = null;
+
     apolloFetch(product: any): void {
         for (const key of Object.keys(this.newProductData)) {
             this.newProductData[key] = product[key];
@@ -319,16 +397,43 @@ export default class ProductPanel extends Vue {
 
         // by shkoh 20210910: Apollo Server로부터 값을 받아올 때 이미지 파일 소스도 초기화함
         if (product.IMAGE_FILE_ID) {
-            this.loadImageFile(product.IMAGE_FILE_ID);
+            // by shkoh 20210927: IMAGE_FILE_ID가 존재하는 경우에는 강제로 이미지를 로드한다
+            if (this.chkImageFileField) {
+                this.loadImageFile();
+            } else {
+                this.chkImageFileField = true;
+            }
         } else {
             this.chkImageFileField = false;
             this.image_file = '';
             this.image_file_blob = undefined;
         }
+
+        if (product.MANUAL_FILE_ID) {
+            if (this.chkManualFileField) {
+                this.loadManualFile();
+            } else {
+                this.chkManualFileField = true;
+            }
+        } else {
+            this.chkManualFileField = false;
+            this.manual_file_name = '';
+            this.manual_file_blob = undefined;
+        }
+
+        this.parseInfoString(this.productData.INFO);
     }
 
     parseProductInfo(info: any[]): void {
         this.newProductData.INFO = info.length > 0 ? JSON.stringify(info) : '';
+    }
+
+    parseInfoString(info: string): void {
+        try {
+            this.productInfo = JSON.parse(info);
+        } catch {
+            this.productInfo = [];
+        }
     }
 
     get productName(): string {
@@ -339,12 +444,20 @@ export default class ProductPanel extends Vue {
         let is_disabled = true;
 
         // by shkoh 20210910: API로부터 받은 제품정보와 작성자가 수정했을 경우의 데이터를 비교
-        for (const key of Object.keys(this.newProductData)) {
+        [
+            'MANUFACTURER_ID',
+            'ASSET_CD',
+            'NAME',
+            'MODEL_NAME',
+            'INFO',
+            'IMAGE_FILE_ID',
+            'MANUAL_FILE_ID',
+            'REMARK'
+        ].forEach((key) => {
             if (this.productData[key] !== this.newProductData[key]) {
                 is_disabled = false;
-                break;
             }
-        }
+        });
 
         return is_disabled;
     }
@@ -357,13 +470,36 @@ export default class ProductPanel extends Vue {
         );
     }
 
+    // by shkoh 20210927: 기존에 등록된 제품이 클리어 되었는지 여부
+    get isClearImageFile() {
+        return (
+            !this.chkImageFileField ||
+            this.newProductData.IMAGE_FILE_ID === null
+        );
+    }
+
+    get isChangedManualFile() {
+        return (
+            this.chkManualFileField &&
+            this.newProductData.MANUAL_FILE_ID === -1 &&
+            this.productData.MANUAL_FILE?.size !== this.manual_file_blob?.size
+        );
+    }
+
+    get isClearManualFile() {
+        return (
+            !this.chkManualFileField ||
+            this.newProductData.MANUAL_FILE_ID === null
+        );
+    }
+
     updateProduct() {
         if (!this.validationCheck()) {
             this.$toast.add({
                 severity: 'warn',
                 summary: '제품 유효성 실패',
                 detail: '제품 내용을 확인하세요',
-                life: 2000,
+                life: 2000
             });
             return;
         }
@@ -373,7 +509,7 @@ export default class ProductPanel extends Vue {
             MANUFACTURER_ID: this.newProductData.MANUFACTURER_ID,
             ASSET_CD: this.newProductData.ASSET_CD,
             NAME: this.newProductData.NAME,
-            MODEL_NAME: this.newProductData.MODEL_NAME,
+            MODEL_NAME: this.newProductData.MODEL_NAME
         };
 
         ['INFO', 'REMARK'].forEach((key: string) => {
@@ -382,35 +518,50 @@ export default class ProductPanel extends Vue {
                     value: this.newProductData[key],
                     configurable: true,
                     enumerable: true,
-                    writable: true,
+                    writable: true
                 });
             }
         });
 
-        // by shkoh 20210914: 기존에 이미지파일이 설정되었다면
-        if (
-            this.productData.IMAGE_FILE_ID &&
-            this.productData.IMAGE_FILE_ID > 0
-        ) {
-            Object.defineProperty(variables, 'IMAGE_FILE_ID', {
-                value: this.productData.IMAGE_FILE_ID,
-                configurable: true,
-                enumerable: true,
-                writable: true,
-            });
-        }
-
         if (this.isChangedImageFile) {
+            // by shkoh 20210927: 이미지 파일을 추가했거나 변경한 경우
             Object.defineProperty(variables, 'IMAGE_FILE', {
                 value: this.image_file_blob,
                 configurable: true,
                 enumerable: true,
-                writable: true,
+                writable: true
             });
         }
 
-        console.info(variables);
+        // by shkoh 20210927: 이미지 파일을 삭제한 경우
+        Object.defineProperty(variables, 'IMAGE_FILE_ID', {
+            value: this.isClearImageFile
+                ? null
+                : this.productData.IMAGE_FILE_ID,
+            configurable: true,
+            enumerable: true,
+            writable: true
+        });
 
+        if (this.isChangedManualFile) {
+            Object.defineProperty(variables, 'MANUAL_FILE', {
+                value: this.manual_file_blob,
+                configurable: true,
+                enumerable: true,
+                writable: true
+            });
+        }
+
+        Object.defineProperty(variables, 'MANUAL_FILE_ID', {
+            value: this.isClearManualFile
+                ? null
+                : this.productData.MANUAL_FILE_ID,
+            configurable: true,
+            enumerable: true,
+            writable: true
+        });
+
+        // by shkoh 20210927: product panel 데이터 업데이트 loading 페이지 시작
         this.$nuxt.$loading.start();
 
         this.$apollo
@@ -424,8 +575,10 @@ export default class ProductPanel extends Vue {
                         $MODEL_NAME: String!
                         $INFO: String
                         $IMAGE_FILE_ID: Int
+                        $MANUAL_FILE_ID: Int
                         $REMARK: String
                         $IMAGE_FILE: Upload
+                        $MANUAL_FILE: Upload
                     ) {
                         UpdateProduct(
                             ID: $ID
@@ -435,21 +588,24 @@ export default class ProductPanel extends Vue {
                             MODEL_NAME: $MODEL_NAME
                             INFO: $INFO
                             IMAGE_FILE_ID: $IMAGE_FILE_ID
+                            MANUAL_FILE_ID: $MANUAL_FILE_ID
                             REMARK: $REMARK
                             IMAGE_FILE: $IMAGE_FILE
+                            MANUAL_FILE: $MANUAL_FILE
                         )
                     }
                 `,
-                variables,
+                variables
             })
             .then(() => {
+                eventBus.$emit('refreshProductTree');
                 this.productDataRefresh();
 
                 this.$toast.add({
                     severity: 'info',
                     summary: '제품 변경 완료',
                     detail: `${this.newProductData.NAME} 제품 변경`,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .catch((error) => {
@@ -459,10 +615,12 @@ export default class ProductPanel extends Vue {
                     severity: 'error',
                     summary: '제품 변경 실패',
                     detail: error.message,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .finally(() => {
+                // by shkoh 20210927: product panel 데이터 업데이트 loading 페이지 종료
+                // by shkoh 20210927: update의 성공여부와 관계없이 무조건 종료함
                 this.$nuxt.$loading.finish();
             });
     }
@@ -471,7 +629,7 @@ export default class ProductPanel extends Vue {
         this.$toast.add({
             severity: 'info',
             summary: 'deleteProduct',
-            life: 1000,
+            life: 1000
         });
     }
 
@@ -530,37 +688,44 @@ export default class ProductPanel extends Vue {
         this.productInfo = event.value;
     }
 
+    onCellEditComplete() {
+        this.parseProductInfo(this.productInfo);
+    }
+
     imageFileUpload(event: any) {
         this.image_file = event.files[0].objectURL;
         this.image_file_blob = event.files[0];
 
         // by shkoh 20210913: IMAGE가 변경되는 경우는 -1로 지정함
-        this.newProductData.IMAGE_FILE_ID = -1;
+        this.newProductData.IMAGE_FILE_ID =
+            this.productData.IMAGE_FILE?.size !== this.image_file_blob?.size
+                ? -1
+                : this.productData.IMAGE_FILE_ID;
     }
 
     imageFileClear() {
         this.image_file = '';
         this.image_file_blob = undefined;
-        this.newProductData.IMAGE_FILE_ID = this.productData.IMAGE_FILE_ID;
+        this.newProductData.IMAGE_FILE_ID = null;
     }
 
-    loadImageFile(ID: number) {
+    loadImageFile() {
+        if (this.productData.IMAGE_FILE_ID === null) return;
+
         this.$apollo
             .query({
                 query: gql`
                 query {
-                    PdFile(ID: ${ID}) {
+                    PdFile(ID: ${this.productData.IMAGE_FILE_ID}) {
                         FILE_NAME
                         MIMETYPE
                         DATA
                     }
                 }
-            `,
+            `
             })
             .then(({ data }) => {
                 const pd_file = data.PdFile;
-
-                this.chkImageFileField = true;
 
                 // by shkoh 20210914: API 서버로부터 이미지가 존재할 경우에는 따로 로드하여 UI에 등록함
                 // by shkoh 20210914: iFileUpload Component에서 강제로 파일을 등록하는 절차를 수행함
@@ -571,7 +736,7 @@ export default class ProductPanel extends Vue {
                         [buf.buffer],
                         pd_file.FILE_NAME,
                         {
-                            type: pd_file.MIMETYPE,
+                            type: pd_file.MIMETYPE
                         }
                     );
 
@@ -587,9 +752,90 @@ export default class ProductPanel extends Vue {
                     severity: 'error',
                     summary: '파일 로드 실패',
                     detail: error.message,
-                    life: 2000,
+                    life: 2000
                 });
             });
+    }
+
+    manualFileUpload(event: any) {
+        this.manual_file_name = event.files[0].name;
+        this.manual_file_blob = event.files[0];
+
+        this.newProductData.MANUAL_FILE_ID =
+            this.productData.MANUAL_FILE?.size !== this.manual_file_blob?.size
+                ? -1
+                : this.productData.MANUAL_FILE_ID;
+    }
+
+    manualFileClear() {
+        this.manual_file_name = '';
+        this.manual_file_blob = undefined;
+        this.newProductData.MANUAL_FILE_ID = null;
+    }
+
+    loadManualFile() {
+        if (this.productData.MANUAL_FILE_ID === null) return;
+
+        this.$apollo
+            .query({
+                query: gql`
+                query {
+                    PdFile(ID: ${this.productData.MANUAL_FILE_ID}) {
+                        FILE_NAME
+                        MIMETYPE
+                        DATA
+                    }
+                }
+            `
+            })
+            .then(({ data }) => {
+                const pd_file = data.PdFile;
+
+                // by shkoh 20210914: API 서버로부터 이미지가 존재할 경우에는 따로 로드하여 UI에 등록함
+                // by shkoh 20210914: iFileUpload Component에서 강제로 파일을 등록하는 절차를 수행함
+                // by shkoh 20210914: $refs로 접근하기 위해서는 $nextTick을 한 후에 수행
+                this.$nextTick(() => {
+                    const buf = Buffer.from(pd_file.DATA, 'base64');
+                    const previous_file = new File(
+                        [buf.buffer],
+                        pd_file.FILE_NAME,
+                        {
+                            type: pd_file.MIMETYPE
+                        }
+                    );
+
+                    this.productData.MANUAL_FILE = previous_file;
+
+                    this.$refs.manualFileUploader.forceInsertFile(
+                        previous_file
+                    );
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '파일 로드 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            });
+    }
+
+    manualFileDownload() {
+        const reader = new FileReader();
+        reader.readAsDataURL(this.manual_file_blob);
+
+        reader.onloadend = (event: any) => {
+            const link = document.createElement('a');
+            link.download = this.manual_file_name;
+            link.href = event.target.result;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
     }
 
     productDataRefresh() {
@@ -606,6 +852,8 @@ export default class ProductPanel extends Vue {
 }
 
 #productPanel {
+    height: calc(100vh - 20px - var(--header-height));
+
     .p-datatable.p-datatable-sm .p-datatable-thead > tr > th {
         padding: 0px;
     }

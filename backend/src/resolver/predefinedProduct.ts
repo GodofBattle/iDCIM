@@ -154,8 +154,9 @@ export class PredefinedProductResolver {
     @Mutation(() => Boolean)
     async UpdateProduct(
         @Arg('ID', () => ID) ID: number,
-        @Args() { MANUFACTURER_ID, ASSET_CD, NAME, MODEL_NAME, INFO, IMAGE_FILE_ID, REMARK }: pd_product_args,
+        @Args() { MANUFACTURER_ID, ASSET_CD, NAME, MODEL_NAME, INFO, MANUAL_FILE_ID, IMAGE_FILE_ID, REMARK }: pd_product_args,
         @Arg('IMAGE_FILE', () => GraphQLUpload, { nullable: true }) fileUpload: FileUpload,
+        @Arg('MANUAL_FILE', () => GraphQLUpload, { nullable: true }) manualFileUpload: FileUpload,
         @Ctx() ctx: any,
         @PubSub('REFRESHTOKEN') publish: Publisher<void>
     ) {
@@ -173,23 +174,42 @@ export class PredefinedProductResolver {
             if (fileUpload) {
                 // by shkoh 20210914: image 변경 전에 기존에 저장된 이미지가 존재한다면 해당 이미지는 삭제하고 진행함
                 if (IMAGE_FILE_ID) {
-                    await getRepository(pd_file).delete({ ID: IMAGE_FILE_ID })
+                    await getRepository(pd_file).delete({ ID: IMAGE_FILE_ID });
                 }
 
                 // by shkoh 20210914: 전달받은 데이터를 Buffer로 변환하여 Database에 저장
                 const image_buffer: Buffer = await streamToBuffer(fileUpload.createReadStream(), fileUpload.mimetype);
-                const result = await getRepository(pd_file).insert({ NAME: fileUpload.filename, MIME: fileUpload.mimetype, DATA: image_buffer });
+                const result = await getRepository(pd_file).insert({ NAME: fileUpload.filename, MIME_TYPE: fileUpload.mimetype, DATA: image_buffer });
 
                 // by shkoh 20210914: 저장한 데이터는 Product를 갱신하는데 사용함
                 image_file_id = result.identifiers.pop().ID;
-            } else if (IMAGE_FILE_ID) {
-                // by shkoh 20210914: Upload가 존재하지 않으나, 기존에 이미지가 존재했을 경우에는 기존 이미지는 삭제함
-                await getRepository(pd_file).delete({ ID: IMAGE_FILE_ID });
+            } else if (IMAGE_FILE_ID === null) {
+                const previous_image_file_id = (await getRepository(pd_product).findOne(ID)).IMAGE_FILE_ID;
+                // by shkoh 20210927: IMAGE_FILE_ID가 null인 경우에 pd_file에 동일한 파일을 삭제하고 Clear를 진행함
+                await getRepository(pd_file).delete({ ID: previous_image_file_id });
                 image_file_id = null;
             }
 
+            let manual_file_id = undefined;
+            if(manualFileUpload) {
+                if(MANUAL_FILE_ID) {
+                    await getRepository(pd_file).delete({ ID: MANUAL_FILE_ID });
+                }
+
+                // by shkoh 20210914: 전달받은 데이터를 Buffer로 변환하여 Database에 저장
+                const manual_buffer: Buffer = await streamToBuffer(manualFileUpload.createReadStream(), manualFileUpload.mimetype);
+                const result = await getRepository(pd_file).insert({ NAME: manualFileUpload.filename, MIME_TYPE: manualFileUpload.mimetype, DATA: manual_buffer });
+
+                // by shkoh 20210914: 저장한 데이터는 Product를 갱신하는데 사용함
+                manual_file_id = result.identifiers.pop().ID;
+            } else if(MANUAL_FILE_ID === null) {
+                const previous_manual_file_id = (await getRepository(pd_product).findOne(ID)).MANUAL_FILE_ID;
+                await getRepository(pd_file).delete({ ID: previous_manual_file_id });
+                manual_file_id = null;
+            }
+
             const update_data = {};
-            for (const [key, value] of Object.entries({ ASSET_CD, NAME, MODEL_NAME, INFO, REMARK, IMAGE_FILE_ID: image_file_id })) {
+            for (const [key, value] of Object.entries({ ASSET_CD, NAME, MODEL_NAME, INFO, REMARK, MANUAL_FILE_ID: manual_file_id, IMAGE_FILE_ID: image_file_id })) {
                 if (value !== undefined) update_data[key] = value;
             }
 

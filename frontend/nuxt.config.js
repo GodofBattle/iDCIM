@@ -99,7 +99,13 @@ export default {
         }
     },
 
-    loading: true,
+    loading: '@/components/common/loading.vue',
+
+    loadingIndicator: {
+        name: 'circle',
+        color: '#3B8070',
+        background: 'white'
+    },
 
     // by shkoh 20210709: primevue2
     primevue: {

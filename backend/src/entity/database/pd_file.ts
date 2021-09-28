@@ -13,8 +13,8 @@ export class pd_file {
     NAME: string;
 
     @Field(() => String)
-    @Column({ type: 'varchar', length: 128, nullable: true, comment: 'MIME TYPE' })
-    MIME: string;
+    @Column({ type: 'varchar', length: 256, nullable: true, default: null, comment: 'MIME 타입' })
+    MIME_TYPE: string;
 
     @Field(() => String)
     @Column({ type: 'mediumblob', nullable: true, default: null, comment: '데이터(16M 한도)' })

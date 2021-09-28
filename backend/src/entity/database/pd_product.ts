@@ -32,6 +32,10 @@ export class pd_product {
     INFO: string;
 
     @Field(() => Int, { nullable: true })
+    @Column({ type: 'int', nullable: true, default: null, comment: '메뉴얼파일아이디(PD_FILE.ID)' })
+    MANUAL_FILE_ID?: number;
+
+    @Field(() => Int, { nullable: true })
     @Column({ type: 'int', nullable: true, default: null, comment: '이미지파일아이디(PD_FILE.ID)' })
     IMAGE_FILE_ID?: number;
 
@@ -65,6 +69,9 @@ export class pd_product_args {
 
     @Field(() => String, { nullable: true })
     INFO: string | undefined;
+    
+    @Field(() => Int, { nullable: true })
+    MANUAL_FILE_ID: number | undefined;
 
     @Field(() => Int, { nullable: true })
     IMAGE_FILE_ID: number | undefined;

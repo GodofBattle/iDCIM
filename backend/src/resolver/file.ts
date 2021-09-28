@@ -22,7 +22,7 @@ export class FileResolver extends Upload {
             await publish();
 
             const buffer: Buffer = await streamToBuffer(createReadStream(), mimetype);
-            const result = await getRepository(pd_file).insert({ NAME: filename, MIME: mimetype, DATA: buffer });
+            const result = await getRepository(pd_file).insert({ NAME: filename, MIME_TYPE: mimetype, DATA: buffer });
             return result.identifiers.length > 0 ? true : false;
         } catch (err) {
             throw new SchemaError(err.message);
@@ -30,7 +30,7 @@ export class FileResolver extends Upload {
     }
 
     @Query(() => DataBaseFile)
-    async PdFile(@Arg('ID') ID: number, @Ctx() ctx: any) {
+    async PdFile(@Arg('ID', { nullable: true }) ID: number, @Ctx() ctx: any) {
         if (!ctx.isAuth) {
             throw new AuthenticationError('인증되지 않은 접근입니다');
         }
@@ -43,7 +43,7 @@ export class FileResolver extends Upload {
             file.FILE_NAME = result.NAME;
 
             // const type = (await FileType.fromBuffer(result.DATA));
-            file.MIMETYPE = result.MIME ? result.MIME : 'application/octet-stream';
+            file.MIMETYPE = result.MIME_TYPE ? result.MIME_TYPE : 'application/octet-stream';
             file.DATA = result.DATA.toString('base64');
 
             return file;
