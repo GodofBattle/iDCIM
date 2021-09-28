@@ -79,9 +79,8 @@ const server: ApolloServer = new ApolloServer({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
+app.use(graphqlUploadExpress({ maxFieldSize: 1024 * 1024, maxFileSize: 16 * 1024 * 1024 * 1024, maxFiles: 2 }));
 app.use(server.getMiddleware({ path: graphql_path, cors: { credentials: false } }));
-
 
 const ip = process.env.API_HOST || 'localhost';
 const api_server_port = process.env.API_PORT || 4000;

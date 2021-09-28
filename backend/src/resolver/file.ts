@@ -22,7 +22,7 @@ export class FileResolver extends Upload {
             await publish();
 
             const buffer: Buffer = await streamToBuffer(createReadStream(), mimetype);
-            const result = await getRepository(pd_file).insert({ NAME: filename, MIME_TYPE: mimetype, DATA: buffer });
+            const result = await getRepository(pd_file).insert({ NAME: filename.normalize('NFC'), MIME_TYPE: mimetype, DATA: buffer });
             return result.identifiers.length > 0 ? true : false;
         } catch (err) {
             throw new SchemaError(err.message);

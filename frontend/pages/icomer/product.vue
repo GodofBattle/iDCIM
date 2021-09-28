@@ -19,20 +19,18 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import productPanel from '~/components/product/productPanel.vue';
 
 export default Vue.extend({
-    components: { productPanel },
     layout: 'icomer',
     props: {
         title: {
             type: String,
-            default: '제품',
-        },
+            default: '제품'
+        }
     },
     data: () => ({
         id: -1,
-        viewType: '',
+        viewType: ''
     }),
     head() {
         return { title: `[iDCIM] 구축계정 - ${this.title}` };
@@ -45,8 +43,8 @@ export default Vue.extend({
         reset() {
             this.id = -1;
             this.viewType = '';
-        },
-    },
+        }
+    }
 });
 </script>
 

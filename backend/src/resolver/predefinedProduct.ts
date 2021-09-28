@@ -179,7 +179,7 @@ export class PredefinedProductResolver {
 
                 // by shkoh 20210914: 전달받은 데이터를 Buffer로 변환하여 Database에 저장
                 const image_buffer: Buffer = await streamToBuffer(fileUpload.createReadStream(), fileUpload.mimetype);
-                const result = await getRepository(pd_file).insert({ NAME: fileUpload.filename, MIME_TYPE: fileUpload.mimetype, DATA: image_buffer });
+                const result = await getRepository(pd_file).insert({ NAME: fileUpload.filename.normalize('NFC'), MIME_TYPE: fileUpload.mimetype, DATA: image_buffer });
 
                 // by shkoh 20210914: 저장한 데이터는 Product를 갱신하는데 사용함
                 image_file_id = result.identifiers.pop().ID;
@@ -198,7 +198,7 @@ export class PredefinedProductResolver {
 
                 // by shkoh 20210914: 전달받은 데이터를 Buffer로 변환하여 Database에 저장
                 const manual_buffer: Buffer = await streamToBuffer(manualFileUpload.createReadStream(), manualFileUpload.mimetype);
-                const result = await getRepository(pd_file).insert({ NAME: manualFileUpload.filename, MIME_TYPE: manualFileUpload.mimetype, DATA: manual_buffer });
+                const result = await getRepository(pd_file).insert({ NAME: manualFileUpload.filename.normalize('NFC'), MIME_TYPE: manualFileUpload.mimetype, DATA: manual_buffer });
 
                 // by shkoh 20210914: 저장한 데이터는 Product를 갱신하는데 사용함
                 manual_file_id = result.identifiers.pop().ID;

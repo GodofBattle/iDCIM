@@ -29,8 +29,8 @@ export default Vue.extend({
                 `,
                 result({
                     data: {
-                        RefreshToken: { ACCESS_TOKEN = '', REFRESH_TOKEN = '' },
-                    },
+                        RefreshToken: { ACCESS_TOKEN = '', REFRESH_TOKEN = '' }
+                    }
                 }) {
                     // by shkoh 20210729: 토큰이 갱신될 경우에 apollo client와 store에 토큰을 갱신시킴
                     // by shkoh 20210729: 토큰의 갱신방법은 api server에서 갱신 토큰을 구독하는 방법으로 함
@@ -39,7 +39,7 @@ export default Vue.extend({
                         .then(() => {
                             this.$store.commit('sessionStorage/REFRESHTOKEN', {
                                 access_token: ACCESS_TOKEN,
-                                refresh_token: REFRESH_TOKEN,
+                                refresh_token: REFRESH_TOKEN
                             });
                         })
                         .then(() => {
@@ -48,9 +48,9 @@ export default Vue.extend({
                 },
                 error(err: any) {
                     console.error(err);
-                },
-            },
-        },
+                }
+            }
+        }
     },
     data: () => {
         return {
@@ -62,7 +62,7 @@ export default Vue.extend({
                 { label: '센서코드', to: '/icomer/sensor' },
                 { separator: true },
                 { label: '제품', to: '/icomer/product' },
-                { label: '인터페이스' },
+                { label: '인터페이스', to: '/icomer/interface' },
                 { label: '임계치' },
                 { separator: true },
                 { label: '사이트' },
@@ -70,15 +70,15 @@ export default Vue.extend({
                 { label: '운영페이지' },
                 { label: '계정' },
                 { separator: true },
-                { label: '에디터' },
-            ],
+                { label: '에디터' }
+            ]
         };
     },
     computed: {
         isSidebar() {
             return this.$store.state.sessionStorage.ui.is_sidebar;
-        },
-    },
+        }
+    }
 });
 </script>
 
