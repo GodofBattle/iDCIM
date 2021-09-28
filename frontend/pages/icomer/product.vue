@@ -50,7 +50,7 @@ export default Vue.extend({
 
 <style lang="scss">
 .i-product-content {
-    height: calc(100vh - 71px);
+    height: calc(100vh - var(--header-height));
     padding-top: 20px;
 }
 </style>

@@ -1,5 +1,8 @@
 import { Field, Int, ObjectType } from "type-graphql";
-import { Column, Entity, PrimaryColumn } from "typeorm";
+import { TypeormLoader } from "type-graphql-dataloader";
+import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
+
+import { pd_interface } from './pd_interface';
 
 @ObjectType()
 @Entity({ synchronize: false })
@@ -27,4 +30,14 @@ export class pd_asset_code {
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256 , nullable: true, default: null, comment: '설명'})
     REMARK: string;
+
+    @Field(() => String)
+    get TYPE(): string {
+        return 'AssetCode';
+    };
+
+    @Field(() => [pd_interface], { nullable: true })
+    @OneToMany(() => pd_interface, (intf: pd_interface) => intf.ASSET_CODE, { primary: false, cascade: true, createForeignKeyConstraints: false })
+    @TypeormLoader((intf: pd_interface) => intf.ASSET_CD, { selfKey: true })
+    PREDEFINED_INTERFACES?: pd_interface[];
 }

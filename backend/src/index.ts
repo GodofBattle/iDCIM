@@ -13,8 +13,9 @@ import { graphqlUploadExpress } from 'graphql-upload';
 import { UserResolver } from './resolver/user';
 import { CodeResolver } from './resolver/code';
 import { SensorCodeResolver } from './resolver/sensorCode';
-import { PredefinedProductResolver } from './resolver/predefinedProduct';
+import { PredefinedProductResolver } from './resolver/predefineProduct';
 import { PredefinedAssetResolver } from './resolver/predefineAsset';
+import { PredefinedInterfaceResolver } from './resolver/predefineInterface';
 import { FileResolver } from './resolver/file';
 
 import Auth from './utils/auth';
@@ -28,6 +29,7 @@ const schemas = buildSchemaSync({
         SensorCodeResolver,
         PredefinedProductResolver,
         PredefinedAssetResolver,
+        PredefinedInterfaceResolver,
         FileResolver
     ],
 });
