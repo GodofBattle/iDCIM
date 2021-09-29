@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div id="product-tree">
         <Tree
             :value="manufacturers"
             :filter="true"
@@ -98,15 +98,15 @@ export default Vue.extend({
                 this.insertAddButtons(Manufacturers);
 
                 return Manufacturers;
-            }
-        }
+            },
+        },
     },
     data: () => ({
         manufacturers: [] as Array<any>,
         showAddManufacturerDialog: false,
         showAddProductDialog: false,
         manufacturerId: -1,
-        manufacturerName: ''
+        manufacturerName: '',
     }),
     mounted() {
         eventBus.$on('refreshProductTree', () => {
@@ -144,7 +144,7 @@ export default Vue.extend({
                             type: 'addProduct',
                             selectable: false,
                             pId: datum.key,
-                            pName: datum.label
+                            pName: datum.label,
                         });
                     }
                 }
@@ -154,16 +154,16 @@ export default Vue.extend({
             if (!data.some((datum: any) => datum.type === 'addManufacturer')) {
                 data.push({
                     type: 'addManufacturer',
-                    selectable: false
+                    selectable: false,
                 });
             }
-        }
-    }
+        },
+    },
 });
 </script>
 
-<style lang="scss">
-.p-tree-container {
+<style lang="scss" scoped>
+#product-tree::v-deep .p-tree-container {
     height: calc(
         100vh - 20px - var(--header-height) - var(--tree-searching-height) -
             var(--content-padding) * 3

@@ -1,4 +1,3 @@
-x
 <template>
     <i-dialog
         :visible.sync="showDialog"
@@ -134,7 +133,7 @@ import gql from 'graphql-tag';
 
 export default Vue.extend({
     props: {
-        visibleAddManufacturerDialog: Boolean
+        visibleAddManufacturerDialog: Boolean,
     },
     data() {
         return {
@@ -145,7 +144,7 @@ export default Vue.extend({
                 FAX: '',
                 EMAIL: '',
                 URL: '',
-                REMARK: ''
+                REMARK: '',
             },
             invalidMessage: {
                 NAME: undefined as String | undefined,
@@ -153,10 +152,10 @@ export default Vue.extend({
                 PHONE: undefined as String | undefined,
                 EMAIL: undefined as String | undefined,
                 URL: undefined as String | undefined,
-                REMARK: undefined as String | undefined
+                REMARK: undefined as String | undefined,
             },
             emailReg:
-                /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/
+                /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/,
         };
     },
     computed: {
@@ -166,7 +165,7 @@ export default Vue.extend({
             },
             set(is_show: Boolean) {
                 this.$emit('update:visibleAddManufacturerDialog', is_show);
-            }
+            },
         },
         addDisabled() {
             let is_disabled = true;
@@ -174,7 +173,7 @@ export default Vue.extend({
             if (this.addData.NAME.length > 0) is_disabled = false;
 
             return is_disabled === true;
-        }
+        },
     },
     methods: {
         onDialogHide() {
@@ -260,7 +259,7 @@ export default Vue.extend({
                     severity: 'warn',
                     summary: '제조사 유효성 실패',
                     detail: '제조사 내용을 확인하세요',
-                    life: 2000
+                    life: 2000,
                 });
                 return;
             }
@@ -288,14 +287,14 @@ export default Vue.extend({
                             )
                         }
                     `,
-                    variables: this.addData
+                    variables: this.addData,
                 })
                 .then(() => {
                     this.$toast.add({
                         severity: 'success',
                         summary: '제조사 추가',
                         detail: `${this.addData.NAME} 추가완료`,
-                        life: 1500
+                        life: 1500,
                     });
 
                     this.$emit('refresh');
@@ -309,10 +308,10 @@ export default Vue.extend({
                         severity: 'error',
                         summary: '제조사 추가 실패',
                         detail: error.message,
-                        life: 2000
+                        life: 2000,
                     });
                 });
-        }
-    }
+        },
+    },
 });
 </script>

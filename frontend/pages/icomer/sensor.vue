@@ -2,7 +2,7 @@
     <div>
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
         <ScrollPanel class="i-sensor-code-content">
-            <div class="p-col-6 p-pl-2 p-pr-2">
+            <div class="p-col-7 p-pl-2 p-pr-2">
                 <DataTable :value="sensorCodes" class="p-datatable-striped">
                     <template #header>
                         <div>
@@ -24,7 +24,7 @@
                     <Column
                         field="NAME"
                         header="센서명"
-                        header-style="width: 6em;"
+                        header-style="width: 5em;"
                     ></Column>
                     <Column
                         field="TYPE"
