@@ -30,6 +30,14 @@
                     <div class="p-p-1">{{ slotProps.node.label }}</div>
                 </div>
             </template>
+            <template #addInterface="slotProps">
+                <Button
+                    class="p-button-info p-button-sm p-py-1"
+                    label="[인터페이스] 추가"
+                    icon="pi pi-plus"
+                    @click="addInterface(slotProps.node)"
+                ></Button>
+            </template>
         </Tree>
     </div>
 </template>
@@ -73,7 +81,8 @@ import { eventBus } from '@/plugins/vueEventBus';
             manual: false,
             prefetch: false,
             update({ PredefinedInterfaces }) {
-                console.info(PredefinedInterfaces);
+                // console.info(PredefinedInterfaces);
+                this.insertAddButtons(PredefinedInterfaces);
                 return PredefinedInterfaces;
             }
         }
@@ -82,13 +91,23 @@ import { eventBus } from '@/plugins/vueEventBus';
 export default class InterfaceTree extends Vue {
     interfaces: Array<any> = [];
 
+    assetCodeToAdding = -1;
+    assetCodeNameToAdding = '';
+
     mounted() {
+        this.assetCodeToAdding = -1;
+        this.assetCodeNameToAdding = '';
+
         eventBus.$on('refreshInterfaceTree', () => {
             this.treeRefresh();
         });
     }
 
     beforeDestroy() {
+        // by shkoh 20211005: component가 제거될 때, 기존 사용값을 초기화함
+        this.assetCodeToAdding = -1;
+        this.assetCodeNameToAdding = '';
+
         eventBus.$off('refreshInterfaceTree');
     }
 
@@ -99,7 +118,29 @@ export default class InterfaceTree extends Vue {
     }
 
     treeRefresh() {
-        console.info('treeRefresh');
+        this.$apollo.queries.interfaces.refresh();
+    }
+
+    insertAddButtons(data: Array<any>) {
+        data.forEach((datum) => {
+            if (datum.type === 'AssetCode') {
+                if (
+                    !datum.children.some((i: any) => i.type === 'addInterface')
+                ) {
+                    datum.children.push({
+                        type: 'addInterface',
+                        selectable: false,
+                        pId: datum.key,
+                        pName: datum.label
+                    });
+                }
+            }
+        });
+    }
+
+    addInterface(node: any) {
+        this.assetCodeToAdding = node.pId;
+        this.assetCodeNameToAdding = node.pName;
     }
 }
 </script>
