@@ -57,7 +57,8 @@ export default {
             '@/components/sensor',
             '@/components/tree',
             '@/components/manufacturer',
-            '@/components/product'
+            '@/components/product',
+            '@/components/interface'
         ]
     },
 
@@ -78,7 +79,8 @@ export default {
         '@nuxtjs/axios',
         'primevue/nuxt',
         '@nuxtjs/apollo',
-        ['nuxt-vuex-localstorage', { mode: 'debug' }]
+        ['nuxt-vuex-localstorage', { mode: 'debug' }],
+        '@nuxtjs/style-resources',
     ],
 
     // Axios module configuration: https://go.nuxtjs.dev/config-axios
@@ -185,6 +187,14 @@ export default {
                         component: 'pages/icomer/product.vue',
                         meta: {
                             title: '제품'
+                        }
+                    },
+                    {
+                        path: '/interface',
+                        name: 'interface',
+                        component: 'pages/icomer/interface.vue',
+                        meta: {
+                            title: '인터페이스'
                         }
                     }
                 ]

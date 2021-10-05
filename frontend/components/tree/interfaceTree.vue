@@ -39,6 +39,11 @@
                 ></Button>
             </template>
         </Tree>
+        <interface-add-dialog
+            :visible-add-interface-dialog.sync="showAddInterfaceDialog"
+            :asset-code="assetCode"
+            :asset-code-name="assetCodeName"
+        ></interface-add-dialog>
     </div>
 </template>
 
@@ -48,7 +53,7 @@ import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 import { eventBus } from '@/plugins/vueEventBus';
 
-@Component({
+@Component<InterfaceTree>({
     apollo: {
         interfaces: {
             query: gql`
@@ -81,8 +86,7 @@ import { eventBus } from '@/plugins/vueEventBus';
             manual: false,
             prefetch: false,
             update({ PredefinedInterfaces }) {
-                // console.info(PredefinedInterfaces);
-                this.insertAddButtons(PredefinedInterfaces);
+                this.insertAddButton(PredefinedInterfaces);
                 return PredefinedInterfaces;
             }
         }
@@ -91,12 +95,13 @@ import { eventBus } from '@/plugins/vueEventBus';
 export default class InterfaceTree extends Vue {
     interfaces: Array<any> = [];
 
-    assetCodeToAdding = -1;
-    assetCodeNameToAdding = '';
+    showAddInterfaceDialog = false;
+    assetCode = '';
+    assetCodeName = '';
 
     mounted() {
-        this.assetCodeToAdding = -1;
-        this.assetCodeNameToAdding = '';
+        // this.assetCodeToAdding = -1;
+        // this.assetCodeNameToAdding = '';
 
         eventBus.$on('refreshInterfaceTree', () => {
             this.treeRefresh();
@@ -105,8 +110,8 @@ export default class InterfaceTree extends Vue {
 
     beforeDestroy() {
         // by shkoh 20211005: component가 제거될 때, 기존 사용값을 초기화함
-        this.assetCodeToAdding = -1;
-        this.assetCodeNameToAdding = '';
+        // this.assetCodeToAdding = -1;
+        // this.assetCodeNameToAdding = '';
 
         eventBus.$off('refreshInterfaceTree');
     }
@@ -138,20 +143,42 @@ export default class InterfaceTree extends Vue {
         });
     }
 
+    // addInterface(node: any) {
+    //     this.assetCodeToAdding = node.pId;
+    //     this.assetCodeNameToAdding = node.pName;
+    // }
+
+    insertAddButton(items: Array<any>): void {
+        items.forEach((item: any) => {
+            if (item.type === 'AssetCode') {
+                const hasAddButton = item.children.some(
+                    (i: any) => i.type === 'addInterface'
+                );
+                if (!hasAddButton) {
+                    item.children.push({
+                        type: 'addInterface',
+                        selectable: false,
+                        pId: item.key,
+                        pName: item.label
+                    });
+                }
+            }
+        });
+    }
+
     addInterface(node: any) {
-        this.assetCodeToAdding = node.pId;
-        this.assetCodeNameToAdding = node.pName;
+        this.showAddInterfaceDialog = true;
+        this.assetCode = node.pId;
+        this.assetCodeName = node.pName;
     }
 }
 </script>
 
 <style lang="scss" scoped>
-#interface-tree {
-    .p-tree-container {
-        height: calc(
-            100vh - 20px - var(--header-height) - var(--tree-searching-height) -
-                var(--content-padding) * 3
-        );
-    }
+#interface-tree::v-deep .p-tree-container {
+    height: calc(
+        100vh - 20px - var(--header-height) - var(--tree-searching-height) -
+            var(--content-padding) * 3
+    );
 }
 </style>
