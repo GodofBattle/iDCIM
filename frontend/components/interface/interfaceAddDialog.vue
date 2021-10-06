@@ -5,13 +5,14 @@
         :content-style="{ width: '16vw' }"
         :modal="true"
         :draggable="true"
+        @show="onDialogShow"
         @hide="onDialogHide"
     >
         <template #header> 인터페이스 추가 </template>
 
         <div class="p-fluid p-input-filled">
             <div class="p-field">
-                <small>{{ this.assetCodeName }} 인터페이스를 추가합니다</small>
+                <small>{{ assetCodeName }} 인터페이스를 추가합니다</small>
             </div>
             <div class="p-field">
                 <label for="name">인터페이스명</label>
@@ -67,7 +68,7 @@
                     label="추가"
                     icon="pi pi-plus"
                     style="width: 100%"
-                    :disabled="addDisabled"
+                    :disabled="addButtonDisabled"
                     @click="addInterface"
                 ></Button>
             </div>
@@ -80,11 +81,19 @@ import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 
+type Interface = {
+    [index: string]: string;
+    NAME: string;
+    ASSET_CD: string;
+    INTF_CD: string;
+    REMARK: string;
+};
+
 @Component<InterfaceAddDialog>({
     props: {
         visibleAddInterfaceDialog: Boolean,
         assetCode: String,
-        assetCodeName: String,
+        assetCodeName: String
     },
     apollo: {
         interfaceTypeList: {
@@ -97,9 +106,9 @@ import Component from '@/plugins/nuxt-class-component';
                 }
             `,
             prefetch: false,
-            update: ({ Codes }) => Codes,
-        },
-    },
+            update: ({ Codes }) => Codes
+        }
+    }
 })
 export default class InterfaceAddDialog extends Vue {
     interfaceTypeList: Array<any> = [];
@@ -108,23 +117,35 @@ export default class InterfaceAddDialog extends Vue {
         NAME: '',
         ASSET_CD: '',
         INTF_CD: '',
-        REMARK: '',
-    };
+        REMARK: ''
+    } as Interface;
 
     invalidMessage = {
         NAME: undefined as String | undefined,
-        REMARK: undefined as String | undefined,
+        REMARK: undefined as String | undefined
     };
 
     get showDialog(): Boolean {
         return this.$props.visibleAddInterfaceDialog;
     }
+
     set showDialog(is_show: Boolean) {
         this.$emit('update:visibleAddInterfaceDialog', is_show);
     }
 
-    get addDisabled(): Boolean {
-        return true;
+    get addButtonDisabled(): Boolean {
+        let is_disabled = false;
+
+        ['NAME', 'ASSET_CD', 'INTF_CD'].forEach((key: string) => {
+            if (this.addInterfaceData[key].length < 2) is_disabled = true;
+        });
+
+        return is_disabled;
+    }
+
+    onDialogShow() {
+        // by shkoh 20211005: 인터페이스 추가 다이얼로그가 보여질 때, 선택된 자산코드를 addInterfaceData에 적용
+        this.addInterfaceData.ASSET_CD = this.$props.assetCode;
     }
 
     onDialogHide() {
@@ -139,7 +160,51 @@ export default class InterfaceAddDialog extends Vue {
     }
 
     addInterface() {
-        console.info('add_interface');
+        if (!this.validationCheck()) {
+            this.$toast.add({
+                severity: 'warn',
+                summary: '인터페이스 유효성 실패',
+                detail: '추가할 인터페이스 내용을 확인하세요',
+                life: 2000
+            });
+            return;
+        }
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                mutation {
+                    AddInterface(
+                        ASSET_CD: "${this.addInterfaceData.ASSET_CD}"
+                        NAME: "${this.addInterfaceData.NAME}"
+                        INTF_CD: "${this.addInterfaceData.INTF_CD}"
+                        REMARK: "${this.addInterfaceData.REMARK}"
+                    )
+                }
+            `
+            })
+            .then(() => {
+                this.$toast.add({
+                    severity: 'success',
+                    summary: '인터페이스 추가',
+                    detail: `${this.addInterfaceData.NAME} 추가완료`,
+                    life: 1500
+                });
+
+                this.$emit('refresh');
+
+                this.showDialog = false;
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '인터페이스 추가 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            });
     }
 
     validateName(input: InputEvent) {
@@ -161,8 +226,20 @@ export default class InterfaceAddDialog extends Vue {
             this.invalidMessage.REMARK = undefined;
         }
     }
+
+    validationCheck() {
+        let is_valid = true;
+
+        for (const valid of Object.values(this.invalidMessage)) {
+            if (valid) {
+                is_valid = false;
+                return;
+            }
+        }
+
+        return is_valid;
+    }
 }
 </script>
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>

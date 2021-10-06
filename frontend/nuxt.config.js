@@ -80,7 +80,7 @@ export default {
         'primevue/nuxt',
         '@nuxtjs/apollo',
         ['nuxt-vuex-localstorage', { mode: 'debug' }],
-        '@nuxtjs/style-resources',
+        '@nuxtjs/style-resources'
     ],
 
     // Axios module configuration: https://go.nuxtjs.dev/config-axios
@@ -143,6 +143,9 @@ export default {
             'ScrollPanel',
             'SelectButton',
             'Tag',
+            'TabMenu',
+            'TabPanel',
+            'TabView',
             'Textarea',
             'TieredMenu',
             'Toolbar',

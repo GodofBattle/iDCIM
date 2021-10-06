@@ -232,7 +232,7 @@
                         :style="{
                             width: '20px',
                             height: '20px',
-                            padding: '0px',
+                            padding: '0px'
                         }"
                         @click="addProductInfo"
                     ></Button>
@@ -245,7 +245,6 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
-import iFileUpload from '../custom/iFileUpload.vue';
 import Component from '@/plugins/nuxt-class-component';
 import { eventBus } from '@/plugins/vueEventBus';
 
@@ -264,9 +263,8 @@ type Product = {
 };
 
 @Component<ProductPanel>({
-    components: { iFileUpload },
     props: {
-        productId: Number,
+        productId: Number
     },
     watch: {
         productInfo(_info: any[]) {
@@ -285,7 +283,7 @@ type Product = {
             } else {
                 this.newProductData.MANUAL_FILE_ID = null;
             }
-        },
+        }
     },
     apollo: {
         productData: {
@@ -312,7 +310,7 @@ type Product = {
             },
             variables(): any {
                 return {
-                    ID: this.productId < 0 ? -1 : this.productId,
+                    ID: this.productId < 0 ? -1 : this.productId
                 };
             },
             result({ data, loading }: any) {
@@ -323,7 +321,7 @@ type Product = {
                         this.apolloFetch(Product);
                     }
                 }
-            },
+            }
         },
         assetCodeList: {
             query: gql`
@@ -334,9 +332,9 @@ type Product = {
                     }
                 }
             `,
-            update: ({ PredefinedAssetCodes }: any) => PredefinedAssetCodes,
-        },
-    },
+            update: ({ PredefinedAssetCodes }: any) => PredefinedAssetCodes
+        }
+    }
 })
 export default class ProductPanel extends Vue {
     $refs!: {
@@ -354,7 +352,7 @@ export default class ProductPanel extends Vue {
         MANUAL_FILE_ID: undefined,
         REMARK: '',
         IMAGE_FILE: undefined,
-        MANUAL_FILE: undefined,
+        MANUAL_FILE: undefined
     };
 
     newProductData: Product = {
@@ -367,13 +365,13 @@ export default class ProductPanel extends Vue {
         MANUAL_FILE_ID: undefined,
         REMARK: '',
         IMAGE_FILE: undefined,
-        MANUAL_FILE: undefined,
+        MANUAL_FILE: undefined
     };
 
     invalidMessage = {
         NAME: undefined as String | undefined,
         MODEL_NAME: undefined as String | undefined,
-        REMARK: undefined as String | undefined,
+        REMARK: undefined as String | undefined
     };
 
     assetCodeList: Array<any> = [];
@@ -452,7 +450,7 @@ export default class ProductPanel extends Vue {
             'INFO',
             'IMAGE_FILE_ID',
             'MANUAL_FILE_ID',
-            'REMARK',
+            'REMARK'
         ].forEach((key) => {
             if (this.productData[key] !== this.newProductData[key]) {
                 is_disabled = false;
@@ -499,7 +497,7 @@ export default class ProductPanel extends Vue {
                 severity: 'warn',
                 summary: '제품 유효성 실패',
                 detail: '제품 내용을 확인하세요',
-                life: 2000,
+                life: 2000
             });
             return;
         }
@@ -509,7 +507,7 @@ export default class ProductPanel extends Vue {
             MANUFACTURER_ID: this.newProductData.MANUFACTURER_ID,
             ASSET_CD: this.newProductData.ASSET_CD,
             NAME: this.newProductData.NAME,
-            MODEL_NAME: this.newProductData.MODEL_NAME,
+            MODEL_NAME: this.newProductData.MODEL_NAME
         };
 
         ['INFO', 'REMARK'].forEach((key: string) => {
@@ -518,7 +516,7 @@ export default class ProductPanel extends Vue {
                     value: this.newProductData[key],
                     configurable: true,
                     enumerable: true,
-                    writable: true,
+                    writable: true
                 });
             }
         });
@@ -529,7 +527,7 @@ export default class ProductPanel extends Vue {
                 value: this.image_file_blob,
                 configurable: true,
                 enumerable: true,
-                writable: true,
+                writable: true
             });
         }
 
@@ -540,7 +538,7 @@ export default class ProductPanel extends Vue {
                 : this.productData.IMAGE_FILE_ID,
             configurable: true,
             enumerable: true,
-            writable: true,
+            writable: true
         });
 
         if (this.isChangedManualFile) {
@@ -548,7 +546,7 @@ export default class ProductPanel extends Vue {
                 value: this.manual_file_blob,
                 configurable: true,
                 enumerable: true,
-                writable: true,
+                writable: true
             });
         }
 
@@ -558,7 +556,7 @@ export default class ProductPanel extends Vue {
                 : this.productData.MANUAL_FILE_ID,
             configurable: true,
             enumerable: true,
-            writable: true,
+            writable: true
         });
 
         // by shkoh 20210927: product panel 데이터 업데이트 loading 페이지 시작
@@ -595,7 +593,7 @@ export default class ProductPanel extends Vue {
                         )
                     }
                 `,
-                variables,
+                variables
             })
             .then(() => {
                 eventBus.$emit('refreshProductTree');
@@ -605,7 +603,7 @@ export default class ProductPanel extends Vue {
                     severity: 'info',
                     summary: '제품 변경 완료',
                     detail: `${this.newProductData.NAME} 제품 변경`,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .catch((error) => {
@@ -615,7 +613,7 @@ export default class ProductPanel extends Vue {
                     severity: 'error',
                     summary: '제품 변경 실패',
                     detail: error.message,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .finally(() => {
@@ -639,7 +637,7 @@ export default class ProductPanel extends Vue {
             blockScroll: false,
             accept: () => {
                 this.delete();
-            },
+            }
         });
     }
 
@@ -650,13 +648,13 @@ export default class ProductPanel extends Vue {
                     mutation {
                         DeleteProduct(ID: ${Number(this.$props.productId)})
                     }
-                `,
+                `
             })
             .then(() => {
                 this.$toast.add({
                     severity: 'success',
                     summary: `${this.productName} 삭제 완료`,
-                    life: 1500,
+                    life: 1500
                 });
 
                 eventBus.$emit('refreshProductTree');
@@ -668,7 +666,7 @@ export default class ProductPanel extends Vue {
                     severity: 'error',
                     summary: '제품 삭제 실패',
                     detail: error.message,
-                    life: 2000,
+                    life: 2000
                 });
             });
     }
@@ -762,7 +760,7 @@ export default class ProductPanel extends Vue {
                         DATA
                     }
                 }
-            `,
+            `
             })
             .then(({ data }) => {
                 const pd_file = data.PdFile;
@@ -776,7 +774,7 @@ export default class ProductPanel extends Vue {
                         [buf.buffer],
                         pd_file.FILE_NAME,
                         {
-                            type: pd_file.MIMETYPE,
+                            type: pd_file.MIMETYPE
                         }
                     );
 
@@ -792,7 +790,7 @@ export default class ProductPanel extends Vue {
                     severity: 'error',
                     summary: '파일 로드 실패',
                     detail: error.message,
-                    life: 2000,
+                    life: 2000
                 });
             });
     }
@@ -826,7 +824,7 @@ export default class ProductPanel extends Vue {
                         DATA
                     }
                 }
-            `,
+            `
             })
             .then(({ data }) => {
                 const pd_file = data.PdFile;
@@ -840,7 +838,7 @@ export default class ProductPanel extends Vue {
                         [buf.buffer],
                         pd_file.FILE_NAME,
                         {
-                            type: pd_file.MIMETYPE,
+                            type: pd_file.MIMETYPE
                         }
                     );
 
@@ -858,7 +856,7 @@ export default class ProductPanel extends Vue {
                     severity: 'error',
                     summary: '파일 로드 실패',
                     detail: error.message,
-                    life: 2000,
+                    life: 2000
                 });
             });
     }
@@ -884,7 +882,7 @@ export default class ProductPanel extends Vue {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .i-title {
     font-size: 1.6rem;
     color: var(--text-color);

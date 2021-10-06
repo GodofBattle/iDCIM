@@ -1,10 +1,10 @@
-import { Field, ID, ObjectType, Int } from "type-graphql";
+import { Field, ID, ObjectType, Int, ArgsType } from "type-graphql";
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
 
 import { pd_asset_code } from './pd_asset_code';
 
 @ObjectType()
-@Entity({ synchronize: false })
+@Entity({ synchronize: false, orderBy: { NAME: 'ASC' } })
 export class pd_interface {
     @Field(() => ID!)
     @PrimaryGeneratedColumn('increment', { type: 'int', comment: '아이디' })
@@ -23,8 +23,8 @@ export class pd_interface {
     @Column({ type: 'varchar', length: 64, nullable: false, default: '', comment: '인터페이스 명' })
     NAME: string;
 
-    @Field(() => Int)
-    @Column({ type: 'int', nullable: false, default: null, comment: '프로토콜문서 파일아이디(PD_FILE.ID)' })
+    @Field(() => Int, { nullable: true })
+    @Column({ type: 'int', nullable: true, default: null, comment: '프로토콜문서 파일아이디(PD_FILE.ID)' })
     PROTOCOL_FILE_ID: number;
 
     @Field(() => String, { nullable: true })
@@ -39,4 +39,22 @@ export class pd_interface {
     @ManyToOne(() => pd_asset_code, (asset_code) => asset_code.PREDEFINED_INTERFACES, { createForeignKeyConstraints: false })
     @JoinColumn({ name: 'ASSET_CD', referencedColumnName: 'CODE' })
     ASSET_CODE: pd_asset_code;
+}
+
+@ArgsType()
+export class pd_interface_args {
+    @Field(() => String!, { nullable: false })
+    ASSET_CD: string;
+
+    @Field(() => String!, { nullable: false })
+    INTF_CD: string;
+
+    @Field(() => String!, { nullable: false })
+    NAME: string;
+
+    @Field(() => Int, { nullable: true })
+    PROTOCOL_FILE_ID: number | undefined;
+
+    @Field(() => String, { nullable: true })
+    REMARK: string | undefined;
 }

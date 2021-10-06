@@ -5,7 +5,15 @@
             <div class="p-col-2">
                 <interface-tree @select="onSelectTreeNode"></interface-tree>
             </div>
-            <div class="p-col-10"></div>
+            <div class="p-col-10">
+                <div v-if="viewType === 'PredefineInterface'">
+                    <interface-panel
+                        :interface-id="id"
+                        :interface-name.sync="name"
+                        @reset="reset"
+                    ></interface-panel>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -19,18 +27,30 @@ import Component from '@/plugins/nuxt-class-component';
     props: {
         title: {
             type: String,
-            default: '인터페이스',
-        },
-    },
+            default: '인터페이스'
+        }
+    }
 })
 export default class IcomerInterface extends Vue {
+    id = -1;
+    name = '';
+    viewType = '';
+
     // by shkoh 20210928: Head Title 정의
     head() {
         return { title: `[iDCIM] 구축계정 - ${this.$props.title}` };
     }
 
-    onSelectTreeNode({ type = '', id = '' }) {
-        console.info(`${id}: ${type}`);
+    onSelectTreeNode({ type = '', id = -1, name = '' }) {
+        this.id = id;
+        this.name = name;
+        this.viewType = type;
+    }
+
+    reset() {
+        this.id = -1;
+        this.name = '';
+        this.viewType = '';
     }
 }
 </script>

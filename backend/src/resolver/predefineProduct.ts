@@ -1,6 +1,6 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
-import { GraphQLUpload, FileUpload, Upload } from "graphql-upload";
-import { Args, Ctx, Mutation, Query, Resolver, PubSub, Publisher, Arg, Int, ID } from "type-graphql";
+import { GraphQLUpload, FileUpload } from "graphql-upload";
+import { Args, Ctx, Mutation, Query, Resolver, PubSub, Publisher, Arg, ID } from "type-graphql";
 import { getRepository } from "typeorm";
 
 import { pd_manufacturer, pd_manufacturer_args } from '../entity/database/pd_manufacturer';

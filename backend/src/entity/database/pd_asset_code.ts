@@ -38,6 +38,6 @@ export class pd_asset_code {
 
     @Field(() => [pd_interface], { nullable: true })
     @OneToMany(() => pd_interface, (intf: pd_interface) => intf.ASSET_CODE, { primary: false, cascade: true, createForeignKeyConstraints: false })
-    @TypeormLoader((intf: pd_interface) => intf.ASSET_CD, { selfKey: true })
+    @TypeormLoader(() => pd_interface, (intf: pd_interface) => intf.ASSET_CD, { selfKey: true })
     PREDEFINED_INTERFACES?: pd_interface[];
 }

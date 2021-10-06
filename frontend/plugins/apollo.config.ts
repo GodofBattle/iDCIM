@@ -12,15 +12,16 @@ const configuer = ({ env, store, redirect, nuxtState }: Context) => {
                     `[graphQLErrors] ${err.extensions?.code}: ${err.message}`
                 );
 
-                if (err.message === 'TokenExpiredError') {
+                if (err.extensions?.code === 'UNAUTHENTICATED') {
                     go_to_login = true;
                 }
             }
 
             // by shkoh 20210913: 사용 토큰이 만료되면 자동으로 로그인 페이지로 이동
             if (go_to_login) {
-                console.info('go_to_login');
-                store.$router.push('/login');
+                store.dispatch('sessionStorage/SIGNOUT').then(() => {
+                    redirect('/login');
+                });
             }
         } else if (networkError) {
             console.error(networkError);
