@@ -512,7 +512,7 @@ export default class InterfacePanelInfo extends Vue {
 
     interfaceDataRefresh() {
         this.$apollo.queries.interfaceData.refresh();
-        this.$emit('updateInterfaceName', this.newInterfaceData.NAME);
+        this.$emit('completeInterfaceUpdate');
     }
 }
 </script>

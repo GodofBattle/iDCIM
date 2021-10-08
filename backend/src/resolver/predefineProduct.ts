@@ -236,6 +236,7 @@ export class PredefinedProductResolver {
             if (!ID) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
             
             // by shkoh 20210928: 미구현. 추후에 product의 존재여부를 파악하여 삭제를 막음
+            // by shkoh 20210928: 예시
             // const hasChild = await getRepository(pd_product).count({ where: { MANUFACTURER_ID: ID } });
 
             // if (hasChild > 0) {

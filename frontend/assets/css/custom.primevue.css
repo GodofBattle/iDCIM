@@ -5,3 +5,7 @@
 .p-tooltip {
     z-index: 500;
 }
+
+.p-datatable-reorderablerow-handle {
+    cursor: pointer;
+}

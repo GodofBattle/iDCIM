@@ -94,6 +94,41 @@ export class PredefinedInterfaceResolver {
         }
     }
 
+    @Mutation(() => Boolean)
+    async DeleteInterface(
+        @Arg('ID', () => ID) ID: number,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if(!ID) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+
+            // by shkoh 20211007: 미구현. 추후에 Interface의 존재여부를 파악하여 삭제를 막음
+            // by shkoh 20211007: 예시
+            // const hasChild = await getRepository(pd_product).count({ where: { MANUFACTURER_ID: ID } });
+
+            // if (hasChild > 0) {
+            //     throw new SchemaError('제품이 존재합니다');
+            // }
+
+            const predefine_interface_data = await getRepository(pd_interface).findOne(ID);
+            if(predefine_interface_data.PROTOCOL_FILE_ID) await getRepository(pd_file).delete({ ID: predefine_interface_data.PROTOCOL_FILE_ID });
+
+            // by shkoh 20211007: 추후에 인터페이스와 연관된 모든 정보(통신방법, 수집항목, 제어항목 등등)를 삭제해야함
+
+            const result = await getRepository(pd_interface).delete(ID);
+            return result.affected > 0 ? true : false;
+        } catch(err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
     @Query(() => pd_interface, { nullable: true })
     async PredefineInterface(@Arg('ID', () => ID) interface_id: number, @Ctx() ctx: any): Promise<pd_interface> | undefined {
         if(!ctx.isAuth) {

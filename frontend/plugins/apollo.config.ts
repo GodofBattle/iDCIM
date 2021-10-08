@@ -2,7 +2,7 @@ import { Context } from '@nuxt/types';
 import { from } from 'apollo-link';
 import { onError } from 'apollo-link-error';
 
-const configuer = ({ env, store, redirect, nuxtState }: Context) => {
+const configuer = ({ env, store, redirect }: Context) => {
     const apolloError = onError(({ graphQLErrors, networkError }) => {
         if (graphQLErrors) {
             let go_to_login = false;
@@ -20,7 +20,7 @@ const configuer = ({ env, store, redirect, nuxtState }: Context) => {
             // by shkoh 20210913: 사용 토큰이 만료되면 자동으로 로그인 페이지로 이동
             if (go_to_login) {
                 store.dispatch('sessionStorage/SIGNOUT').then(() => {
-                    redirect('/login');
+                    redirect('/login', { session: 'expire' });
                 });
             }
         } else if (networkError) {

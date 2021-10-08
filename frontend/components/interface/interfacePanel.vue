@@ -2,7 +2,7 @@
     <ScrollPanel v-if="interfaceId > 0" id="interfacePanel">
         <div class="p-d-flex p-px-2">
             <div class="p-as-center i-title p-text-bold">
-                {{ interfaceName }}
+                {{ interfaceData.NAME }}
             </div>
             <div class="p-ml-auto">
                 <Button
@@ -31,15 +31,19 @@
                     :id="interfaceId"
                     ref="interfacePanelInfo"
                     :apply-button-disabled.sync="applyButtonDisabled"
-                    @updateInterfaceName="updateInterfaceName"
+                    @completeInterfaceUpdate="completeInterfaceUpdate"
                 ></interface-panel-info>
             </TabPanel>
-            <TabPanel>
+            <TabPanel :disabled="isDisabledComm">
                 <template #header>
                     <i class="pi pi-wifi p-mr-2"></i>
                     <span>통신방법</span>
                 </template>
-                미구현 - 1
+                <interface-panel-comm
+                    :id="interfaceId"
+                    ref="interfacePanelComm"
+                >
+                </interface-panel-comm>
             </TabPanel>
             <TabPanel>
                 <template #header>
@@ -61,25 +65,72 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
+
+type Interface = {
+    [index: string]: string;
+    NAME: string;
+    INTF_CD: string;
+};
 
 @Component<InterfacePanel>({
     props: {
         interfaceId: Number,
         interfaceName: String
+    },
+    watch: {
+        interfaceId() {
+            this.interfaceTabIndex = 0;
+        }
+    },
+    apollo: {
+        interfaceData: {
+            query: gql`
+                query PredefineInterface($ID: ID!) {
+                    PredefineInterface(ID: $ID) {
+                        NAME
+                        INTF_CD
+                    }
+                }
+            `,
+            prefetch: false,
+            variables(): any {
+                return {
+                    ID: this.interfaceId ? this.interfaceId : -1
+                };
+            },
+            update: ({ PredefineInterface }) => PredefineInterface
+        }
     }
 })
 export default class InterfacePanel extends Vue {
     $refs!: {
         interfacePanelInfo: any;
+        interfacePanelComm: any;
+    };
+
+    // by shkoh 20211007: 인터페이스 기본 정보
+    interfaceData: Interface = {
+        NAME: '',
+        INTF_CD: ''
     };
 
     // by shkoh 20211006: TabView Component Ref
     interfacePanelInfo = null;
+    interfacePanelComm = null;
 
     interfaceTabIndex = 0;
 
     applyButtonDisabled = true;
+
+    get isDisabledComm(): boolean {
+        const hasComm = ['INTF02', 'INTF06', 'INTF07'].includes(
+            this.interfaceData.INTF_CD
+        );
+
+        return !hasComm;
+    }
 
     updateInterface() {
         switch (this.interfaceTabIndex) {
@@ -90,20 +141,43 @@ export default class InterfacePanel extends Vue {
     }
 
     deleteInterface() {
-        console.info('deleteInterface');
+        this.$confirmDialog.require({
+            group: 'deleteConfirmDialog',
+            message: `[${this.interfaceData.NAME}] 인터페이스를 삭제하시겠습니까?\n관련된 모든 항목들이 삭제됩니다.\n사이트에서 해당 제품이 등록되어 있다면 삭제가 불가합니다.(미구현)`,
+            header: `인터페이스 ${this.interfaceData.NAME} 삭제`,
+            position: 'top',
+            icon: 'pi pi-exclamation-triangle',
+            acceptClass: 'p-button-danger',
+            blockScroll: false,
+            accept: () => {
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '인터페이스 삭제 처리',
+                    detail: `미구현되었습니다. 삭제처리를 추후 논의 후 삭제할 것입니다`,
+                    life: 2000
+                });
+            }
+        });
     }
 
-    updateInterfaceName(new_interface_name: string) {
-        console.info(new_interface_name);
-        this.$emit('update:interfaceName', new_interface_name);
+    completeInterfaceUpdate() {
+        this.$apollo.queries.interfaceData.refresh();
     }
 }
 </script>
 
 <style lang="scss" scoped>
-#interfacePanel::v-deep .i-title {
-    font-size: 1.6rem;
-    color: var(--text-color);
-    width: 10vw;
+#interfacePanel::v-deep {
+    height: calc(100vh - 20px - var(--header-height));
+
+    .i-title {
+        font-size: 1.6rem;
+        color: var(--text-color);
+        width: 10vw;
+    }
+
+    .p-tabview-panels {
+        padding: 1rem 0.5rem;
+    }
 }
 </style>

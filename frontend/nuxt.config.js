@@ -134,6 +134,7 @@ export default {
             'FileUpload',
             'Inplace',
             'InputMask',
+            'InputNumber',
             'InputSwitch',
             'InputText',
             'OverlayPanel',
