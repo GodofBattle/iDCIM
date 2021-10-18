@@ -42,6 +42,7 @@
                 <interface-panel-comm
                     :id="interfaceId"
                     ref="interfacePanelComm"
+                    :apply-button-disabled.sync="applyButtonDisabled"
                 >
                 </interface-panel-comm>
             </TabPanel>

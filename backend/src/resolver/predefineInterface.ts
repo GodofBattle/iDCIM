@@ -1,11 +1,12 @@
 import { AuthenticationError, SchemaError, UserInputError } from 'apollo-server-express';
 import { FileUpload, GraphQLUpload } from 'graphql-upload';
-import { Ctx, Mutation, Query, Resolver, PubSub, Publisher, Args, ID, Arg } from "type-graphql";
+import { Ctx, Mutation, Query, Resolver, PubSub, Publisher, Args, ID, Arg, Int } from "type-graphql";
 import { getRepository } from 'typeorm';
 
 import { pd_asset_code } from '../entity/database/pd_asset_code';
 import { pd_file } from '../entity/database/pd_file';
 import { pd_interface, pd_interface_args } from '../entity/database/pd_interface';
+import { pd_modbus_cmd } from '../entity/database/pd_modbus_cmd';
 
 import streamToBuffer from '../utils/streamToBuffer';
 
@@ -136,9 +137,24 @@ export class PredefinedInterfaceResolver {
         }
 
         try {
-            if(!ID) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            if(!interface_id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
 
             return (await getRepository(pd_interface).findOne({ where: { ID: interface_id } }));
+        } catch(err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => [pd_modbus_cmd], { nullable: true })
+    async PredefineModbusCommands(@Arg('PD_INTF_ID', () => Int) pd_interface_id: number, @Ctx() ctx: any): Promise<pd_modbus_cmd[]> | undefined {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되 않은 접근입니다');
+        }
+
+        try {
+            if(!pd_interface_id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+
+            return (await getRepository(pd_modbus_cmd).find({ where: { PD_INTF_ID: pd_interface_id } }));
         } catch(err) {
             throw new SchemaError(err.message);
         }

@@ -13,10 +13,12 @@
                     <Button
                         class="p-button-rounded p-button-text p-buttom-success"
                         icon="pi pi-save"
+                        :disabled="saveButtonDisabled"
                     ></Button>
                     <Button
                         class="p-button-rounded p-button-text p-button-danger"
                         icon="pi pi-minus"
+                        @click="deleteModbusCmdCard"
                     ></Button>
                 </div>
             </div>
@@ -28,7 +30,7 @@
                     <label for="func-num">FUNC NUM</label>
                     <InputNumber
                         id="func-num"
-                        v-model="data.FUNC_CD"
+                        v-model="data.FUNC_NO"
                         mode="decimal"
                         :min="0"
                         :max="255"
@@ -111,14 +113,14 @@ import Component from '@/plugins/nuxt-class-component';
 @Component<ModbusCmdPanel>({
     props: {
         mcId: Number,
-        funcCd: Number,
+        funcNo: Number,
         startAddr: Number,
         pointCnt: Number,
         dtypeCd: String
     },
     watch: {
-        funcCd(new_val) {
-            this.data.FUNC_CD = new_val;
+        funcNo(new_val) {
+            this.data.FUNC_NO = new_val;
         },
         startAddr(new_val) {
             this.data.START_ADDR = new_val;
@@ -128,6 +130,14 @@ import Component from '@/plugins/nuxt-class-component';
         },
         dtypeCd(new_val) {
             this.data.DTYPE_CD = new_val;
+        },
+        data: {
+            deep: true,
+            handler(new_data, old_data) {
+                console.info(new_data.FUNC_NO);
+                console.info(this.$props.funcNo);
+                this.$emit('change');
+            }
         }
     },
     apollo: {
@@ -140,23 +150,30 @@ import Component from '@/plugins/nuxt-class-component';
                     }
                 }
             `,
-            prefetch: false,
+            prefetch: true,
+            fetchPolicy: 'cache-and-network',
             update: ({ Codes }) => Codes
         }
     }
 })
 export default class ModbusCmdPanel extends Vue {
     data = {
-        FUNC_CD: this.$props.funcCd,
+        FUNC_NO: this.$props.funcNo,
         START_ADDR: this.$props.startAddr,
         POINT_CNT: this.$props.pointCnt,
         DTYPE_CD: this.$props.dtypeCd
     };
 
+    FUNC_NO = this.$props.funcNo;
+
     dtype: Array<any> = [];
 
+    get saveButtonDisabled(): boolean {
+        return true;
+    }
+
     inputFuncNum(input: InputEvent) {
-        this.$emit('update:funcCd', input);
+        this.$emit('update:funcNo', input);
     }
 
     inputStartAddr(input: InputEvent) {
@@ -169,6 +186,10 @@ export default class ModbusCmdPanel extends Vue {
 
     inputDtype(input: InputEvent) {
         this.$emit('update:dtypeCd', input);
+    }
+
+    deleteModbusCmdCard() {
+        this.$emit('delete');
     }
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
     <div v-if="showCommPanel" id="interfacePanelComm" class="p-grid">
         <div>
-            <DataTable :value="commList" @row-reorder="onRowReorder">
+            <DataTable :value="newCommList" @row-reorder="onRowReorder">
                 <template #header>
                     <div class="i-table-header">
                         <span class="p-input-icon-left">
@@ -27,10 +27,12 @@
                     <template #body="slotProps">
                         <modbus-cmd-card
                             :mc-id.sync="slotProps.data.MC_ID"
-                            :func-cd.sync="slotProps.data.FUNC_CD"
+                            :func-no.sync="slotProps.data.FUNC_NO"
                             :start-addr.sync="slotProps.data.START_ADDR"
                             :point-cnt.sync="slotProps.data.POINT_CNT"
                             :dtype-cd.sync="slotProps.data.DTYPE_CD"
+                            @delete="deleteModbusCmdCard(slotProps)"
+                            @change="changeModbusCmdInfo(slotProps)"
                         />
                     </template>
                 </Column>
@@ -41,12 +43,13 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 
 type ModbusCmd = {
     [index: string]: number | string;
     MC_ID: number;
-    FUNC_CD: number;
+    FUNC_NO: number;
     START_ADDR: number;
     POINT_CNT: number;
     DTYPE_CD: string;
@@ -54,14 +57,58 @@ type ModbusCmd = {
 
 @Component<InterfacePanelComm>({
     props: {
-        id: Number
+        id: Number,
+        applyButtonDisabled: Boolean
+    },
+    watch: {
+        newCommList: {
+            deep: true,
+            handler(_data: Array<ModbusCmd>) {
+                this.changeNewCommList(_data);
+            }
+        }
+    },
+    apollo: {
+        commList: {
+            query: gql`
+                query PredefineModbusCommands($ID: Int!) {
+                    PredefineModbusCommands(PD_INTF_ID: $ID) {
+                        MC_ID
+                        FUNC_NO
+                        START_ADDR
+                        POINT_CNT
+                        DTYPE_CD
+                    }
+                }
+            `,
+            variables(): any {
+                return {
+                    ID: this.id ? this.id : -1
+                };
+            },
+            update: ({ PredefineModbusCommands }) => PredefineModbusCommands,
+            result({ data, loading }: any) {
+                if (!loading) {
+                    const { PredefineModbusCommands } = data;
+
+                    if (PredefineModbusCommands) {
+                        this.apolloFetch(PredefineModbusCommands);
+                    }
+                }
+            }
+        }
     }
 })
 export default class InterfacePanelComm extends Vue {
     commList: Array<ModbusCmd> = [];
+    newCommList: Array<ModbusCmd> = [];
 
     get showCommPanel(): boolean {
         return this.$props.id > 0;
+    }
+
+    reset() {
+        this.newCommList.splice(0, this.newCommList.length);
     }
 
     onRowReorder(event: any) {
@@ -70,16 +117,105 @@ export default class InterfacePanelComm extends Vue {
             return data;
         });
 
-        this.commList = new_order_list;
+        this.newCommList = new_order_list;
     }
 
     addModbusCmdCard() {
-        this.commList.push({
-            MC_ID: this.commList.length + 1,
-            FUNC_CD: 0,
+        this.newCommList.push({
+            MC_ID: this.newCommList.length + 1,
+            FUNC_NO: 0,
             START_ADDR: 0,
             POINT_CNT: 0,
             DTYPE_CD: 'DT_F4'
+        });
+    }
+
+    apolloFetch(data: Array<ModbusCmd>) {
+        this.reset();
+
+        data.forEach((datum) => {
+            const new_cmd_data: ModbusCmd = Object.create({
+                MC_ID: datum.MC_ID,
+                FUNC_NO: datum.FUNC_NO,
+                START_ADDR: datum.START_ADDR,
+                POINT_CNT: datum.POINT_CNT,
+                DTYPE_CD: datum.DTYPE_CD
+            });
+
+            this.newCommList.push(new_cmd_data);
+        });
+    }
+
+    compareData(index: number) {
+        const is_diff = false;
+
+        // const previous_data = this.commList.at(index);
+        // const new_data = this.newCommList.at(index);
+
+        // if (!previous_data) return true;
+        // if (!new_data) return true;
+
+        // for (const key of Object.keys(previous_data)) {
+        //     if (previous_data[key] !== new_data[key]) {
+        //         is_diff = true;
+        //         break;
+        //     }
+        // }
+
+        return is_diff;
+    }
+
+    changeNewCommList(new_data: Array<ModbusCmd>) {
+        this.$emit('update:applyButtonDisabled', true);
+
+        if (new_data.length !== this.commList.length) {
+            this.$emit('update:applyButtonDisabled', false);
+        } else if (
+            new_data.length > 0 &&
+            new_data.length === this.commList.length
+        ) {
+        }
+
+        // this.newCommList.forEach((comm_info: ModbusCmd) => {
+        //     const proto_info = Object.getPrototypeOf(comm_info);
+
+        //     console.info(proto_info);
+
+        //     ['FUNC_NO', 'START_ADDR', 'POINT_CNT', 'DTYPE_CD'].forEach(
+        //         (key: string) => {
+        //             if (proto_info[key] !== comm_info[key]) {
+        //                 this.$emit('update:applyButtonDisabled', false);
+        //             }
+        //         }
+        //     );
+        // });
+    }
+
+    changeModbusCmdInfo(node: any) {
+        this.$emit('update:applyButtonDisabled', true);
+
+        this.newCommList.forEach((comm_info: ModbusCmd) => {
+            const proto_info = Object.getPrototypeOf(comm_info);
+
+            console.info(proto_info);
+
+            ['FUNC_NO', 'START_ADDR', 'POINT_CNT', 'DTYPE_CD'].forEach(
+                (key: string) => {
+                    if (proto_info[key] !== comm_info[key]) {
+                        this.$emit('update:applyButtonDisabled', false);
+                    }
+                }
+            );
+        });
+    }
+
+    deleteModbusCmdCard(node: any) {
+        // by shkoh 20211012: 모드버스 커맨드 삭제
+        this.newCommList.splice(node.index, 1);
+
+        // by shkoh 20211012: 다수의 카드 삭제 후, MC_ID 번호를 재정리
+        this.newCommList.forEach((data: any, index: any) => {
+            data.MC_ID = index + 1;
         });
     }
 }
