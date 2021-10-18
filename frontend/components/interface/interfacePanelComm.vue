@@ -33,6 +33,8 @@
                             :dtype-cd.sync="slotProps.data.DTYPE_CD"
                             @delete="deleteModbusCmdCard(slotProps)"
                             @change="changeModbusCmdInfo(slotProps)"
+                            @copy="copyModbusCmdInfo"
+                            :init-data="initModbusCmdInfo(slotProps.index)"
                         />
                     </template>
                 </Column>
@@ -58,15 +60,15 @@ type ModbusCmd = {
 @Component<InterfacePanelComm>({
     props: {
         id: Number,
-        applyButtonDisabled: Boolean
+        applyButtonDisabled: Boolean,
     },
     watch: {
         newCommList: {
             deep: true,
             handler(_data: Array<ModbusCmd>) {
                 this.changeNewCommList(_data);
-            }
-        }
+            },
+        },
     },
     apollo: {
         commList: {
@@ -83,7 +85,7 @@ type ModbusCmd = {
             `,
             variables(): any {
                 return {
-                    ID: this.id ? this.id : -1
+                    ID: this.id ? this.id : -1,
                 };
             },
             update: ({ PredefineModbusCommands }) => PredefineModbusCommands,
@@ -95,9 +97,9 @@ type ModbusCmd = {
                         this.apolloFetch(PredefineModbusCommands);
                     }
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 })
 export default class InterfacePanelComm extends Vue {
     commList: Array<ModbusCmd> = [];
@@ -105,6 +107,10 @@ export default class InterfacePanelComm extends Vue {
 
     get showCommPanel(): boolean {
         return this.$props.id > 0;
+    }
+
+    initModbusCmdInfo(index: number): any {
+        return this.commList?.at(index);
     }
 
     reset() {
@@ -126,7 +132,8 @@ export default class InterfacePanelComm extends Vue {
             FUNC_NO: 0,
             START_ADDR: 0,
             POINT_CNT: 0,
-            DTYPE_CD: 'DT_F4'
+            DTYPE_CD: '',
+            MODE: 'NEW',
         });
     }
 
@@ -139,30 +146,11 @@ export default class InterfacePanelComm extends Vue {
                 FUNC_NO: datum.FUNC_NO,
                 START_ADDR: datum.START_ADDR,
                 POINT_CNT: datum.POINT_CNT,
-                DTYPE_CD: datum.DTYPE_CD
+                DTYPE_CD: datum.DTYPE_CD,
             });
 
             this.newCommList.push(new_cmd_data);
         });
-    }
-
-    compareData(index: number) {
-        const is_diff = false;
-
-        // const previous_data = this.commList.at(index);
-        // const new_data = this.newCommList.at(index);
-
-        // if (!previous_data) return true;
-        // if (!new_data) return true;
-
-        // for (const key of Object.keys(previous_data)) {
-        //     if (previous_data[key] !== new_data[key]) {
-        //         is_diff = true;
-        //         break;
-        //     }
-        // }
-
-        return is_diff;
     }
 
     changeNewCommList(new_data: Array<ModbusCmd>) {
@@ -175,20 +163,6 @@ export default class InterfacePanelComm extends Vue {
             new_data.length === this.commList.length
         ) {
         }
-
-        // this.newCommList.forEach((comm_info: ModbusCmd) => {
-        //     const proto_info = Object.getPrototypeOf(comm_info);
-
-        //     console.info(proto_info);
-
-        //     ['FUNC_NO', 'START_ADDR', 'POINT_CNT', 'DTYPE_CD'].forEach(
-        //         (key: string) => {
-        //             if (proto_info[key] !== comm_info[key]) {
-        //                 this.$emit('update:applyButtonDisabled', false);
-        //             }
-        //         }
-        //     );
-        // });
     }
 
     changeModbusCmdInfo(node: any) {
@@ -214,6 +188,15 @@ export default class InterfacePanelComm extends Vue {
         this.newCommList.splice(node.index, 1);
 
         // by shkoh 20211012: 다수의 카드 삭제 후, MC_ID 번호를 재정리
+        this.newCommList.forEach((data: any, index: any) => {
+            data.MC_ID = index + 1;
+        });
+    }
+
+    copyModbusCmdInfo(node: any) {
+        this.newCommList.splice(node.MC_ID - 1, 0, node);
+
+        // by shkoh 20211018: 카드 복제 후, MC_ID 번호를 재정리
         this.newCommList.forEach((data: any, index: any) => {
             data.MC_ID = index + 1;
         });

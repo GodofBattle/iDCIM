@@ -1,5 +1,5 @@
 <template>
-    <Card id="modbusCmdCard" class="p-shadow-12">
+    <Card id="modbusCmdCard" :class="modbusCmdClass">
         <template #header>
             <div class="p-d-flex">
                 <div class="p-as-center p-pl-2 i-header-title">
@@ -9,6 +9,7 @@
                     <Button
                         class="p-button-rounded p-button-text p-button-help"
                         icon="pi pi-copy"
+                        @click="copyModbusCmdCard"
                     ></Button>
                     <Button
                         class="p-button-rounded p-button-text p-buttom-success"
@@ -110,13 +111,22 @@ import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 
+type ModbusCmd = {
+    [index: string]: string | undefined;
+    FUNC_NO: string;
+    START_ADDR: string;
+    POINT_CNT: string;
+    DTYPE_CD: string;
+};
+
 @Component<ModbusCmdPanel>({
     props: {
         mcId: Number,
         funcNo: Number,
         startAddr: Number,
         pointCnt: Number,
-        dtypeCd: String
+        dtypeCd: String,
+        initData: Object,
     },
     watch: {
         funcNo(new_val) {
@@ -131,14 +141,6 @@ import Component from '@/plugins/nuxt-class-component';
         dtypeCd(new_val) {
             this.data.DTYPE_CD = new_val;
         },
-        data: {
-            deep: true,
-            handler(new_data, old_data) {
-                console.info(new_data.FUNC_NO);
-                console.info(this.$props.funcNo);
-                this.$emit('change');
-            }
-        }
     },
     apollo: {
         dtype: {
@@ -152,24 +154,35 @@ import Component from '@/plugins/nuxt-class-component';
             `,
             prefetch: true,
             fetchPolicy: 'cache-and-network',
-            update: ({ Codes }) => Codes
-        }
-    }
+            update: ({ Codes }) => Codes,
+        },
+    },
 })
 export default class ModbusCmdPanel extends Vue {
-    data = {
+    data: ModbusCmd = {
         FUNC_NO: this.$props.funcNo,
         START_ADDR: this.$props.startAddr,
         POINT_CNT: this.$props.pointCnt,
-        DTYPE_CD: this.$props.dtypeCd
+        DTYPE_CD: this.$props.dtypeCd,
     };
-
-    FUNC_NO = this.$props.funcNo;
 
     dtype: Array<any> = [];
 
+    get modbusCmdClass(): Array<any> {
+        return [{ 'i-editable': !this.saveButtonDisabled }];
+    }
+
     get saveButtonDisabled(): boolean {
-        return true;
+        if (this.$props.initData === undefined) return false;
+
+        let is_disabled = true;
+        for (const key of Object.keys(this.data)) {
+            if (this.data[key] !== this.$props.initData[key]) {
+                is_disabled = false;
+                break;
+            }
+        }
+        return is_disabled;
     }
 
     inputFuncNum(input: InputEvent) {
@@ -191,6 +204,10 @@ export default class ModbusCmdPanel extends Vue {
     deleteModbusCmdCard() {
         this.$emit('delete');
     }
+
+    copyModbusCmdCard() {
+        this.$emit('copy', { MC_ID: this.$props.mcId + 1, ...this.data });
+    }
 }
 </script>
 
@@ -210,5 +227,10 @@ export default class ModbusCmdPanel extends Vue {
     .p-card-content {
         padding: 0;
     }
+}
+
+#modbusCmdCard.i-editable {
+    border-left: 10px solid;
+    border-color: var(--yellow-500);
 }
 </style>
