@@ -15,6 +15,7 @@
                         class="p-button-rounded p-button-text p-buttom-success"
                         icon="pi pi-save"
                         :disabled="saveButtonDisabled"
+                        @click="saveModbusCmdCard"
                     ></Button>
                     <Button
                         class="p-button-rounded p-button-text p-button-danger"
@@ -34,7 +35,7 @@
                         v-model="data.FUNC_NO"
                         mode="decimal"
                         :min="0"
-                        :max="255"
+                        :max="127"
                         show-buttons
                         button-layout="horizontal"
                         :step="1"
@@ -54,7 +55,7 @@
                         v-model="data.START_ADDR"
                         mode="decimal"
                         :min="0"
-                        :max="255"
+                        :max="65535"
                         show-buttons
                         button-layout="horizontal"
                         :step="1"
@@ -74,7 +75,7 @@
                         v-model="data.POINT_CNT"
                         mode="decimal"
                         :min="0"
-                        :max="255"
+                        :max="127"
                         show-buttons
                         button-layout="horizontal"
                         :step="1"
@@ -99,6 +100,7 @@
                         placeholder="데이터 타입을 선택하세요"
                         empty-filter-message="데이터 타입이 존재하지 않습니디"
                         @input="inputDtype"
+                        append-to="body"
                     ></Dropdown>
                 </div>
             </div>
@@ -121,14 +123,20 @@ type ModbusCmd = {
 
 @Component<ModbusCmdPanel>({
     props: {
+        idx: Number,
+        pdIntfId: Number,
         mcId: Number,
         funcNo: Number,
         startAddr: Number,
         pointCnt: Number,
         dtypeCd: String,
         initData: Object,
+        isEditable: Boolean,
     },
     watch: {
+        idx(new_val) {
+            console.info(new_val);
+        },
         funcNo(new_val) {
             this.data.FUNC_NO = new_val;
         },
@@ -141,6 +149,9 @@ type ModbusCmd = {
         dtypeCd(new_val) {
             this.data.DTYPE_CD = new_val;
         },
+        isEditable() {
+            this.$emit('change');
+        },
     },
     apollo: {
         dtype: {
@@ -152,7 +163,7 @@ type ModbusCmd = {
                     }
                 }
             `,
-            prefetch: true,
+            prefetch: false,
             fetchPolicy: 'cache-and-network',
             update: ({ Codes }) => Codes,
         },
@@ -173,7 +184,11 @@ export default class ModbusCmdPanel extends Vue {
     }
 
     get saveButtonDisabled(): boolean {
-        if (this.$props.initData === undefined) return false;
+        if (this.$props.initData === undefined) {
+            this.$emit('update:isEditable', true);
+            this.$emit('change');
+            return false;
+        }
 
         let is_disabled = true;
         for (const key of Object.keys(this.data)) {
@@ -182,6 +197,9 @@ export default class ModbusCmdPanel extends Vue {
                 break;
             }
         }
+
+        this.$emit('update:isEditable', !is_disabled);
+        this.$emit('change');
         return is_disabled;
     }
 
@@ -206,7 +224,33 @@ export default class ModbusCmdPanel extends Vue {
     }
 
     copyModbusCmdCard() {
-        this.$emit('copy', { MC_ID: this.$props.mcId + 1, ...this.data });
+        this.$emit('copy', {
+            PD_INTF_ID: this.$props.pdIntfId,
+            MC_ID: this.$props.mcId,
+            FUNC_NO: this.data.FUNC_NO,
+            START_ADDR: this.data.START_ADDR,
+            POINT_CNT: this.data.POINT_CNT,
+            DTYPE_CD: this.data.DTYPE_CD,
+        });
+    }
+
+    saveModbusCmdCard() {
+        if (this.data.DTYPE_CD === '') {
+            this.$toast.add({
+                severity: 'warn',
+                summary: '통신방법 유효성 실패',
+                detail: 'DTYPE을 확인하세요',
+                life: 2000,
+            });
+            return;
+        }
+
+        this.$emit('save', this.$props.idx, {
+            FUNC_NO: this.data.FUNC_NO,
+            START_ADDR: this.data.START_ADDR,
+            POINT_CNT: this.data.POINT_CNT,
+            DTYPE_CD: this.data.DTYPE_CD,
+        });
     }
 }
 </script>

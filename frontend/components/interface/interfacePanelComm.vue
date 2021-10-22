@@ -1,13 +1,22 @@
 <template>
     <div v-if="showCommPanel" id="interfacePanelComm" class="p-grid">
-        <div>
-            <DataTable :value="newCommList" @row-reorder="onRowReorder">
-                <template #header>
-                    <div class="i-table-header">
-                        <span class="p-input-icon-left">
-                            <i class="pi pi-search" />
-                            <InputText placeholder="검색" />
-                        </span>
+        <DataTable
+            :value="commList"
+            @row-reorder="onRowReorder"
+            data-key="MC_ID"
+            :scrollable="true"
+            scrollHeight="calc(100vh - 20px - var(--header-height) - 30px - 42px - 12px - 55px - 12px"
+            :style="{ height: '100%' }"
+            :row-hover="true"
+        >
+            <template #header>
+                <div class="i-table-header p-d-flex">
+                    <div class="p-ml-auto">
+                        <Button
+                            icon="pi pi-save"
+                            label="일괄적용"
+                            class="p-field p-button-outlined p-button-secondary"
+                        ></Button>
                         <Button
                             icon="pi pi-plus"
                             label="ADD"
@@ -15,31 +24,32 @@
                             @click="addModbusCmdCard"
                         ></Button>
                     </div>
+                </div>
+            </template>
+            <template #empty>
+                <div class="i-table-empty">통신방법을 추가하세요</div>
+            </template>
+            <Column header-style="width: 2rem;" :row-reorder="true"></Column>
+            <Column>
+                <template #body="slotProps">
+                    <modbus-cmd-card
+                        :idx="slotProps.index"
+                        :pd-intf-id="id"
+                        :mc-id.sync="slotProps.data.MC_ID"
+                        :func-no.sync="slotProps.data.FUNC_NO"
+                        :start-addr.sync="slotProps.data.START_ADDR"
+                        :point-cnt.sync="slotProps.data.POINT_CNT"
+                        :dtype-cd.sync="slotProps.data.DTYPE_CD"
+                        :is-editable.sync="slotProps.data.is_editable"
+                        :init-data="initModbusCmdInfo(slotProps.index)"
+                        @copy="copyModbusCmdInfo"
+                        @save="saveModbusCmdCard"
+                        @change="chageCardInfo"
+                        @delete="deleteModbusCmdCard(slotProps.index)"
+                    />
                 </template>
-                <template #empty>
-                    <div class="i-table-empty">통신방법을 추가하세요</div>
-                </template>
-                <Column
-                    header-style="width: 2rem;"
-                    :row-reorder="true"
-                ></Column>
-                <Column>
-                    <template #body="slotProps">
-                        <modbus-cmd-card
-                            :mc-id.sync="slotProps.data.MC_ID"
-                            :func-no.sync="slotProps.data.FUNC_NO"
-                            :start-addr.sync="slotProps.data.START_ADDR"
-                            :point-cnt.sync="slotProps.data.POINT_CNT"
-                            :dtype-cd.sync="slotProps.data.DTYPE_CD"
-                            @delete="deleteModbusCmdCard(slotProps)"
-                            @change="changeModbusCmdInfo(slotProps)"
-                            @copy="copyModbusCmdInfo"
-                            :init-data="initModbusCmdInfo(slotProps.index)"
-                        />
-                    </template>
-                </Column>
-            </DataTable>
-        </div>
+            </Column>
+        </DataTable>
     </div>
 </template>
 
@@ -49,12 +59,13 @@ import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 
 type ModbusCmd = {
-    [index: string]: number | string;
+    [index: string]: number | string | boolean;
     MC_ID: number;
     FUNC_NO: number;
     START_ADDR: number;
     POINT_CNT: number;
     DTYPE_CD: string;
+    is_editable: boolean;
 };
 
 @Component<InterfacePanelComm>({
@@ -62,16 +73,8 @@ type ModbusCmd = {
         id: Number,
         applyButtonDisabled: Boolean,
     },
-    watch: {
-        newCommList: {
-            deep: true,
-            handler(_data: Array<ModbusCmd>) {
-                this.changeNewCommList(_data);
-            },
-        },
-    },
     apollo: {
-        commList: {
+        dbCommList: {
             query: gql`
                 query PredefineModbusCommands($ID: Int!) {
                     PredefineModbusCommands(PD_INTF_ID: $ID) {
@@ -98,46 +101,93 @@ type ModbusCmd = {
                     }
                 }
             },
+            fetchPolicy: 'cache-and-network',
+            deep: true,
         },
     },
 })
 export default class InterfacePanelComm extends Vue {
+    dbCommList: Array<ModbusCmd> = [];
     commList: Array<ModbusCmd> = [];
-    newCommList: Array<ModbusCmd> = [];
 
     get showCommPanel(): boolean {
         return this.$props.id > 0;
     }
 
     initModbusCmdInfo(index: number): any {
-        return this.commList?.at(index);
+        return this.dbCommList?.at(index);
     }
 
     reset() {
-        this.newCommList.splice(0, this.newCommList.length);
+        this.commList.splice(0, this.commList.length);
     }
 
     onRowReorder(event: any) {
-        const new_order_list = event.value.map((data: any, index: any) => {
-            data.MC_ID = index + 1;
-            return data;
-        });
+        // const new_order_list = event.value.map((data: any, index: any) => {
+        //     data.MC_ID = index + 1;
+        //     return data;
+        // });
 
-        this.newCommList = new_order_list;
+        this.commList = event.value;
     }
 
     addModbusCmdCard() {
-        this.newCommList.push({
-            MC_ID: this.newCommList.length + 1,
-            FUNC_NO: 0,
-            START_ADDR: 0,
-            POINT_CNT: 0,
-            DTYPE_CD: '',
-            MODE: 'NEW',
-        });
+        if (this.commList.length === 127) {
+            this.$toast.add({
+                severity: 'warn',
+                summary: '통신방법 추가 불가',
+                detail: `인터페이스당 통신방법은 최대 127개까지 가능합니다`,
+                life: 2000,
+            });
+
+            return;
+        }
+
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation {
+                        AddPredefineModbusCommand(
+                            PD_INTF_ID: ${this.$props.id}
+                            MC_ID: ${this.commList.length + 1}
+                            FUNC_NO: 0
+                            START_ADDR: 0
+                            POINT_CNT: 0
+                            DTYPE_CD: "DT_F4"
+                        )
+                    }
+                `,
+            })
+            .then(() => {
+                this.refreshCommList();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '통신방법 추가 완료',
+                    detail: `MC ID: ${this.commList.length + 1} 추가`,
+                    life: 2000,
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '통신방법 추가 실패',
+                    detail: error.message,
+                    life: 2000,
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
     }
 
     apolloFetch(data: Array<ModbusCmd>) {
+        // by shkoh 20211022: 여기서부터 합시다.
+
         this.reset();
 
         data.forEach((datum) => {
@@ -147,59 +197,185 @@ export default class InterfacePanelComm extends Vue {
                 START_ADDR: datum.START_ADDR,
                 POINT_CNT: datum.POINT_CNT,
                 DTYPE_CD: datum.DTYPE_CD,
+                is_editable: false,
             });
 
-            this.newCommList.push(new_cmd_data);
+            this.commList.push(new_cmd_data);
         });
     }
 
-    changeNewCommList(new_data: Array<ModbusCmd>) {
-        this.$emit('update:applyButtonDisabled', true);
+    deleteModbusCmdCard(index: number) {
+        this.$nuxt.$loading.start();
 
-        if (new_data.length !== this.commList.length) {
-            this.$emit('update:applyButtonDisabled', false);
-        } else if (
-            new_data.length > 0 &&
-            new_data.length === this.commList.length
-        ) {
-        }
-    }
-
-    changeModbusCmdInfo(node: any) {
-        this.$emit('update:applyButtonDisabled', true);
-
-        this.newCommList.forEach((comm_info: ModbusCmd) => {
-            const proto_info = Object.getPrototypeOf(comm_info);
-
-            console.info(proto_info);
-
-            ['FUNC_NO', 'START_ADDR', 'POINT_CNT', 'DTYPE_CD'].forEach(
-                (key: string) => {
-                    if (proto_info[key] !== comm_info[key]) {
-                        this.$emit('update:applyButtonDisabled', false);
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation {
+                        DeletePredefineModbusCommand(
+                            PD_INTF_ID: ${this.$props.id}
+                            MC_ID: ${index + 1}
+                        )
                     }
-                }
-            );
-        });
+                `,
+            })
+            .then(() => {
+                this.refreshCommList();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '통신방법 삭제 완료',
+                    detail: `MC ID: ${index + 1} 삭제 완료`,
+                    life: 2000,
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '통신방법 삭제 실패',
+                    detail: error.message,
+                    life: 2000,
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
     }
 
-    deleteModbusCmdCard(node: any) {
-        // by shkoh 20211012: 모드버스 커맨드 삭제
-        this.newCommList.splice(node.index, 1);
+    saveModbusCmdCard(index: number, modbusCmd: any) {
+        const variables = {
+            PD_INTF_ID: this.$props.id,
+            MC_ID: index + 1,
+            ...modbusCmd,
+        };
 
-        // by shkoh 20211012: 다수의 카드 삭제 후, MC_ID 번호를 재정리
-        this.newCommList.forEach((data: any, index: any) => {
-            data.MC_ID = index + 1;
-        });
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation (
+                        $PD_INTF_ID: Int!
+                        $MC_ID: Int!
+                        $FUNC_NO: Int
+                        $START_ADDR: Int
+                        $POINT_CNT: Int
+                        $DTYPE_CD: String
+                    ) {
+                        UpdatePredefineModbusCommand(
+                            PD_INTF_ID: $PD_INTF_ID
+                            MC_ID: $MC_ID
+                            FUNC_NO: $FUNC_NO
+                            START_ADDR: $START_ADDR
+                            POINT_CNT: $POINT_CNT
+                            DTYPE_CD: $DTYPE_CD
+                        ) {
+                            PD_INTF_ID
+                            MC_ID
+                            FUNC_NO
+                            START_ADDR
+                            POINT_CNT
+                            DTYPE_CD
+                        }
+                    }
+                `,
+                variables: variables,
+            })
+            .then(() => {
+                this.refreshCommList();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '통신방법 적용 완료',
+                    detail: `MC ID: ${index + 1} 적용 완료`,
+                    life: 2000,
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '통신방법 적용 실패',
+                    detail: error.message,
+                    life: 2000,
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
     }
 
-    copyModbusCmdInfo(node: any) {
-        this.newCommList.splice(node.MC_ID - 1, 0, node);
+    copyModbusCmdInfo(modbusCmd: any) {
+        if (this.commList.length === 127) {
+            this.$toast.add({
+                severity: 'warn',
+                summary: '통신방법 복사 불가',
+                detail: `인터페이스당 통신방법은 최대 127개까지 가능합니다`,
+                life: 2000,
+            });
 
-        // by shkoh 20211018: 카드 복제 후, MC_ID 번호를 재정리
-        this.newCommList.forEach((data: any, index: any) => {
-            data.MC_ID = index + 1;
-        });
+            return;
+        }
+
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation (
+                        $PD_INTF_ID: Int!
+                        $MC_ID: Int!
+                        $FUNC_NO: Int
+                        $START_ADDR: Int
+                        $POINT_CNT: Int
+                        $DTYPE_CD: String
+                    ) {
+                        CopyPredefineModbusCommand(
+                            PD_INTF_ID: $PD_INTF_ID
+                            MC_ID: $MC_ID
+                            FUNC_NO: $FUNC_NO
+                            START_ADDR: $START_ADDR
+                            POINT_CNT: $POINT_CNT
+                            DTYPE_CD: $DTYPE_CD
+                        )
+                    }
+                `,
+                variables: modbusCmd,
+            })
+            .then(() => {
+                this.refreshCommList();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '통신방법 복사 완료',
+                    detail: `MC ID: ${modbusCmd.MC_ID} 복사`,
+                    life: 2000,
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '통신방법 복사 실패',
+                    detail: error.message,
+                    life: 2000,
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    chageCardInfo() {
+        const is_edit = this.commList.some((data) => data.is_editable === true);
+        this.$emit('update:applyButtonDisabled', !is_edit);
+    }
+
+    refreshCommList() {
+        this.$apollo.queries.dbCommList.refresh();
     }
 }
 </script>

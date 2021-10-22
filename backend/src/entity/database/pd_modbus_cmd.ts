@@ -1,4 +1,4 @@
-import { Field, ObjectType, Int } from "type-graphql";
+import { Field, ObjectType, Int, ArgsType } from "type-graphql";
 import { Column, Entity, PrimaryColumn } from "typeorm";
 
 @ObjectType()
@@ -31,4 +31,19 @@ export class pd_modbus_cmd {
     @Field(() => String)
     @Column({ type: 'varchar', length: 256, nullable: true, comment: '설명' })
     REMARK: string;
+}
+
+@ArgsType()
+export class pd_modbus_cmd_arg {
+    @Field(() => Int, { nullable: true })
+    FUNC_NO: number;
+
+    @Field(() => Int, { nullable: true })
+    START_ADDR: number;
+
+    @Field(() => Int, { nullable: true })
+    POINT_CNT: number;
+
+    @Field(() => String, { nullable: true })
+    DTYPE_CD: string;
 }

@@ -11,6 +11,7 @@
                     class="p-mr-2"
                     :disabled="applyButtonDisabled"
                     @click="updateInterface"
+                    v-show="showApplyButton"
                 ></Button>
                 <Button
                     icon="pi pi-trash"
@@ -78,12 +79,12 @@ type Interface = {
 @Component<InterfacePanel>({
     props: {
         interfaceId: Number,
-        interfaceName: String
+        interfaceName: String,
     },
     watch: {
         interfaceId() {
             this.interfaceTabIndex = 0;
-        }
+        },
     },
     apollo: {
         interfaceData: {
@@ -98,12 +99,12 @@ type Interface = {
             prefetch: false,
             variables(): any {
                 return {
-                    ID: this.interfaceId ? this.interfaceId : -1
+                    ID: this.interfaceId ? this.interfaceId : -1,
                 };
             },
-            update: ({ PredefineInterface }) => PredefineInterface
-        }
-    }
+            update: ({ PredefineInterface }) => PredefineInterface,
+        },
+    },
 })
 export default class InterfacePanel extends Vue {
     $refs!: {
@@ -114,7 +115,7 @@ export default class InterfacePanel extends Vue {
     // by shkoh 20211007: 인터페이스 기본 정보
     interfaceData: Interface = {
         NAME: '',
-        INTF_CD: ''
+        INTF_CD: '',
     };
 
     // by shkoh 20211006: TabView Component Ref
@@ -131,6 +132,10 @@ export default class InterfacePanel extends Vue {
         );
 
         return !hasComm;
+    }
+
+    get showApplyButton(): boolean {
+        return this.interfaceTabIndex !== 1;
     }
 
     updateInterface() {
@@ -155,9 +160,9 @@ export default class InterfacePanel extends Vue {
                     severity: 'error',
                     summary: '인터페이스 삭제 처리',
                     detail: `미구현되었습니다. 삭제처리를 추후 논의 후 삭제할 것입니다`,
-                    life: 2000
+                    life: 2000,
                 });
-            }
+            },
         });
     }
 
