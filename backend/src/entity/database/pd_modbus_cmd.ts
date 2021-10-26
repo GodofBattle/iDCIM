@@ -1,7 +1,9 @@
-import { Field, ObjectType, Int, ArgsType } from "type-graphql";
+import { GraphQLList } from "graphql";
+import { Field, ObjectType, Int, ArgsType, InputType } from "type-graphql";
 import { Column, Entity, PrimaryColumn } from "typeorm";
 
 @ObjectType()
+@InputType('PdModbusCmdInput')
 @Entity({ synchronize: false })
 export class pd_modbus_cmd {
     @Field(() => Int!)
