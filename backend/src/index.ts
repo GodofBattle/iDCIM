@@ -16,6 +16,7 @@ import { SensorCodeResolver } from './resolver/sensorCode';
 import { PredefinedProductResolver } from './resolver/predefineProduct';
 import { PredefinedAssetResolver } from './resolver/predefineAsset';
 import { PredefinedInterfaceResolver } from './resolver/predefineInterface';
+import { PredefineSensorResolver } from "./resolver/predefineSensor";
 import { FileResolver } from './resolver/file';
 
 import Auth from './utils/auth';
@@ -30,6 +31,7 @@ const schemas = buildSchemaSync({
         PredefinedProductResolver,
         PredefinedAssetResolver,
         PredefinedInterfaceResolver,
+        PredefineSensorResolver,
         FileResolver
     ],
 });

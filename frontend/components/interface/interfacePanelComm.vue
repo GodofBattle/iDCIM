@@ -13,7 +13,7 @@
                     <div class="p-ml-auto">
                         <Button
                             icon="pi pi-save"
-                            label="일괄적용"
+                            label="SAVE ALL"
                             class="p-field p-button-outlined p-button-secondary"
                             :disabled="applyButtonDisabled"
                             @click="saveAll"

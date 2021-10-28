@@ -1,12 +1,12 @@
 import { AuthenticationError, SchemaError, UserInputError } from 'apollo-server-express';
 import { FileUpload, GraphQLUpload } from 'graphql-upload';
-import { Ctx, Mutation, Query, Resolver, PubSub, Publisher, Args, ID, Arg, Int, ArgsDictionary } from "type-graphql";
+import { Ctx, Mutation, Query, Resolver, PubSub, Publisher, Args, ID, Arg, Int } from "type-graphql";
 import { getRepository, MoreThan } from 'typeorm';
 
 import { pd_asset_code } from '../entity/database/pd_asset_code';
 import { pd_file } from '../entity/database/pd_file';
 import { pd_interface, pd_interface_args } from '../entity/database/pd_interface';
-import { pd_modbus_cmd, pd_modbus_cmd_arg } from '../entity/database/pd_modbus_cmd';
+import { pd_modbus_cmd, pd_modbus_cmd_arg, pd_modbus_cmd_input } from '../entity/database/pd_modbus_cmd';
 
 import streamToBuffer from '../utils/streamToBuffer';
 
@@ -306,7 +306,7 @@ export class PredefinedInterfaceResolver {
     @Mutation(() => Boolean, { nullable: true })
     async UpdatePredefineModbusCommands(
         // @Args(() => pd_modbus_cmd_array) pdModbusCmds: pd_modbus_cmd_array,
-        @Arg('Input', () => [pd_modbus_cmd], { nullable: true }) input: pd_modbus_cmd[],
+        @Arg('Input', () => [pd_modbus_cmd_input], { nullable: true }) input: pd_modbus_cmd_input[],
         @Ctx() ctx: any,
         @PubSub('REFRESHTOKEN') publish: Publisher<void>
     ) {
@@ -320,7 +320,7 @@ export class PredefinedInterfaceResolver {
             if(input.length === 0) throw new UserInputError('전달한 인자의 데이터가 존재하지 않습니다');
 
             let is_result: number = 0;
-            input.forEach(async (comm: pd_modbus_cmd) => {
+            input.forEach(async (comm: pd_modbus_cmd_input) => {
                 const { PD_INTF_ID, MC_ID, FUNC_NO, START_ADDR, POINT_CNT, DTYPE_CD } = comm;
                 const result = await getRepository(pd_modbus_cmd).update({ PD_INTF_ID, MC_ID }, { FUNC_NO, START_ADDR, POINT_CNT, DTYPE_CD });
                 is_result += result.affected;

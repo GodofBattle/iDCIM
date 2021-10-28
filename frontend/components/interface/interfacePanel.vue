@@ -6,12 +6,12 @@
             </div>
             <div class="p-ml-auto">
                 <Button
+                    v-show="showApplyButton"
                     icon="pi pi-check"
                     label="적용"
                     class="p-mr-2"
                     :disabled="applyButtonDisabled"
                     @click="updateInterface"
-                    v-show="showApplyButton"
                 ></Button>
                 <Button
                     icon="pi pi-trash"
@@ -52,7 +52,11 @@
                     <i class="pi pi-list p-mr-2"></i>
                     <span>수집항목</span>
                 </template>
-                미구현 - 2
+                <interface-panel-sensor
+                    :id="interfaceId"
+                    ref="interfacePanelSensor"
+                >
+                </interface-panel-sensor>
             </TabPanel>
             <TabPanel>
                 <template #header>
@@ -79,12 +83,7 @@ type Interface = {
 @Component<InterfacePanel>({
     props: {
         interfaceId: Number,
-        interfaceName: String,
-    },
-    watch: {
-        interfaceId() {
-            this.interfaceTabIndex = 0;
-        },
+        interfaceName: String
     },
     apollo: {
         interfaceData: {
@@ -99,28 +98,30 @@ type Interface = {
             prefetch: false,
             variables(): any {
                 return {
-                    ID: this.interfaceId ? this.interfaceId : -1,
+                    ID: this.interfaceId ? this.interfaceId : -1
                 };
             },
-            update: ({ PredefineInterface }) => PredefineInterface,
-        },
-    },
+            update: ({ PredefineInterface }) => PredefineInterface
+        }
+    }
 })
 export default class InterfacePanel extends Vue {
     $refs!: {
         interfacePanelInfo: any;
         interfacePanelComm: any;
+        interfacePanelSensor: any;
     };
 
     // by shkoh 20211007: 인터페이스 기본 정보
     interfaceData: Interface = {
         NAME: '',
-        INTF_CD: '',
+        INTF_CD: ''
     };
 
     // by shkoh 20211006: TabView Component Ref
     interfacePanelInfo = null;
     interfacePanelComm = null;
+    interfacePanelSensor = null;
 
     interfaceTabIndex = 0;
 
@@ -131,11 +132,16 @@ export default class InterfacePanel extends Vue {
             this.interfaceData.INTF_CD
         );
 
+        // by shkoh 20211026: Interface 통신방법 탭이 비활성되고, [통신방법] Tab을 보고 있다면 이 때 [기본정보] 탭으로 이동한다.
+        if (!hasComm && this.interfaceTabIndex === 1)
+            this.interfaceTabIndex = 0;
+
         return !hasComm;
     }
 
     get showApplyButton(): boolean {
-        return this.interfaceTabIndex !== 1;
+        // by shkoh 20211026: 인터페이스 창에서 [기본설정] 탭을 제외하고는 저장 버튼을 보여줄 일은 없다
+        return this.interfaceTabIndex === 0;
     }
 
     updateInterface() {
@@ -160,9 +166,9 @@ export default class InterfacePanel extends Vue {
                     severity: 'error',
                     summary: '인터페이스 삭제 처리',
                     detail: `미구현되었습니다. 삭제처리를 추후 논의 후 삭제할 것입니다`,
-                    life: 2000,
+                    life: 2000
                 });
-            },
+            }
         });
     }
 
