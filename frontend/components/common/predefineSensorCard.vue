@@ -24,7 +24,7 @@
         </template>
         <template #content>
             <div class="p-fluid p-formgrid p-grid p-input-filled">
-                <div class="p-field p-col-2 p-mb-0">
+                <div class="p-field p-col-1 p-mb-0">
                     <label for="p-sensor-name">NAME</label>
                     <InputText
                         id="p-sensor-name"
@@ -57,7 +57,7 @@
                     >
                     </InputText>
                 </div>
-                <div class="p-field p-col-2 p-mb-0">
+                <div v-if="hasComm" class="p-field p-col-2 p-mb-0">
                     <label for="mc-id">MODBUS ID</label>
                     <Dropdown
                         id="mc-id"
@@ -84,10 +84,11 @@
                         placeholder="Sensor Type"
                         empty-filter-message="센서 타입이 존재하지 않습니다"
                         append-to="body"
+                        @input="inputSensorType"
                     >
                     </Dropdown>
                 </div>
-                <div class="p-field p-col-1 p-mb-0">
+                <div v-if="isDispConv" class="p-field p-col-1 p-mb-0">
                     <label for="disp-power">단위</label>
                     <Dropdown
                         id="disp-power"
@@ -123,8 +124,16 @@ import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 
+interface SensorCode {
+    CODE: string;
+    NAME: string;
+    TYPE: string;
+    UNIT: string;
+    IS_DISP_CONV: number;
+}
+
 type Sensor = {
-    [index: string]: string | number;
+    [index: string]: undefined | string | number | SensorCode;
     NAME: string;
     ADJUST_VALUE: string;
     DATA_ADDRESS: string;
@@ -132,6 +141,9 @@ type Sensor = {
     SENSOR_CD: string;
     DISP_POWER: number;
     PD_THRESHOLD_ID: number;
+    IS_NOTI: number;
+    IS_MKSTATS: number;
+    SENSOR_CODE: SensorCode | undefined;
 };
 
 @Component<PredefineSensorCard>({
@@ -139,7 +151,7 @@ type Sensor = {
         interfaceId: Number,
         sensorId: Number,
         nodeId: Number,
-        name: String
+        hasComm: Boolean
     },
     apollo: {
         initSensorData: {
@@ -153,6 +165,15 @@ type Sensor = {
                         SENSOR_CD
                         DISP_POWER
                         PD_THRESHOLD_ID
+                        IS_NOTI
+                        IS_MKSTATS
+                        SENSOR_CODE {
+                            CODE
+                            NAME
+                            TYPE
+                            UNIT
+                            IS_DISP_CONV
+                        }
                     }
                 }
             `,
@@ -201,9 +222,7 @@ type Sensor = {
                     }
                 }
             `,
-            update: ({ SensorCodes }) => {
-                return SensorCodes;
-            }
+            update: ({ Codes }) => Codes
         },
         modbusCommandList: {
             query: gql`
@@ -240,7 +259,10 @@ export default class PredefineSensorCard extends Vue {
         MC_ID: 0,
         SENSOR_CD: '',
         DISP_POWER: 0,
-        PD_THRESHOLD_ID: 0
+        PD_THRESHOLD_ID: 0,
+        IS_NOTI: 0,
+        IS_MKSTATS: 0,
+        SENSOR_CODE: undefined
     };
 
     sensorData: Sensor = {
@@ -250,7 +272,10 @@ export default class PredefineSensorCard extends Vue {
         MC_ID: 0,
         SENSOR_CD: '',
         DISP_POWER: 0,
-        PD_THRESHOLD_ID: 0
+        PD_THRESHOLD_ID: 0,
+        IS_NOTI: 0,
+        IS_MKSTATS: 0,
+        SENSOR_CODE: undefined
     };
 
     apolloFetch(data: Sensor) {
@@ -267,6 +292,35 @@ export default class PredefineSensorCard extends Vue {
         )} | ${item.POINT_CNT.toString().padStart(2, '0')} | ${
             item.DTYPE_NAME
         }`;
+    }
+
+    get isDispConv(): boolean {
+        return !!this.sensorData.SENSOR_CODE?.IS_DISP_CONV;
+    }
+
+    inputSensorType(value: string) {
+        this.$apollo
+            .query({
+                query: gql`
+                query {
+                    SensorCode(CODE: "${value}") {
+                        CODE
+                        NAME
+                        TYPE
+                        UNIT
+                        IS_DISP_CONV
+                    }
+                }
+            `
+            })
+            .then(({ data: { SensorCode } }: any) => {
+                if (SensorCode) {
+                    this.$set(this.sensorData, 'SENSOR_CODE', SensorCode);
+                }
+            })
+            .catch((error) => {
+                console.info(error);
+            });
     }
 }
 </script>

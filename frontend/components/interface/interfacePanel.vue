@@ -55,6 +55,7 @@
                 <interface-panel-sensor
                     :id="interfaceId"
                     ref="interfacePanelSensor"
+                    :has-comm="!isDisabledComm"
                 >
                 </interface-panel-sensor>
             </TabPanel>

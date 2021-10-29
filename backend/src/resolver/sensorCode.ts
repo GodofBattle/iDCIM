@@ -19,6 +19,19 @@ export class SensorCodeResolver {
         }
     }
 
+    @Query(() => pd_sensor_code)
+    async SensorCode(@Arg('CODE') code: string, @Ctx() ctx: any) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return (await getRepository(pd_sensor_code).findOne(code));
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
     @Mutation(() => Boolean)
     async AddSensorCode(
         @Args() { CODE, NAME, TYPE, UNIT, IS_DISP_CONV, REMARK }: pd_sensor_code,

@@ -1,5 +1,6 @@
 import { ObjectType, Field, Int, ArgsType } from "type-graphql";
-import { Column, Entity, PrimaryColumn } from "typeorm";
+import { Column, Entity, OneToOne, PrimaryColumn } from "typeorm";
+import { pd_sensor } from "./pd_sensor";
 
 @ObjectType()
 @ArgsType()
@@ -28,4 +29,7 @@ export class pd_sensor_code {
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256, nullable: true, default: '', comment: '설명' })
     REMARK?: string | null;
+
+    @OneToOne(() => pd_sensor, (sensor: pd_sensor) => sensor.SENSOR_CODE, { lazy: true, primary: false, createForeignKeyConstraints: false })
+    PD_SENSOR?: pd_sensor;
 }

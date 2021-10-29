@@ -31,7 +31,7 @@
                         :interface-id="id"
                         :sensor-id="slotProps.data.ID"
                         :node-id="slotProps.data.NODE_ID"
-                        :name="slotProps.data.NAME"
+                        :has-comm="hasComm"
                     />
                 </template>
             </Column>
@@ -62,7 +62,8 @@ type Sensor = {
 
 @Component<InterfacePanelSensor>({
     props: {
-        id: Number
+        id: Number,
+        hasComm: Boolean
     },
     apollo: {
         dbSensorList: {
