@@ -30,13 +30,13 @@ export class pd_modbus_cmd {
     @Column({ type: 'varchar', length: 8, nullable: false, comment: '데이터타입(PD_CODE.CODE (TYPE="DTYPE"))' })
     DTYPE_CD: string;
 
-    @Field(() => String)
+    @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256, nullable: true, comment: '설명' })
     REMARK?: string;
 
     @AfterLoad()
-    @Field(() => String)
-    async DTYPE_NAME() {
+    @Field(() => String, { nullable: true })
+    async DTYPE_NAME?() {
         const code_data: pd_code = await getRepository(pd_code).findOne({ where: { CODE: this.DTYPE_CD } });
         return code_data.NAME;
     }

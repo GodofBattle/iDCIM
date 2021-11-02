@@ -105,16 +105,41 @@
                 </div>
                 <div class="p-field p-col-2 p-mb-0">
                     <label for="threshold">임계치 지정</label>
-                    <InputText
+                    <Dropdown
+                        v-if="isAnalogValue"
                         id="threshold"
                         v-model="sensorData.PD_THRESHOLD_ID"
-                        type="text"
-                        aria-describedby="threshold-help"
-                        autocomplete="off"
+                        :options="pdThresholdAIList"
+                        option-label="NAME"
+                        option-value="ID"
+                        data-key="ID"
+                        placeholder="임계치"
+                        empty-filter-message="선택 가능한 임계치가 존재하지 않습니다"
+                        append-to="body"
                     >
-                    </InputText>
+                    </Dropdown>
+                    <Dropdown
+                        v-if="!isAnalogValue"
+                        id="threshold"
+                        v-model="sensorData.PD_THRESHOLD_ID"
+                        :options="pdThresholdDIList"
+                        option-label="NAME"
+                        option-value="ID"
+                        data-key="ID"
+                        placeholder="임계치"
+                        empty-filter-message="선택 가능한 임계치가 존재하지 않습니다"
+                        append-to="body"
+                    >
+                    </Dropdown>
                 </div>
             </div>
+            <Panel
+                :header="thresholdLabel"
+                :toggleable="true"
+                class="p-mt-2"
+                :collapsed="true"
+            >
+            </Panel>
         </template>
     </Card>
 </template>
@@ -208,9 +233,7 @@ type Sensor = {
                     }
                 }
             `,
-            update: ({ SensorCodes }) => {
-                return SensorCodes;
-            }
+            update: ({ SensorCodes }) => SensorCodes
         },
         displayPowerList: {
             query: gql`
@@ -244,13 +267,57 @@ type Sensor = {
                 };
             },
             update: ({ PredefineModbusCommands }) => PredefineModbusCommands
+        },
+        pdThresholdAIList: {
+            query: gql`
+                query PredefineThresholdsByAI($SENSOR_CD: String!) {
+                    PredefineThresholdsByAI(SENSOR_CD: $SENSOR_CD) {
+                        ID
+                        NAME
+                        SENSOR_CD
+                        HOLD_TIME
+                    }
+                }
+            `,
+            prefetch: false,
+            variables(): any {
+                return {
+                    SENSOR_CD: this.sensorData.SENSOR_CD
+                        ? this.sensorData.SENSOR_CD
+                        : ''
+                };
+            },
+            update: ({ PredefineThresholdsByAI }) => PredefineThresholdsByAI
+        },
+        pdThresholdDIList: {
+            query: gql`
+                query PredefineThresholdsByDI($SENSOR_CD: String!) {
+                    PredefineThresholdsByDI(SENSOR_CD: $SENSOR_CD) {
+                        ID
+                        NAME
+                        SENSOR_CD
+                        HOLD_TIME
+                    }
+                }
+            `,
+            prefetch: false,
+            variables(): any {
+                return {
+                    SENSOR_CD: this.sensorData.SENSOR_CD
+                        ? this.sensorData.SENSOR_CD
+                        : ''
+                };
+            },
+            update: ({ PredefineThresholdsByDI }) => PredefineThresholdsByDI
         }
     }
 })
 export default class PredefineSensorCard extends Vue {
     modbusCommandList = [];
     sensorCodeList = [];
-    displayPowerList = [];
+    displayPowerList: Array<any> = [];
+    pdThresholdAIList = [];
+    pdThresholdDIList = [];
 
     initSensorData: Sensor = {
         NAME: '',
@@ -279,6 +346,7 @@ export default class PredefineSensorCard extends Vue {
     };
 
     apolloFetch(data: Sensor) {
+        console.info(data.PD_THRESHOLD_ID);
         Object.assign(this.sensorData, data);
     }
 
@@ -295,7 +363,31 @@ export default class PredefineSensorCard extends Vue {
     }
 
     get isDispConv(): boolean {
+        // by shkoh 20211102: 선택한 임계치 설정에서 센서타입이 단위표기가 가능한지 여부를 판가름
         return !!this.sensorData.SENSOR_CODE?.IS_DISP_CONV;
+    }
+
+    get isAnalogValue(): boolean {
+        // by shkoh 20211102: 선택한 임계치 설정에서 센서타입이 아날로그 값인지, 디지털 값인지 구분
+        return this.sensorData.SENSOR_CODE?.TYPE === 'A';
+    }
+
+    get thresholdLabel(): string {
+        let label = '임계치 보기';
+
+        if (this.isAnalogValue && this.sensorData.SENSOR_CODE?.UNIT) {
+            const power: any = this.isDispConv
+                ? this.displayPowerList
+                      .filter(
+                          (l: any) => l.VALUE === this.sensorData.DISP_POWER
+                      )
+                      .pop().NAME
+                : ``;
+
+            label += `(${power}${this.sensorData.SENSOR_CODE.UNIT})`;
+        }
+
+        return label;
     }
 
     inputSensorType(value: string) {
@@ -316,6 +408,7 @@ export default class PredefineSensorCard extends Vue {
             .then(({ data: { SensorCode } }: any) => {
                 if (SensorCode) {
                     this.$set(this.sensorData, 'SENSOR_CODE', SensorCode);
+                    this.$set(this.sensorData, 'PD_THRESHOLD_ID', 0);
                 }
             })
             .catch((error) => {
