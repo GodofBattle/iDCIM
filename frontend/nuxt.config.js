@@ -143,6 +143,7 @@ export default {
             'PickList',
             'ScrollPanel',
             'SelectButton',
+            'Slider',
             'Tag',
             'TabMenu',
             'TabPanel',

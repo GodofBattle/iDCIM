@@ -139,6 +139,15 @@
                 class="p-mt-2"
                 :collapsed="true"
             >
+                <div v-if="sliderValue">
+                    <h4>{{ sliderValue }}</h4>
+                    <Slider
+                        v-model="sliderValue"
+                        :range="true"
+                        :min="-100"
+                        :max="200"
+                    />
+                </div>
             </Panel>
         </template>
     </Card>
@@ -313,6 +322,8 @@ type Sensor = {
     }
 })
 export default class PredefineSensorCard extends Vue {
+    sliderValue = [20, 80, 100];
+
     modbusCommandList = [];
     sensorCodeList = [];
     displayPowerList: Array<any> = [];
@@ -346,7 +357,6 @@ export default class PredefineSensorCard extends Vue {
     };
 
     apolloFetch(data: Sensor) {
-        console.info(data.PD_THRESHOLD_ID);
         Object.assign(this.sensorData, data);
     }
 
