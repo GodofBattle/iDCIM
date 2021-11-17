@@ -1,11 +1,15 @@
 import { ObjectType, Field, Int, ArgsType } from "type-graphql";
-import { Column, Entity, OneToOne, PrimaryColumn } from "typeorm";
+import { Column, Entity, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { pd_sensor } from "./pd_sensor";
 
 @ObjectType()
 @ArgsType()
 @Entity({ synchronize: false })
 export class pd_sensor_code {
+    @Field(() => Int!, { nullable: true })
+    @PrimaryGeneratedColumn('increment', { type: 'int', comment: '아이디' })
+    ID: number;
+
     @Field(() => String!)
     @PrimaryColumn({ type: 'varchar', length: 8, nullable: false, comment: '코드' })
     CODE: string;

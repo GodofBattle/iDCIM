@@ -5,7 +5,23 @@
                 <div class="p-as-center p-pl-2 i-header-title">
                     NODE ID: {{ nodeId }}
                 </div>
-                <div class="p-ml-auto">
+                <div class="p-ml-auto p-d-flex">
+                    <div class="p-field-checkbox p-mb-0 p-mr-4">
+                        <Checkbox
+                            id="is_mkstat"
+                            v-model="sensorData.IS_MKSTATS"
+                            :binary="true"
+                        />
+                        <label for="is_mkstat">통계생성</label>
+                    </div>
+                    <div class="p-field-checkbox p-mb-0 p-mr-2">
+                        <Checkbox
+                            id="is_noti"
+                            v-model="sensorData.IS_NOTI"
+                            :binary="true"
+                        />
+                        <label for="is_noti">알림</label>
+                    </div>
                     <Button
                         class="p-button-rounded p-button-text p-button-help"
                         icon="pi pi-copy"
@@ -116,6 +132,7 @@
                         placeholder="임계치"
                         empty-filter-message="선택 가능한 임계치가 존재하지 않습니다"
                         append-to="body"
+                        @input="inputPdThresholdAI"
                     >
                     </Dropdown>
                     <Dropdown
@@ -129,6 +146,7 @@
                         placeholder="임계치"
                         empty-filter-message="선택 가능한 임계치가 존재하지 않습니다"
                         append-to="body"
+                        @input="inputPdThresholdDI"
                     >
                     </Dropdown>
                 </div>
@@ -139,14 +157,36 @@
                 class="p-mt-2"
                 :collapsed="true"
             >
-                <div v-if="sliderValue">
-                    <h4>{{ sliderValue }}</h4>
-                    <Slider
-                        v-model="sliderValue"
-                        :range="true"
-                        :min="-100"
-                        :max="200"
-                    />
+                <div
+                    v-if="
+                        isAnalogValue &&
+                        sensorData.PD_THRESHOLD_ID > 0 &&
+                        aiThresholdData !== null
+                    "
+                >
+                    <threshold-analog
+                        :show-min-max="aiThresholdData.IS_VALID === 1"
+                        :n3="aiThresholdData.POINT_N3"
+                        :n2="aiThresholdData.POINT_N2"
+                        :n1="aiThresholdData.POINT_N1"
+                        :p1="aiThresholdData.POINT_P1"
+                        :p2="aiThresholdData.POINT_P2"
+                        :p3="aiThresholdData.POINT_P3"
+                        :min="aiThresholdData.VALID_MIN"
+                        :max="aiThresholdData.VALID_MAX"
+                        :disabled="true"
+                    ></threshold-analog>
+                </div>
+                <div
+                    v-else-if="
+                        !isAnalogValue &&
+                        sensorData.PD_THRESHOLD_ID > 0 &&
+                        diThresholdData !== null
+                    "
+                >
+                    <threshold-digital
+                        :di="diThresholdData.DI"
+                    ></threshold-digital>
                 </div>
             </Panel>
         </template>
@@ -166,6 +206,12 @@ interface SensorCode {
     IS_DISP_CONV: number;
 }
 
+interface DIValue {
+    INDEX: number;
+    LEVEL: number;
+    LABEL: string;
+}
+
 type Sensor = {
     [index: string]: undefined | string | number | SensorCode;
     NAME: string;
@@ -178,6 +224,28 @@ type Sensor = {
     IS_NOTI: number;
     IS_MKSTATS: number;
     SENSOR_CODE: SensorCode | undefined;
+};
+
+type AnalogThreshold = {
+    [index: string]: number;
+    ID: number;
+    HOLD_TIME: number;
+    VALID_MIN: number;
+    VALID_MAX: number;
+    IS_VALID: number;
+    POINT_N3: number;
+    POINT_N2: number;
+    POINT_N1: number;
+    POINT_P1: number;
+    POINT_P2: number;
+    POINT_P3: number;
+};
+
+type DigitalThreshold = {
+    [index: string]: number | string | Array<DIValue>;
+    ID: number;
+    HOLD_TIME: number;
+    DI: Array<DIValue>;
 };
 
 @Component<PredefineSensorCard>({
@@ -322,8 +390,6 @@ type Sensor = {
     }
 })
 export default class PredefineSensorCard extends Vue {
-    sliderValue = [20, 80, 100];
-
     modbusCommandList = [];
     sensorCodeList = [];
     displayPowerList: Array<any> = [];
@@ -356,8 +422,17 @@ export default class PredefineSensorCard extends Vue {
         SENSOR_CODE: undefined
     };
 
+    aiThresholdData: AnalogThreshold | null = null;
+    diThresholdData: DigitalThreshold | null = null;
+
     apolloFetch(data: Sensor) {
         Object.assign(this.sensorData, data);
+
+        if (data.SENSOR_CODE?.TYPE === 'A' && data.PD_THRESHOLD_ID > 0) {
+            this.getAIThresholdData();
+        } else if (data.SENSOR_CODE?.TYPE === 'D' && data.PD_THRESHOLD_ID > 0) {
+            this.getDIThresholdData();
+        }
     }
 
     modbusCommandLabel(item: any) {
@@ -397,6 +472,12 @@ export default class PredefineSensorCard extends Vue {
             label += `(${power}${this.sensorData.SENSOR_CODE.UNIT})`;
         }
 
+        if (this.isAnalogValue && this.aiThresholdData !== null) {
+            label += ` - 지속시간: ${this.aiThresholdData?.HOLD_TIME}초`;
+        } else if (!this.isAnalogValue && this.diThresholdData !== null) {
+            label += ` - 지속시간: ${this.diThresholdData?.HOLD_TIME}초`;
+        }
+
         return label;
     }
 
@@ -419,10 +500,85 @@ export default class PredefineSensorCard extends Vue {
                 if (SensorCode) {
                     this.$set(this.sensorData, 'SENSOR_CODE', SensorCode);
                     this.$set(this.sensorData, 'PD_THRESHOLD_ID', 0);
+
+                    this.aiThresholdData = null;
+                    this.diThresholdData = null;
                 }
             })
             .catch((error) => {
-                console.info(error);
+                console.error(error);
+            });
+    }
+
+    // by shkoh 20211117: Analog 값에 대한 임계치 지정 Dropdown의 값이 변경될 때 발생 이벤트
+    inputPdThresholdAI() {
+        this.getAIThresholdData();
+    }
+
+    // by shkoh 20211117: Digital 값에 대한 임계치 지정 Dropdown의 값이 변경될 때 발생 이벤트
+    inputPdThresholdDI() {
+        this.getDIThresholdData();
+    }
+
+    getAIThresholdData() {
+        this.$apollo
+            .query({
+                query: gql`
+                    query {
+                        PredefineThresholdByAI(ID: ${this.sensorData.PD_THRESHOLD_ID}) {
+                            ID
+                            HOLD_TIME
+                            VALID_MIN
+                            VALID_MAX
+                            IS_VALID
+                            POINT_N3
+                            POINT_N2
+                            POINT_N1
+                            POINT_P1
+                            POINT_P2
+                            POINT_P3
+                        }
+                    }
+                `
+            })
+            .then(({ data: { PredefineThresholdByAI } }: any) => {
+                if (PredefineThresholdByAI) {
+                    this.aiThresholdData = PredefineThresholdByAI;
+                } else {
+                    this.aiThresholdData = null;
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+
+    getDIThresholdData() {
+        this.$apollo
+            .query({
+                query: gql`
+                    query {
+                        PredefineThresholdByDI(ID: ${this.sensorData.PD_THRESHOLD_ID}) {
+                            ID
+                            HOLD_TIME
+                            DI {
+                                INDEX
+                                LEVEL
+                                LABEL
+                            }
+                        }
+                    }
+                `
+            })
+            .then(({ data: { PredefineThresholdByDI } }: any) => {
+                if (PredefineThresholdByDI) {
+                    this.diThresholdData = PredefineThresholdByDI;
+                } else {
+                    this.diThresholdData = null;
+                }
+            })
+            .catch((error) => {
+                console.error(error);
             });
     }
 }

@@ -273,15 +273,15 @@ export class PredefinedInterfaceResolver {
             if (!mc_id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
 
             let is_result = 0;
-            const previous_data: pd_modbus_cmd[] = await getRepository(pd_modbus_cmd).find({ PD_INTF_ID: pd_interface_id, MC_ID: MoreThan(mc_id) });
+            const previous_data: pd_modbus_cmd[] = await getRepository(pd_modbus_cmd).find({ where: { PD_INTF_ID: pd_interface_id, MC_ID: MoreThan(mc_id) }, order: { PD_INTF_ID: 'ASC', MC_ID: 'ASC' } });
             previous_data.unshift({
+                ID: 0,
                 PD_INTF_ID: pd_interface_id,
                 MC_ID: mc_id,
                 FUNC_NO: FUNC_NO,
                 START_ADDR: START_ADDR,
                 POINT_CNT: POINT_CNT,
-                DTYPE_CD: DTYPE_CD,
-                REMARK: ''
+                DTYPE_CD: DTYPE_CD
             });
 
             previous_data.forEach(async (pdModbusCmd: pd_modbus_cmd, index: number, pData: pd_modbus_cmd[]) => {
@@ -305,7 +305,6 @@ export class PredefinedInterfaceResolver {
 
     @Mutation(() => Boolean, { nullable: true })
     async UpdatePredefineModbusCommands(
-        // @Args(() => pd_modbus_cmd_array) pdModbusCmds: pd_modbus_cmd_array,
         @Arg('Input', () => [pd_modbus_cmd_input], { nullable: true }) input: pd_modbus_cmd_input[],
         @Ctx() ctx: any,
         @PubSub('REFRESHTOKEN') publish: Publisher<void>

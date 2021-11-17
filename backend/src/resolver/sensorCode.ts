@@ -13,7 +13,7 @@ export class SensorCodeResolver {
         }
 
         try {
-            return (await getRepository(pd_sensor_code).find());
+            return (await getRepository(pd_sensor_code).find({ order: { CODE: 'ASC' } }));
         } catch (err) {
             throw new SchemaError(err.message);
         }
@@ -26,7 +26,7 @@ export class SensorCodeResolver {
         }
 
         try {
-            return (await getRepository(pd_sensor_code).findOne(code));
+            return (await getRepository(pd_sensor_code).findOne({ CODE: code }));
         } catch (err) {
             throw new SchemaError(err.message);
         }
@@ -56,7 +56,7 @@ export class SensorCodeResolver {
 
     @Mutation(() => Boolean)
     async UpdateSensorCode(
-        @Arg('ID') ID: string,
+        @Arg('ID') code: string,
         @Args() { CODE, NAME, TYPE, UNIT, IS_DISP_CONV, REMARK }: pd_sensor_code,
         @Ctx() ctx: any,
         @PubSub('REFRESHTOKEN') publish: Publisher<void>
@@ -68,7 +68,7 @@ export class SensorCodeResolver {
         try {
             await publish();
 
-            if (!ID) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            if (!code) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
 
             // by shkoh 20210818: 전달받은 인자들 중에서 반드시 필요한 인자들만 적용함
             const update_data = {};
@@ -76,7 +76,7 @@ export class SensorCodeResolver {
                 if (value !== undefined) update_data[key] = value;
             }
 
-            const result = await getRepository(pd_sensor_code).update({ CODE: ID }, update_data);
+            const result = await getRepository(pd_sensor_code).update({ CODE: code }, update_data);
             return result.affected > 0 ? true : false;
         } catch (err) {
             throw new SchemaError(err.message);

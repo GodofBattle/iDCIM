@@ -1,6 +1,10 @@
 :root {
     --header-height: 71px;
     --tree-searching-height: 29px;
+    --normal: #4444ee;
+    --warning: #eeee66;
+    --major: #eeaa66;
+    --critical: #ee6666;
 }
 
 html {

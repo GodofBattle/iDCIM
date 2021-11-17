@@ -1,11 +1,15 @@
 import { Field, ObjectType, Int, ArgsType, InputType } from "type-graphql";
-import { AfterLoad, Column, Entity, getRepository, PrimaryColumn } from "typeorm";
+import { AfterLoad, Column, Entity, getRepository, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 
 import { pd_code } from "./pd_code";
 
 @ObjectType()
 @Entity({ synchronize: false })
 export class pd_modbus_cmd {
+    @Field(() => Int!, { nullable: true })
+    @PrimaryGeneratedColumn('increment', { type: 'int', comment: '아이디' })
+    ID: number;
+
     @Field(() => Int!)
     @PrimaryColumn({ type: 'int', nullable: false, comment: '사전정의_인터페이스아이디(od_interface.id)' })
     PD_INTF_ID: number;
