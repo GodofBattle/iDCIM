@@ -1,5 +1,5 @@
 <template>
-    <Card id="predefineSensorCard">
+    <Card id="predefineSensorCard" :class="predefineSensorCardClass">
         <template #header>
             <div class="p-d-flex">
                 <div class="p-as-center p-pl-2 i-header-title">
@@ -9,7 +9,7 @@
                     <div class="p-field-checkbox p-mb-0 p-mr-4">
                         <Checkbox
                             id="is_mkstat"
-                            v-model="sensorData.IS_MKSTATS"
+                            v-model="chkStat"
                             :binary="true"
                         />
                         <label for="is_mkstat">통계생성</label>
@@ -17,7 +17,7 @@
                     <div class="p-field-checkbox p-mb-0 p-mr-2">
                         <Checkbox
                             id="is_noti"
-                            v-model="sensorData.IS_NOTI"
+                            v-model="chkNoti"
                             :binary="true"
                         />
                         <label for="is_noti">알림</label>
@@ -25,14 +25,18 @@
                     <Button
                         class="p-button-rounded p-button-text p-button-help"
                         icon="pi pi-copy"
+                        @click="copySensorCard"
                     ></Button>
                     <Button
                         class="p-button-rounded p-button-text p-buttom-success"
                         icon="pi pi-save"
+                        :disabled="saveButtonDisabled"
+                        @click="saveSensorCard"
                     ></Button>
                     <Button
                         class="p-button-rounded p-button-text p-button-danger"
                         icon="pi pi-minus"
+                        @click="deleteSensorCard"
                     ></Button>
                 </div>
             </div>
@@ -44,10 +48,11 @@
                     <label for="p-sensor-name">NAME</label>
                     <InputText
                         id="p-sensor-name"
-                        v-model="sensorData.NAME"
+                        v-model="data.NAME"
                         type="text"
                         aria-describedby="p-sensor-name-help"
                         autocomplete="off"
+                        @input="inputName"
                     >
                     </InputText>
                 </div>
@@ -55,10 +60,11 @@
                     <label for="adjust-value">표현식</label>
                     <InputText
                         id="adjust-value"
-                        v-model="sensorData.ADJUST_VALUE"
+                        v-model="data.ADJUST_VALUE"
                         type="text"
                         aria-describedby="adjust-value-help"
                         autocomplete="off"
+                        @input="inputAdjustValue"
                     >
                     </InputText>
                 </div>
@@ -66,10 +72,11 @@
                     <label for="data-address">ADDRESS</label>
                     <InputText
                         id="data-address"
-                        v-model="sensorData.DATA_ADDRESS"
+                        v-model="data.DATA_ADDRESS"
                         type="text"
                         aria-describedby="data-address-help"
                         autocomplete="off"
+                        @input="inputDataAddress"
                     >
                     </InputText>
                 </div>
@@ -77,7 +84,7 @@
                     <label for="mc-id">MODBUS ID</label>
                     <Dropdown
                         id="mc-id"
-                        v-model="sensorData.MC_ID"
+                        v-model="data.MC_ID"
                         :options="modbusCommandList"
                         :option-label="modbusCommandLabel"
                         option-value="MC_ID"
@@ -85,6 +92,7 @@
                         placeholder="MODBUS CMD"
                         empty-filter-message="MODBUS 명령어가 존재하지 않습니다"
                         append-to="body"
+                        @input="inputMcId"
                     >
                     </Dropdown>
                 </div>
@@ -92,7 +100,7 @@
                     <label for="sensor-cd">TYPE</label>
                     <Dropdown
                         id="sensor-cd"
-                        v-model="sensorData.SENSOR_CD"
+                        v-model="data.SENSOR_CD"
                         :options="sensorCodeList"
                         option-label="NAME"
                         option-value="CODE"
@@ -108,7 +116,7 @@
                     <label for="disp-power">단위</label>
                     <Dropdown
                         id="disp-power"
-                        v-model="sensorData.DISP_POWER"
+                        v-model="data.DISP_POWER"
                         :options="displayPowerList"
                         option-label="NAME"
                         option-value="VALUE"
@@ -116,6 +124,7 @@
                         placeholder="단위"
                         empty-filter-message="선택 가능한 단위가 존재하지 않습니다"
                         append-to="body"
+                        @input="inputDispPower"
                     >
                     </Dropdown>
                 </div>
@@ -124,7 +133,7 @@
                     <Dropdown
                         v-if="isAnalogValue"
                         id="threshold"
-                        v-model="sensorData.PD_THRESHOLD_ID"
+                        v-model="data.PD_THRESHOLD_ID"
                         :options="pdThresholdAIList"
                         option-label="NAME"
                         option-value="ID"
@@ -132,13 +141,13 @@
                         placeholder="임계치"
                         empty-filter-message="선택 가능한 임계치가 존재하지 않습니다"
                         append-to="body"
-                        @input="inputPdThresholdAI"
+                        @input="inputPdThresholdId"
                     >
                     </Dropdown>
                     <Dropdown
                         v-if="!isAnalogValue"
                         id="threshold"
-                        v-model="sensorData.PD_THRESHOLD_ID"
+                        v-model="data.PD_THRESHOLD_ID"
                         :options="pdThresholdDIList"
                         option-label="NAME"
                         option-value="ID"
@@ -146,7 +155,7 @@
                         placeholder="임계치"
                         empty-filter-message="선택 가능한 임계치가 존재하지 않습니다"
                         append-to="body"
-                        @input="inputPdThresholdDI"
+                        @input="inputPdThresholdId"
                     >
                     </Dropdown>
                 </div>
@@ -160,7 +169,7 @@
                 <div
                     v-if="
                         isAnalogValue &&
-                        sensorData.PD_THRESHOLD_ID > 0 &&
+                        data.PD_THRESHOLD_ID > 0 &&
                         aiThresholdData !== null
                     "
                 >
@@ -180,7 +189,7 @@
                 <div
                     v-else-if="
                         !isAnalogValue &&
-                        sensorData.PD_THRESHOLD_ID > 0 &&
+                        data.PD_THRESHOLD_ID > 0 &&
                         diThresholdData !== null
                     "
                 >
@@ -206,14 +215,8 @@ interface SensorCode {
     IS_DISP_CONV: number;
 }
 
-interface DIValue {
-    INDEX: number;
-    LEVEL: number;
-    LABEL: string;
-}
-
-type Sensor = {
-    [index: string]: undefined | string | number | SensorCode;
+type PredefineSensor = {
+    [index: string]: undefined | string | number;
     NAME: string;
     ADJUST_VALUE: string;
     DATA_ADDRESS: string;
@@ -223,8 +226,13 @@ type Sensor = {
     PD_THRESHOLD_ID: number;
     IS_NOTI: number;
     IS_MKSTATS: number;
-    SENSOR_CODE: SensorCode | undefined;
 };
+
+interface DIValue {
+    INDEX: number;
+    LEVEL: number;
+    LABEL: string;
+}
 
 type AnalogThreshold = {
     [index: string]: number;
@@ -253,98 +261,22 @@ type DigitalThreshold = {
         interfaceId: Number,
         sensorId: Number,
         nodeId: Number,
-        hasComm: Boolean
+        hasComm: Boolean,
+        initSensorData: Object,
+        modbusCommandList: Array,
+        sensorCodeList: Array,
+        displayPowerList: Array,
+        name: String,
+        adjustValue: String,
+        dataAddress: String,
+        mcId: Number,
+        sensorCd: String,
+        dispPower: Number,
+        pdThresholdId: Number,
+        isNoti: Number,
+        isMkStats: Number
     },
     apollo: {
-        initSensorData: {
-            query: gql`
-                query PredefineSensor($ID: Int!) {
-                    PredefineSensor(ID: $ID) {
-                        NAME
-                        ADJUST_VALUE
-                        DATA_ADDRESS
-                        MC_ID
-                        SENSOR_CD
-                        DISP_POWER
-                        PD_THRESHOLD_ID
-                        IS_NOTI
-                        IS_MKSTATS
-                        SENSOR_CODE {
-                            CODE
-                            NAME
-                            TYPE
-                            UNIT
-                            IS_DISP_CONV
-                        }
-                    }
-                }
-            `,
-            variables() {
-                return {
-                    ID: this.sensorId ? this.sensorId : -1
-                };
-            },
-            prefetch: false,
-            fetchPolicy: 'cache-and-network',
-            update: ({ PredefineSensor }) => PredefineSensor,
-            result({ loading, data }) {
-                if (!loading) {
-                    const { PredefineSensor } = data;
-
-                    if (PredefineSensor) {
-                        this.apolloFetch(PredefineSensor);
-                    }
-                }
-            }
-        },
-        sensorCodeList: {
-            query: gql`
-                query {
-                    SensorCodes {
-                        CODE
-                        NAME
-                        TYPE
-                        UNIT
-                        IS_DISP_CONV
-                        REMARK
-                    }
-                }
-            `,
-            update: ({ SensorCodes }) => SensorCodes
-        },
-        displayPowerList: {
-            query: gql`
-                query {
-                    Codes(TYPE: "POWER") {
-                        CODE
-                        NAME
-                        VALUE
-                    }
-                }
-            `,
-            update: ({ Codes }) => Codes
-        },
-        modbusCommandList: {
-            query: gql`
-                query PredefineModbusCommands($PD_INTF_ID: Int!) {
-                    PredefineModbusCommands(PD_INTF_ID: $PD_INTF_ID) {
-                        PD_INTF_ID
-                        MC_ID
-                        FUNC_NO
-                        START_ADDR
-                        POINT_CNT
-                        DTYPE_CD
-                        DTYPE_NAME
-                    }
-                }
-            `,
-            variables(): any {
-                return {
-                    PD_INTF_ID: this.interfaceId ? this.interfaceId : -1
-                };
-            },
-            update: ({ PredefineModbusCommands }) => PredefineModbusCommands
-        },
         pdThresholdAIList: {
             query: gql`
                 query PredefineThresholdsByAI($SENSOR_CD: String!) {
@@ -359,9 +291,7 @@ type DigitalThreshold = {
             prefetch: false,
             variables(): any {
                 return {
-                    SENSOR_CD: this.sensorData.SENSOR_CD
-                        ? this.sensorData.SENSOR_CD
-                        : ''
+                    SENSOR_CD: this.sensorCode?.CODE ?? ''
                 };
             },
             update: ({ PredefineThresholdsByAI }) => PredefineThresholdsByAI
@@ -380,59 +310,159 @@ type DigitalThreshold = {
             prefetch: false,
             variables(): any {
                 return {
-                    SENSOR_CD: this.sensorData.SENSOR_CD
-                        ? this.sensorData.SENSOR_CD
-                        : ''
+                    SENSOR_CD: this.sensorCode?.CODE ?? ''
                 };
             },
             update: ({ PredefineThresholdsByDI }) => PredefineThresholdsByDI
+        },
+        aiThresholdData: {
+            query: gql`
+                query PredefineThresholdByAI($ID: Int!) {
+                    PredefineThresholdByAI(ID: $ID) {
+                        ID
+                        HOLD_TIME
+                        VALID_MIN
+                        VALID_MAX
+                        IS_VALID
+                        POINT_N3
+                        POINT_N2
+                        POINT_N1
+                        POINT_P1
+                        POINT_P2
+                        POINT_P3
+                    }
+                }
+            `,
+            prefetch: false,
+            variables(): any {
+                return {
+                    ID:
+                        this.sensorCode?.TYPE === 'A' &&
+                        this.data.PD_THRESHOLD_ID > 0
+                            ? this.data.PD_THRESHOLD_ID
+                            : 0
+                };
+            },
+            update: ({ PredefineThresholdByAI }) => PredefineThresholdByAI
+        },
+        diThresholdData: {
+            query: gql`
+                query PredefineThresholdByDI($ID: Int!) {
+                    PredefineThresholdByDI(ID: $ID) {
+                        ID
+                        HOLD_TIME
+                        DI {
+                            INDEX
+                            LEVEL
+                            LABEL
+                        }
+                    }
+                }
+            `,
+            prefetch: false,
+            variables(): any {
+                return {
+                    ID:
+                        this.sensorCode?.TYPE === 'D' &&
+                        this.data.PD_THRESHOLD_ID > 0
+                            ? this.data.PD_THRESHOLD_ID
+                            : 0
+                };
+            },
+            update: ({ PredefineThresholdByDI }) => PredefineThresholdByDI
         }
     }
 })
 export default class PredefineSensorCard extends Vue {
-    modbusCommandList = [];
-    sensorCodeList = [];
-    displayPowerList: Array<any> = [];
-    pdThresholdAIList = [];
-    pdThresholdDIList = [];
-
-    initSensorData: Sensor = {
-        NAME: '',
-        ADJUST_VALUE: '',
-        DATA_ADDRESS: '',
-        MC_ID: 0,
-        SENSOR_CD: '',
-        DISP_POWER: 0,
-        PD_THRESHOLD_ID: 0,
-        IS_NOTI: 0,
-        IS_MKSTATS: 0,
-        SENSOR_CODE: undefined
+    data: PredefineSensor = {
+        NAME: this.$props.name,
+        ADJUST_VALUE: this.$props.adjustValue,
+        DATA_ADDRESS: this.$props.dataAddress,
+        MC_ID: this.$props.mcId,
+        SENSOR_CD: this.$props.sensorCd,
+        DISP_POWER: this.$props.dispPower,
+        PD_THRESHOLD_ID: this.$props.pdThresholdId,
+        IS_NOTI: this.$props.isNoti,
+        IS_MKSTATS: this.$props.isMkStats
     };
 
-    sensorData: Sensor = {
-        NAME: '',
-        ADJUST_VALUE: '',
-        DATA_ADDRESS: '',
-        MC_ID: 0,
-        SENSOR_CD: '',
-        DISP_POWER: 0,
-        PD_THRESHOLD_ID: 0,
-        IS_NOTI: 0,
-        IS_MKSTATS: 0,
-        SENSOR_CODE: undefined
-    };
+    pdThresholdAIList: Array<any> = [];
+    pdThresholdDIList: Array<any> = [];
 
     aiThresholdData: AnalogThreshold | null = null;
     diThresholdData: DigitalThreshold | null = null;
 
-    apolloFetch(data: Sensor) {
-        Object.assign(this.sensorData, data);
-
-        if (data.SENSOR_CODE?.TYPE === 'A' && data.PD_THRESHOLD_ID > 0) {
-            this.getAIThresholdData();
-        } else if (data.SENSOR_CODE?.TYPE === 'D' && data.PD_THRESHOLD_ID > 0) {
-            this.getDIThresholdData();
+    get saveButtonDisabled(): boolean {
+        let is_disabled = true;
+        for (const key of Object.keys(this.data)) {
+            if (this.data[key] !== this.$props.initSensorData[key]) {
+                is_disabled = false;
+                break;
+            }
         }
+
+        this.$emit('change', {
+            id: this.$props.sensorId,
+            isEdit: !is_disabled
+        });
+        return is_disabled;
+    }
+
+    get predefineSensorCardClass(): Array<string | object> {
+        return [{ 'i-editable': !this.saveButtonDisabled }];
+    }
+
+    get chkNoti(): boolean {
+        return this.data.IS_NOTI === 1;
+    }
+
+    set chkNoti(_noti: boolean) {
+        this.data.IS_NOTI = _noti ? 1 : 0;
+        this.$emit('update:isNoti', this.data.IS_NOTI);
+    }
+
+    get chkStat(): boolean {
+        return this.data.IS_MKSTATS === 1;
+    }
+
+    set chkStat(_stat) {
+        this.data.IS_MKSTATS = _stat ? 1 : 0;
+        this.$emit('update:isMkStats', this.data.IS_MKSTATS);
+    }
+
+    get isDispConv(): boolean {
+        return !!this.sensorCode?.IS_DISP_CONV;
+    }
+
+    get isAnalogValue(): boolean {
+        return this.sensorCode?.TYPE === 'A';
+    }
+
+    get thresholdLabel(): string {
+        // by shkoh 20211118: Threshold 임계치 보기 단위 및 지속시간을 텍스트로 표현
+        let label = '임계치 보기';
+
+        if (this.isAnalogValue && this.sensorCode?.UNIT) {
+            const current_power = this.displayPower;
+
+            label += `(${
+                this.isDispConv && current_power ? current_power.NAME : ``
+            }${this.sensorCode?.UNIT})`;
+        }
+
+        return label;
+    }
+
+    get sensorCode(): SensorCode {
+        return this.$props.sensorCodeList
+            .filter((item: any) => item.CODE === this.data.SENSOR_CD)
+            .pop();
+    }
+
+    get displayPower(): any {
+        return this.$props.displayPowerList
+            .filter((item: any) => item.VALUE === (this.data.DISP_POWER ?? 0))
+            .pop();
     }
 
     modbusCommandLabel(item: any) {
@@ -447,139 +477,88 @@ export default class PredefineSensorCard extends Vue {
         }`;
     }
 
-    get isDispConv(): boolean {
-        // by shkoh 20211102: 선택한 임계치 설정에서 센서타입이 단위표기가 가능한지 여부를 판가름
-        return !!this.sensorData.SENSOR_CODE?.IS_DISP_CONV;
+    inputName(input: string) {
+        this.$emit('update:name', input);
     }
 
-    get isAnalogValue(): boolean {
-        // by shkoh 20211102: 선택한 임계치 설정에서 센서타입이 아날로그 값인지, 디지털 값인지 구분
-        return this.sensorData.SENSOR_CODE?.TYPE === 'A';
+    inputAdjustValue(input: string) {
+        this.$emit('update:adjustValue', input);
     }
 
-    get thresholdLabel(): string {
-        let label = '임계치 보기';
+    inputDataAddress(input: string) {
+        this.$emit('update:dataAddress', input);
+    }
 
-        if (this.isAnalogValue && this.sensorData.SENSOR_CODE?.UNIT) {
-            const power: any = this.isDispConv
-                ? this.displayPowerList
-                      .filter(
-                          (l: any) => l.VALUE === this.sensorData.DISP_POWER
-                      )
-                      .pop().NAME
-                : ``;
+    inputMcId(input: number) {
+        this.$emit('update:mcId', input);
+    }
 
-            label += `(${power}${this.sensorData.SENSOR_CODE.UNIT})`;
+    inputSensorType(input: string) {
+        this.data.PD_THRESHOLD_ID = 0;
+
+        this.aiThresholdData = null;
+        this.diThresholdData = null;
+
+        this.$emit('update:sensorCd', input);
+        this.$emit('update:pdThresholdId', 0);
+    }
+
+    inputDispPower(input: number) {
+        this.$emit('update:dispPower', input);
+    }
+
+    inputPdThresholdId(input: number) {
+        this.$emit('update:pdThresholdId', input);
+    }
+
+    copySensorCard() {
+        this.$emit('copy', {
+            PD_INTF_ID: this.$props.interfaceId,
+            NODE_ID: this.$props.nodeId,
+            NAME: this.data.NAME,
+            ADJUST_VALUE: this.data.ADJUST_VALUE,
+            DATA_ADDRESS: this.data.DATA_ADDRESS,
+            MC_ID: this.data.MC_ID,
+            SENSOR_CD: this.data.SENSOR_CD,
+            DISP_POWER: this.data.DISP_POWER,
+            PD_THRESHOLD_ID: this.data.PD_THRESHOLD_ID,
+            IS_NOTI: this.data.IS_NOTI,
+            IS_MKSTATS: this.data.IS_MKSTATS
+        });
+    }
+
+    saveSensorCard() {
+        const save_data = {
+            ID: this.$props.sensorId
+        };
+
+        for (const key of Object.keys(this.data)) {
+            if (this.data[key] !== this.$props.initSensorData[key]) {
+                Object.defineProperty(save_data, key, {
+                    value: this.data[key],
+                    configurable: true,
+                    enumerable: true,
+                    writable: true
+                });
+            }
         }
 
-        if (this.isAnalogValue && this.aiThresholdData !== null) {
-            label += ` - 지속시간: ${this.aiThresholdData?.HOLD_TIME}초`;
-        } else if (!this.isAnalogValue && this.diThresholdData !== null) {
-            label += ` - 지속시간: ${this.diThresholdData?.HOLD_TIME}초`;
-        }
-
-        return label;
+        this.$emit('save', this.data.NAME, save_data);
     }
 
-    inputSensorType(value: string) {
-        this.$apollo
-            .query({
-                query: gql`
-                query {
-                    SensorCode(CODE: "${value}") {
-                        CODE
-                        NAME
-                        TYPE
-                        UNIT
-                        IS_DISP_CONV
-                    }
-                }
-            `
-            })
-            .then(({ data: { SensorCode } }: any) => {
-                if (SensorCode) {
-                    this.$set(this.sensorData, 'SENSOR_CODE', SensorCode);
-                    this.$set(this.sensorData, 'PD_THRESHOLD_ID', 0);
-
-                    this.aiThresholdData = null;
-                    this.diThresholdData = null;
-                }
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-    }
-
-    // by shkoh 20211117: Analog 값에 대한 임계치 지정 Dropdown의 값이 변경될 때 발생 이벤트
-    inputPdThresholdAI() {
-        this.getAIThresholdData();
-    }
-
-    // by shkoh 20211117: Digital 값에 대한 임계치 지정 Dropdown의 값이 변경될 때 발생 이벤트
-    inputPdThresholdDI() {
-        this.getDIThresholdData();
-    }
-
-    getAIThresholdData() {
-        this.$apollo
-            .query({
-                query: gql`
-                    query {
-                        PredefineThresholdByAI(ID: ${this.sensorData.PD_THRESHOLD_ID}) {
-                            ID
-                            HOLD_TIME
-                            VALID_MIN
-                            VALID_MAX
-                            IS_VALID
-                            POINT_N3
-                            POINT_N2
-                            POINT_N1
-                            POINT_P1
-                            POINT_P2
-                            POINT_P3
-                        }
-                    }
-                `
-            })
-            .then(({ data: { PredefineThresholdByAI } }: any) => {
-                if (PredefineThresholdByAI) {
-                    this.aiThresholdData = PredefineThresholdByAI;
-                } else {
-                    this.aiThresholdData = null;
-                }
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-    }
-
-    getDIThresholdData() {
-        this.$apollo
-            .query({
-                query: gql`
-                    query {
-                        PredefineThresholdByDI(ID: ${this.sensorData.PD_THRESHOLD_ID}) {
-                            ID
-                            HOLD_TIME
-                            DI {
-                                INDEX
-                                LEVEL
-                                LABEL
-                            }
-                        }
-                    }
-                `
-            })
-            .then(({ data: { PredefineThresholdByDI } }: any) => {
-                if (PredefineThresholdByDI) {
-                    this.diThresholdData = PredefineThresholdByDI;
-                } else {
-                    this.diThresholdData = null;
-                }
-            })
-            .catch((error) => {
-                console.error(error);
-            });
+    deleteSensorCard() {
+        this.$confirmDialog.require({
+            group: 'deleteConfirmDialog',
+            message: `[${this.data.NAME}] 수집항목을 삭제하시겠습니까?\n사전정의 항목의 센서 삭제 시, 관련된 모든 항목들이 삭제됩니다.`,
+            header: `수집항목 - ${this.data.NAME} 삭제`,
+            position: 'top',
+            icon: 'pi pi-exclamation-triangle',
+            acceptClass: 'p-button-danger',
+            blockScroll: false,
+            accept: () => {
+                this.$emit('delete');
+            }
+        });
     }
 }
 </script>
@@ -602,7 +581,7 @@ export default class PredefineSensorCard extends Vue {
     }
 }
 
-#predefineSensorCard.i-editable {
+#predefineSensorCard.i-editable::v-deep {
     border-left: 10px solid;
     border-color: var(--yellow-500);
 }

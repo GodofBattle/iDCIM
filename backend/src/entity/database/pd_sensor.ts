@@ -1,4 +1,4 @@
-import { Field, ObjectType, Int } from "type-graphql";
+import { Field, ObjectType, Int, ArgsType, InputType } from "type-graphql";
 import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 import { pd_sensor_code } from "./pd_sensor_code";
@@ -62,4 +62,67 @@ export class pd_sensor {
     @OneToOne(() => pd_sensor_code, (sensor_code: pd_sensor_code) => sensor_code.PD_SENSOR, { primary: true, createForeignKeyConstraints: false, lazy: true })
     @JoinColumn({ name: 'SENSOR_CD', referencedColumnName: 'CODE' })
     SENSOR_CODE?: pd_sensor_code;
+}
+
+@ArgsType()
+export class pd_sensor_args {
+    @Field(() => String, { nullable: true })
+    NAME: string;
+
+    @Field(() => String, { nullable: true })
+    SENSOR_CD: string;
+
+    @Field(() => Int, { nullable: true })
+    PD_THRESHOLD_ID: number;
+
+    @Field(() => String, { nullable: true })
+    DATA_ADDRESS: string;
+
+    @Field(() => String, { nullable: true })
+    ADJUST_VALUE: string;
+
+    @Field(() => Int, { nullable: true })
+    MC_ID: number;
+
+    @Field(() => Int, { nullable: true })
+    DISP_POWER: number;
+
+    @Field(() => Int, { nullable: true })
+    IS_NOTI: number;
+
+    @Field(() => Int, { nullable: true })
+    IS_MKSTATS: number;
+}
+
+@InputType('PdSensorInput')
+export class pd_sensor_input {
+    @Field(() => Int, { nullable: true })
+    ID: number;
+
+    @Field(() => String, { nullable: true })
+    NAME: string;
+
+    @Field(() => String, { nullable: true })
+    ADJUST_VALUE: string;
+    
+    @Field(() => String, { nullable: true })
+    DATA_ADDRESS: string;
+    
+    @Field(() => Int, { nullable: true })
+    MC_ID: number;
+    
+    @Field(() => String, { nullable: true })
+    SENSOR_CD: string;
+
+    @Field(() => Int, { nullable: true })
+    DISP_POWER: number;
+    
+    @Field(() => Int, { nullable: true })
+    PD_THRESHOLD_ID: number;
+
+    @Field(() => Int, { nullable: true })
+    IS_NOTI: number;
+
+    @Field(() => Int, { nullable: true })
+    IS_MKSTATS: number;
 }

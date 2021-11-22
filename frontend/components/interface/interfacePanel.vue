@@ -29,6 +29,7 @@
                     <span>기본정보</span>
                 </template>
                 <interface-panel-info
+                    v-if="interfaceTabIndex === 0"
                     :id="interfaceId"
                     ref="interfacePanelInfo"
                     :apply-button-disabled.sync="applyButtonDisabled"
@@ -41,6 +42,7 @@
                     <span>통신방법</span>
                 </template>
                 <interface-panel-comm
+                    v-if="interfaceTabIndex === 1"
                     :id="interfaceId"
                     ref="interfacePanelComm"
                     :apply-button-disabled.sync="applyButtonDisabled"
@@ -53,6 +55,7 @@
                     <span>수집항목</span>
                 </template>
                 <interface-panel-sensor
+                    v-if="interfaceTabIndex === 2"
                     :id="interfaceId"
                     ref="interfacePanelSensor"
                     :has-comm="!isDisabledComm"
@@ -64,7 +67,7 @@
                     <i class="pi pi-sliders-v p-mr-2"></i>
                     <span>제어항목</span>
                 </template>
-                미구현 - 3
+                <div v-if="interfaceTabIndex === 3">미구현 - 3</div>
             </TabPanel>
         </TabView>
     </ScrollPanel>

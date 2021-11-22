@@ -134,9 +134,6 @@ type ModbusCmd = {
         isEditable: Boolean
     },
     watch: {
-        idx(new_val) {
-            console.info(new_val);
-        },
         funcNo(new_val) {
             this.data.FUNC_NO = new_val;
         },
