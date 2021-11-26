@@ -58,7 +58,8 @@ export default {
             '@/components/tree',
             '@/components/manufacturer',
             '@/components/product',
-            '@/components/interface'
+            '@/components/interface',
+            '@/components/threshold'
         ]
     },
 
@@ -198,6 +199,14 @@ export default {
                         path: '/interface',
                         name: 'interface',
                         component: 'pages/icomer/interface.vue',
+                        meta: {
+                            title: '인터페이스'
+                        }
+                    },
+                    {
+                        path: '/threshold',
+                        name: 'threshold',
+                        component: 'pages/icomer/threshold.vue',
                         meta: {
                             title: '인터페이스'
                         }

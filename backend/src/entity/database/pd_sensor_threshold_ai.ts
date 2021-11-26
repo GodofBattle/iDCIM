@@ -1,5 +1,6 @@
-import { Field, ObjectType, ID, Int, Float } from "type-graphql";
+import { Field, ObjectType, Int, Float } from "type-graphql";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+
 
 @ObjectType()
 @Entity({ synchronize: false })
@@ -16,7 +17,7 @@ export class pd_sensor_threshold_ai {
     @Column({ type: 'varchar', length: 64, nullable: false, default: '', comment: '임계치 이름' })
     NAME: string;
 
-    @Field(() => Int!)
+    @Field(() => Int!, { nullable: true })
     @Column({ type: 'int', nullable: false, default: 0, comment: '지속시간(초)' })
     HOLD_TIME: number;
 
@@ -32,27 +33,27 @@ export class pd_sensor_threshold_ai {
     @Column({ type: 'tinyint', nullable: true, default: null, comment: '유효값 사용여부' })
     IS_VALID: number;
 
-    @Field(() => Float!)
+    @Field(() => Float!, { nullable: true })
     @Column({ type: 'double', nullable: false, comment: '하한 임계값3' })
     POINT_N3: number;
 
-    @Field(() => Float!)
+    @Field(() => Float!, { nullable: true })
     @Column({ type: 'double', nullable: false, comment: '하한 임계값2' })
     POINT_N2: number;
 
-    @Field(() => Float!)
+    @Field(() => Float!, { nullable: true })
     @Column({ type: 'double', nullable: false, comment: '하한 임계값1' })
     POINT_N1: number;
 
-    @Field(() => Float!)
+    @Field(() => Float!, { nullable: true })
     @Column({ type: 'double', nullable: false, comment: '상한 임계값1' })
     POINT_P1: number;
 
-    @Field(() => Float!)
+    @Field(() => Float!, { nullable: true })
     @Column({ type: 'double', nullable: false, comment: '상한 임계값2' })
     POINT_P2: number;
 
-    @Field(() => Float!)
+    @Field(() => Float!, { nullable: true })
     @Column({ type: 'double', nullable: false, comment: '상한 임계값3' })
     POINT_P3: number;
 

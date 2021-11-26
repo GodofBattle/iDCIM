@@ -2,7 +2,9 @@ import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-
 import { Ctx, Mutation, Query, Resolver, Args, Publisher, PubSub, Arg } from "type-graphql";
 import { getRepository, UpdateResult } from "typeorm";
 
-import { pd_sensor_code } from '../entity/database/pd_sensor_code'
+import { pd_sensor_code, pd_sensor_code_args } from '../entity/database/pd_sensor_code'
+import { pd_sensor_threshold_ai } from "../entity/database/pd_sensor_threshold_ai";
+import { pd_sensor_threshold_di } from "../entity/database/pd_sensor_threshold_di";
 
 @Resolver()
 export class SensorCodeResolver {
@@ -34,7 +36,7 @@ export class SensorCodeResolver {
 
     @Mutation(() => Boolean)
     async AddSensorCode(
-        @Args() { CODE, NAME, TYPE, UNIT, IS_DISP_CONV, REMARK }: pd_sensor_code,
+        @Args() { CODE, NAME, TYPE, UNIT, IS_DISP_CONV, REMARK }: pd_sensor_code_args,
         @Ctx() ctx: any,
         @PubSub('REFRESHTOKEN') publish: Publisher<void>
     ) {
@@ -57,7 +59,7 @@ export class SensorCodeResolver {
     @Mutation(() => Boolean)
     async UpdateSensorCode(
         @Arg('ID') code: string,
-        @Args() { CODE, NAME, TYPE, UNIT, IS_DISP_CONV, REMARK }: pd_sensor_code,
+        @Args() { CODE, NAME, TYPE, UNIT, IS_DISP_CONV, REMARK }: pd_sensor_code_args,
         @Ctx() ctx: any,
         @PubSub('REFRESHTOKEN') publish: Publisher<void>
     ) {

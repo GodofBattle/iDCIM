@@ -12,7 +12,7 @@
                         @click="copyModbusCmdCard"
                     ></Button>
                     <Button
-                        class="p-button-rounded p-button-text p-buttom-success"
+                        class="p-button-rounded p-button-text"
                         icon="pi pi-save"
                         :disabled="saveButtonDisabled"
                         @click="saveModbusCmdCard"

@@ -1,6 +1,7 @@
 import { AuthenticationError, SchemaError } from 'apollo-server-express';
 import { Arg, Ctx, Int, Query, Resolver } from "type-graphql";
 import { getRepository } from 'typeorm';
+import { pd_sensor_code_args } from '../entity/database/pd_sensor_code';
 
 import { pd_sensor_threshold_ai } from "../entity/database/pd_sensor_threshold_ai";
 import { pd_sensor_threshold_di } from "../entity/database/pd_sensor_threshold_di";

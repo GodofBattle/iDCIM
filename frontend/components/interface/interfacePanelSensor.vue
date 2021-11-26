@@ -68,7 +68,6 @@
 </template>
 
 <script lang="ts">
-import { env } from 'process';
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';

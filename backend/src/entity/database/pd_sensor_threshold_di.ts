@@ -1,5 +1,7 @@
-import { Field, ObjectType, ID, Int, Float } from "type-graphql";
+import { Field, ObjectType, Int } from "type-graphql";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+
+import { pd_sensor_code } from "./pd_sensor_code";
 
 @ObjectType()
 @Entity({ synchronize: false })
