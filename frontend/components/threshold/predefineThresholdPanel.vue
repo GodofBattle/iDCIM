@@ -47,6 +47,7 @@
                             :unit="sensorUnit"
                             :name="slotProps.data.NAME"
                             :hold-time="slotProps.data.HOLD_TIME"
+                            :level-codes="dbLevelCodes"
                         ></predefine-threshold-card>
                     </template>
                 </Column>
@@ -116,13 +117,26 @@ type ThresholdInfo = {
                     }
                 }
             }
+        },
+        dbLevelCodes: {
+            query: gql`
+                query {
+                    Codes(TYPE: "LEVEL") {
+                        CODE
+                        NAME
+                        VALUE
+                    }
+                }
+            `,
+            update: ({ Codes }) => Codes
         }
     }
 })
 export default class PredefineThresholdPanel extends Vue {
     dbThresholdList: Array<ThresholdInfo> = [];
-
     thresholdList: Array<ThresholdInfo> = [];
+
+    dbLevelCodes: Array<any> = [];
 
     reset() {
         this.thresholdList.splice(0, this.thresholdList.length);

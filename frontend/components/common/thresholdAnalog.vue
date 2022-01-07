@@ -23,7 +23,7 @@
                         />
                         <Button
                             class="p-button-secondary p-button-sm"
-                            icon="pi pi-times"
+                            icon="pi pi-check"
                             @click="onInputBlur('min')"
                         ></Button>
                     </div>
@@ -54,7 +54,7 @@
                             />
                             <Button
                                 class="p-button-secondary p-button-sm"
-                                icon="pi pi-times"
+                                icon="pi pi-check"
                                 @click="onInputBlur('n3')"
                             ></Button>
                         </div>
@@ -110,7 +110,7 @@
                                 />
                                 <Button
                                     class="p-button-secondary p-button-sm"
-                                    icon="pi pi-times"
+                                    icon="pi pi-check"
                                     @click="onInputBlur('n1')"
                                 ></Button>
                             </div>
@@ -157,7 +157,7 @@
                                 />
                                 <Button
                                     class="p-button-secondary p-button-sm"
-                                    icon="pi pi-times"
+                                    icon="pi pi-check"
                                     @click="onInputBlur('p1')"
                                 ></Button>
                             </div>
@@ -204,7 +204,7 @@
                                 />
                                 <Button
                                     class="p-button-secondary p-button-sm"
-                                    icon="pi pi-times"
+                                    icon="pi pi-check"
                                     @click="onInputBlur('n2')"
                                 ></Button>
                             </div>
@@ -248,7 +248,7 @@
                                 />
                                 <Button
                                     class="p-button-secondary p-button-sm"
-                                    icon="pi pi-times"
+                                    icon="pi pi-check"
                                     @click="onInputBlur('p2')"
                                 ></Button>
                             </div>
@@ -259,7 +259,7 @@
         </div>
         <div
             class="p-col-fiexed p-text-center p-py-5"
-            :style="{ width: new_value_active.p3 ? '120px' : '80px' }"
+            :style="{ width: new_value_active.p3 ? '100px' : '60px' }"
         >
             <span>
                 <Inplace :active.sync="new_value_active.p3">
@@ -281,7 +281,7 @@
                             />
                             <Button
                                 class="p-button-secondary p-button-sm"
-                                icon="pi pi-times"
+                                icon="pi pi-check"
                                 @click="onInputBlur('p3')"
                             ></Button>
                         </div>
@@ -292,7 +292,7 @@
         <div
             v-if="showMinMax"
             class="p-col-fiexed p-text-center p-py-5"
-            :style="{ width: new_value_active.max ? '120px' : '80px' }"
+            :style="{ width: new_value_active.max ? '100px' : '60px' }"
         >
             <Inplace :active.sync="new_value_active.max" :class="editorClass">
                 <template #display>
@@ -312,7 +312,7 @@
                         />
                         <Button
                             class="p-button-secondary p-button-sm"
-                            icon="pi pi-times"
+                            icon="pi pi-check"
                             @click="onInputBlur('max')"
                         ></Button>
                     </div>

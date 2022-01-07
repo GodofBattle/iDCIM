@@ -1,5 +1,5 @@
 <template>
-    <Card id="predefineThresholdCard">
+    <Card id="predefineThresholdCard" :class="predefineThresholdCardClass">
         <template #header>
             <div class="p-d-flex">
                 <div class="p-as-center p-pl-2 i-header-title">
@@ -89,11 +89,34 @@
                         :disabled="false"
                     ></threshold-analog>
                 </div>
-                <div v-else-if="!is_analog && diThresholdData !== null">
-                    <threshold-digital
-                        :di="diThresholdData.DI"
-                    ></threshold-digital>
-                </div>
+                <ScrollPanel
+                    v-else-if="!is_analog && diThresholdData !== null"
+                    :style="{
+                        'max-height': '50vh',
+                        height: heightDIThresholdContent
+                    }"
+                >
+                    <div class="p-d-flex p-flex-column">
+                        <threshold-digital
+                            :init-di="dbDiThresholdData && dbDiThresholdData.DI"
+                            :di.sync="diThresholdData.DI"
+                            :is-editable="true"
+                            :level-codes="levelCodes"
+                            style="padding: 0"
+                            @delete="deleteThresholdDigital"
+                        ></threshold-digital>
+                        <Button
+                            class="p-mt-2"
+                            icon="pi pi-plus"
+                            :style="{
+                                width: '24px',
+                                height: '24px',
+                                padding: '0px'
+                            }"
+                            @click="addThresholdDigital"
+                        ></Button>
+                    </div>
+                </ScrollPanel>
             </Panel>
         </template>
     </Card>
@@ -111,12 +134,12 @@ type PredefineThreshold = {
 };
 
 type AnalogThreshold = {
-    [index: string]: number;
+    [index: string]: number | undefined;
     ID: number;
     HOLD_TIME: number;
     VALID_MIN: number;
     VALID_MAX: number;
-    IS_VALID: number;
+    IS_VALID: number | undefined;
     POINT_N3: number;
     POINT_N2: number;
     POINT_N1: number;
@@ -129,6 +152,9 @@ interface DIValue {
     INDEX: number;
     LEVEL: number;
     LABEL: string;
+    isEditableGrade: boolean | undefined;
+    isEditableValue: boolean | undefined;
+    hasSameINDEX: boolean | undefined;
 }
 
 type DigitalThreshold = {
@@ -144,10 +170,11 @@ type DigitalThreshold = {
         type: String,
         unit: String,
         name: String,
-        holdTime: Number
+        holdTime: Number,
+        levelCodes: Array
     },
     apollo: {
-        aiThresholdData: {
+        dbAiThresholdData: {
             query: gql`
                 query PredefineThresholdByAI($ID: Int!) {
                     PredefineThresholdByAI(ID: $ID) {
@@ -172,9 +199,18 @@ type DigitalThreshold = {
                     ID: this.id ? this.id : -1
                 };
             },
-            update: ({ PredefineThresholdByAI }) => PredefineThresholdByAI
+            update: ({ PredefineThresholdByAI }) => PredefineThresholdByAI,
+            result({ loading, data }) {
+                if (!loading) {
+                    const { PredefineThresholdByAI } = data;
+
+                    if (PredefineThresholdByAI) {
+                        this.apolloFetchAI(PredefineThresholdByAI);
+                    }
+                }
+            }
         },
-        diThresholdData: {
+        dbDiThresholdData: {
             query: gql`
                 query PredefineThresholdByDI($ID: Int!) {
                     PredefineThresholdByDI(ID: $ID) {
@@ -195,18 +231,118 @@ type DigitalThreshold = {
                     ID: this.id ? this.id : -1
                 };
             },
-            update: ({ PredefineThresholdByDI }) => PredefineThresholdByDI
+            update: ({ PredefineThresholdByDI }) => PredefineThresholdByDI,
+            result({ loading, data }) {
+                if (!loading) {
+                    const { PredefineThresholdByDI } = data;
+
+                    if (PredefineThresholdByDI) {
+                        this.apolloFetchDI(PredefineThresholdByDI);
+                    }
+                }
+            }
         }
     }
 })
 export default class PredefineThresholdCard extends Vue {
+    initData: PredefineThreshold = {
+        NAME: this.$props.name,
+        HOLD_TIME: this.$props.holdTime
+    };
+
     data: PredefineThreshold = {
         NAME: this.$props.name,
         HOLD_TIME: this.$props.holdTime
     };
 
-    aiThresholdData: AnalogThreshold | null = null;
-    diThresholdData: DigitalThreshold | null = null;
+    dbAiThresholdData: AnalogThreshold | null = null;
+    dbDiThresholdData: DigitalThreshold | null = null;
+
+    aiThresholdData: AnalogThreshold = {
+        ID: 0,
+        HOLD_TIME: 0,
+        VALID_MIN: 0,
+        VALID_MAX: 0,
+        IS_VALID: 0,
+        POINT_N3: 0,
+        POINT_N2: 0,
+        POINT_N1: 0,
+        POINT_P1: 0,
+        POINT_P2: 0,
+        POINT_P3: 0
+    };
+
+    diThresholdData: DigitalThreshold = {
+        ID: 0,
+        HOLD_TIME: 0,
+        DI: []
+    };
+
+    apolloFetchAI(_data: AnalogThreshold) {
+        for (const key of Object.keys(this.aiThresholdData)) {
+            this.aiThresholdData[key] = _data[key];
+        }
+    }
+
+    apolloFetchDI(_data: DigitalThreshold) {
+        for (const key of Object.keys(this.diThresholdData)) {
+            if (key === 'DI') {
+                _data[key].forEach((dv: DIValue) => {
+                    this.diThresholdData[key].push({
+                        INDEX: dv.INDEX,
+                        LEVEL: dv.LEVEL,
+                        LABEL: dv.LABEL,
+                        isEditableGrade: false,
+                        isEditableValue: false,
+                        hasSameINDEX: false
+                    });
+                });
+            } else {
+                this.diThresholdData[key] = _data[key];
+            }
+        }
+    }
+
+    addThresholdDigital() {
+        if (this.diThresholdData.DI.length === 30) {
+            this.$toast.add({
+                severity: 'error',
+                summary: '임계치 초과',
+                detail: `임계값은 최대 30개까지 가능합니다`,
+                life: 1200
+            });
+            return;
+        }
+
+        this.diThresholdData.DI.push({
+            INDEX: this.minimumDiThresholdIndex,
+            LEVEL: 0,
+            LABEL: '새로운 임계값',
+            isEditableGrade: false,
+            isEditableValue: false,
+            hasSameINDEX: false
+        });
+    }
+
+    deleteThresholdDigital(index: number) {
+        this.diThresholdData.DI.splice(index, 1);
+    }
+
+    get saveButtonDisabled(): boolean {
+        let is_disabled = !this.isDiffThresholdInfo;
+
+        if (is_disabled === true && this.is_analog) {
+            is_disabled = !this.isDiffAiThresholdData;
+        } else if (is_disabled === true && !this.is_analog) {
+            is_disabled = !this.isDiffDiThresholdData;
+        }
+
+        return is_disabled;
+    }
+
+    get predefineThresholdCardClass(): Array<string | object> {
+        return [{ 'i-editable': !this.saveButtonDisabled }];
+    }
 
     get is_analog(): boolean {
         return this.$props.type === 'Analog';
@@ -221,6 +357,89 @@ export default class PredefineThresholdCard extends Vue {
             this.aiThresholdData.IS_VALID = _new_is_valid ? 1 : 0;
         }
     }
+
+    get isDiffThresholdInfo(): boolean {
+        let is_diff = false;
+
+        for (const key of Object.keys(this.data)) {
+            if (this.data[key] !== this.initData[key]) {
+                is_diff = true;
+                break;
+            }
+        }
+
+        return is_diff;
+    }
+
+    get isDiffAiThresholdData(): boolean {
+        let is_diff = false;
+
+        if (this.aiThresholdData && this.dbAiThresholdData) {
+            for (const key of Object.keys(this.aiThresholdData)) {
+                if (this.aiThresholdData[key] !== this.dbAiThresholdData[key]) {
+                    is_diff = true;
+                    break;
+                }
+            }
+        }
+
+        return is_diff;
+    }
+
+    get isDiffDiThresholdData(): boolean {
+        let is_diff = false;
+
+        if (this.diThresholdData && this.dbDiThresholdData) {
+            if (this.diThresholdData.ID !== this.dbDiThresholdData.ID)
+                is_diff = true;
+            else if (
+                this.diThresholdData.HOLD_TIME !==
+                this.dbDiThresholdData.HOLD_TIME
+            ) {
+                is_diff = true;
+            } else if (
+                this.diThresholdData.DI.length !==
+                this.dbDiThresholdData.DI.length
+            ) {
+                is_diff = true;
+            } else {
+                for (let idx = 0; idx < this.diThresholdData.DI.length; idx++) {
+                    if (
+                        this.diThresholdData.DI[idx].INDEX !==
+                            this.dbDiThresholdData.DI[idx].INDEX ||
+                        this.diThresholdData.DI[idx].LEVEL !==
+                            this.dbDiThresholdData.DI[idx].LEVEL ||
+                        this.diThresholdData.DI[idx].LABEL !==
+                            this.dbDiThresholdData.DI[idx].LABEL
+                    ) {
+                        is_diff = true;
+                    }
+                }
+            }
+        }
+
+        return is_diff;
+    }
+
+    get minimumDiThresholdIndex(): number {
+        let min = 0;
+
+        for (let seq = 0; seq < 30; seq++) {
+            const has_seq = this.diThresholdData.DI.some(
+                (d: DIValue) => d.INDEX === seq
+            );
+            if (!has_seq) {
+                min = seq;
+                break;
+            }
+        }
+
+        return min;
+    }
+
+    get heightDIThresholdContent(): string {
+        return `${this.diThresholdData.DI.length * 46 + 24 + 12}px`;
+    }
 }
 </script>
 
@@ -234,11 +453,20 @@ export default class PredefineThresholdCard extends Vue {
     }
 
     .p-card-header {
-        padding: 0.5rem 1rem 0 1rem;
+        padding: 0.3rem 0.8rem 0 0.8rem;
     }
 
     .p-card-content {
         padding: 0;
     }
+
+    .p-panel .p-panel-content {
+        padding: 0.8rem;
+    }
+}
+
+#predefineThresholdCard.i-editable::v-deep {
+    border-left: 10px solid;
+    border-color: var(--yellow-500);
 }
 </style>

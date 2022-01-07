@@ -123,6 +123,7 @@ export default {
         ripple: true,
         components: [
             'AutoComplete',
+            'Avatar',
             'Button',
             'Card',
             'Checkbox',
