@@ -1,10 +1,8 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
 import { Ctx, Mutation, Query, Resolver, Args, Publisher, PubSub, Arg } from "type-graphql";
-import { getRepository, UpdateResult } from "typeorm";
+import { getRepository } from "typeorm";
 
 import { pd_sensor_code, pd_sensor_code_args } from '../entity/database/pd_sensor_code'
-import { pd_sensor_threshold_ai } from "../entity/database/pd_sensor_threshold_ai";
-import { pd_sensor_threshold_di } from "../entity/database/pd_sensor_threshold_di";
 
 @Resolver()
 export class SensorCodeResolver {

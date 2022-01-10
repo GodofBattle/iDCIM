@@ -3,7 +3,7 @@
         <div
             v-if="showMinMax"
             class="p-col-fiexed p-text-center p-py-5"
-            :style="{ width: new_value_active.min ? '100px' : '60px' }"
+            :style="{ width: new_value_active.min ? '100px' : '80px' }"
         >
             <Inplace :active.sync="new_value_active.min" :class="editorClass">
                 <template #display>
@@ -292,7 +292,7 @@
         <div
             v-if="showMinMax"
             class="p-col-fiexed p-text-center p-py-5"
-            :style="{ width: new_value_active.max ? '100px' : '60px' }"
+            :style="{ width: new_value_active.max ? '100px' : '80px' }"
         >
             <Inplace :active.sync="new_value_active.max" :class="editorClass">
                 <template #display>
@@ -394,19 +394,19 @@ type EditControl = {
         showMinMax(_is_show) {
             // by shkoh 20211126: 최대/최소 유효값을 지정할 때, min / max 값이 정해져 있지 않은 경우 min / max 값을 강제 지정
             if (_is_show) {
-                if (this.$props.max === undefined) {
+                if (this.$props.max === null) {
                     this.$emit('update:max', this.$props.p3);
                 } else if (
-                    this.$props.max !== undefined &&
+                    this.$props.max !== null &&
                     this.$props.max < this.$props.p3
                 ) {
                     this.$emit('update:max', this.$props.p3);
                 }
 
-                if (this.$props.min === undefined) {
+                if (this.$props.min === null) {
                     this.$emit('update:min', this.$props.n3);
                 } else if (
-                    this.$props.min !== undefined &&
+                    this.$props.min !== null &&
                     this.$props.min > this.$props.n3
                 ) {
                     this.$emit('update:min', this.$props.n3);
@@ -666,7 +666,6 @@ export default class ThresholdAnalog extends Vue {
 
     get rangeP2HandleStyle() {
         return { left: this.rangeP2Position + '%' };
-        4;
     }
 
     get rangeP3Position() {

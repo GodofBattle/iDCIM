@@ -1,4 +1,4 @@
-import { Field, ObjectType, Int, Float } from "type-graphql";
+import { Field, ObjectType, Int, Float, ArgsType } from "type-graphql";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 
@@ -60,4 +60,40 @@ export class pd_sensor_threshold_ai {
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256 , nullable: true, default: null, comment: '설명'})
     REMARK: string;
+}
+
+@ArgsType()
+export class pd_sensor_threshold_ai_args {
+    @Field(() => String, { nullable: true })
+    NAME?: string;
+
+    @Field(() => Int, { nullable: true })
+    HOLD_TIME?: number;
+
+    @Field(() => Float, { nullable: true })
+    VALID_MIN?: number;
+
+    @Field(() => Float, { nullable: true })
+    VALID_MAX?: number;
+
+    @Field(() => Float, { nullable: true })
+    IS_VALID?: number;
+
+    @Field(() => Float, { nullable: true })
+    POINT_N3?: number;
+
+    @Field(() => Float, { nullable: true })
+    POINT_N2?: number;
+
+    @Field(() => Float, { nullable: true })
+    POINT_N1?: number;
+
+    @Field(() => Float, { nullable: true })
+    POINT_P1?: number;
+
+    @Field(() => Float, { nullable: true })
+    POINT_P2?: number;
+
+    @Field(() => Float, { nullable: true })
+    POINT_P3?: number;
 }

@@ -48,6 +48,9 @@
                             :name="slotProps.data.NAME"
                             :hold-time="slotProps.data.HOLD_TIME"
                             :level-codes="dbLevelCodes"
+                            @copy="copyPredefineThreshold"
+                            @save="savePredefineThreshold"
+                            @delete="deletePredefineThreshold"
                         ></predefine-threshold-card>
                     </template>
                 </Column>
@@ -57,6 +60,7 @@
 </template>
 
 <script lang="ts">
+import { BlobOptions } from 'buffer';
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
@@ -157,6 +161,189 @@ export default class PredefineThresholdPanel extends Vue {
                 this.thresholdList.push(threshold_info);
             });
         });
+    }
+
+    copyPredefineThreshold(
+        is_analog: boolean,
+        id: number,
+        threshold_copy_info: any
+    ) {
+        if (is_analog) {
+            this.copyAiPredefineThreshold(id, threshold_copy_info);
+        }
+    }
+
+    copyAiPredefineThreshold(id: number, ai_threshold: any) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                mutation (
+                    $NAME: String
+                    $HOLD_TIME: Int
+                    $VALID_MIN: Float
+                    $VALID_MAX: Float
+                    $IS_VALID: Float
+                    $POINT_N3: Float
+                    $POINT_N2: Float
+                    $POINT_N1: Float
+                    $POINT_P1: Float
+                    $POINT_P2: Float
+                    $POINT_P3: Float
+                ) {
+                    CopyPredefineThresholdByAI(
+                        SENSOR_CD: "${this.$props.sensorCode}"
+                        NAME: $NAME
+                        HOLD_TIME: $HOLD_TIME
+                        VALID_MIN: $VALID_MIN
+                        VALID_MAX: $VALID_MAX
+                        IS_VALID: $IS_VALID
+                        POINT_N3: $POINT_N3
+                        POINT_N2: $POINT_N2
+                        POINT_N1: $POINT_N1
+                        POINT_P1: $POINT_P1
+                        POINT_P2: $POINT_P2
+                        POINT_P3: $POINT_P3
+                    )
+                }
+            `,
+                variables: ai_threshold
+            })
+            .then(() => {
+                this.refreshPredefineThreshold();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: 'AI 임계치 복사 완료',
+                    detail: `Analog ID: ${id} - ${ai_threshold.NAME} 복사 완료`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: 'AI 임계치 복사 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    savePredefineThreshold(
+        is_analog: boolean,
+        name: string,
+        threshold_info: any
+    ) {
+        if (is_analog) {
+            this.saveAiPredefineThreshold(name, threshold_info);
+        }
+    }
+
+    saveAiPredefineThreshold(name: string, ai_threshold: any) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation (
+                        $ID: ID!
+                        $NAME: String
+                        $HOLD_TIME: Int
+                        $VALID_MIN: Float
+                        $VALID_MAX: Float
+                        $IS_VALID: Float
+                        $POINT_N3: Float
+                        $POINT_N2: Float
+                        $POINT_N1: Float
+                        $POINT_P1: Float
+                        $POINT_P2: Float
+                        $POINT_P3: Float
+                    ) {
+                        UpdatePredefineThresholdByAI(
+                            ID: $ID
+                            NAME: $NAME
+                            HOLD_TIME: $HOLD_TIME
+                            VALID_MIN: $VALID_MIN
+                            VALID_MAX: $VALID_MAX
+                            IS_VALID: $IS_VALID
+                            POINT_N3: $POINT_N3
+                            POINT_N2: $POINT_N2
+                            POINT_N1: $POINT_N1
+                            POINT_P1: $POINT_P1
+                            POINT_P2: $POINT_P2
+                            POINT_P3: $POINT_P3
+                        )
+                    }
+                `,
+                variables: ai_threshold
+            })
+            .then(() => {
+                this.refreshPredefineThreshold();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: 'AI 임계치 적용 완료',
+                    detail: `Analog ID: ${ai_threshold.ID} - ${name} 적용 완료`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: 'AI 임계치 적용 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    deletePredefineThreshold(is_analog: boolean, id: number, name: string) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: is_analog
+                    ? gql`mutation { DeletePredefineThresholdByAI(ID: ${id}) }`
+                    : gql`mutation { DeletePredefineThresholdByDI(ID: ${id}) }`
+            })
+            .then(() => {
+                this.refreshPredefineThreshold();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: 'AI 임계치 삭제 완료',
+                    detail: `Analog ID: ${id} - ${name} 삭제 완료`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: 'AI 임계치 삭제 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    refreshPredefineThreshold() {
+        this.$apollo.queries.dbThresholdList.refresh();
     }
 
     get type(): string {

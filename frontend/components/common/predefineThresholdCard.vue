@@ -20,14 +20,18 @@
                     <Button
                         class="p-button-rounded p-button-text p-button-help"
                         icon="pi pi-copy"
+                        @click="copyThreshold"
                     ></Button>
                     <Button
                         class="p-button-rounded p-button-text"
                         icon="pi pi-save"
+                        :disabled="saveButtonDisabled"
+                        @click="saveThreshold"
                     ></Button>
                     <Button
                         class="p-button-rounded p-button-text p-button-danger"
                         icon="pi pi-minus"
+                        @click="deleteThreshold"
                     ></Button>
                 </div>
             </div>
@@ -136,7 +140,6 @@ type PredefineThreshold = {
 type AnalogThreshold = {
     [index: string]: number | undefined;
     ID: number;
-    HOLD_TIME: number;
     VALID_MIN: number;
     VALID_MAX: number;
     IS_VALID: number | undefined;
@@ -160,7 +163,6 @@ interface DIValue {
 type DigitalThreshold = {
     [index: string]: number | string | Array<DIValue>;
     ID: number;
-    HOLD_TIME: number;
     DI: Array<DIValue>;
 };
 
@@ -179,7 +181,6 @@ type DigitalThreshold = {
                 query PredefineThresholdByAI($ID: Int!) {
                     PredefineThresholdByAI(ID: $ID) {
                         ID
-                        HOLD_TIME
                         VALID_MIN
                         VALID_MAX
                         IS_VALID
@@ -215,7 +216,6 @@ type DigitalThreshold = {
                 query PredefineThresholdByDI($ID: Int!) {
                     PredefineThresholdByDI(ID: $ID) {
                         ID
-                        HOLD_TIME
                         DI {
                             INDEX
                             LEVEL
@@ -260,7 +260,6 @@ export default class PredefineThresholdCard extends Vue {
 
     aiThresholdData: AnalogThreshold = {
         ID: 0,
-        HOLD_TIME: 0,
         VALID_MIN: 0,
         VALID_MAX: 0,
         IS_VALID: 0,
@@ -326,6 +325,73 @@ export default class PredefineThresholdCard extends Vue {
 
     deleteThresholdDigital(index: number) {
         this.diThresholdData.DI.splice(index, 1);
+    }
+
+    copyThreshold() {
+        const copy_data = {
+            NAME: this.data.NAME,
+            HOLD_TIME: this.data.HOLD_TIME
+        };
+
+        if (this.is_analog) {
+            for (const key of Object.keys(this.aiThresholdData)) {
+                let val = this.aiThresholdData[key];
+                if (
+                    (key === 'VALID_MIN' || key === 'VALID_MAX') &&
+                    this.aiThresholdData.IS_VALID === 0
+                ) {
+                    val = undefined;
+                }
+
+                Object.defineProperty(copy_data, key, {
+                    value: val,
+                    configurable: true,
+                    enumerable: true,
+                    writable: true
+                });
+            }
+        }
+
+        this.$emit('copy', this.is_analog, this.$props.id, copy_data);
+    }
+
+    saveThreshold() {
+        const save_data = {
+            ID: this.$props.id
+        };
+
+        // by shkoh 202201107: 저장할 임계치 데이터의 기본값 들 중에서 변경될 값을 비교하여 저장
+        for (const key of Object.keys(this.data)) {
+            if (this.data[key] !== this.initData[key]) {
+                Object.defineProperty(save_data, key, {
+                    value: this.data[key],
+                    configurable: true,
+                    enumerable: true,
+                    writable: true
+                });
+            }
+        }
+
+        // by shkoh 20220110: 아날로그 임계치인 경우
+        if (this.is_analog && this.dbAiThresholdData) {
+            for (const key of Object.keys(this.aiThresholdData)) {
+                if (this.aiThresholdData[key] !== this.dbAiThresholdData[key]) {
+                    Object.defineProperty(save_data, key, {
+                        value: this.aiThresholdData[key],
+                        configurable: true,
+                        enumerable: true,
+                        writable: true
+                    });
+                }
+            }
+        }
+
+        // by shkoh 20220107: 임계치의 저장은 크게 2가지 형태로 구분(아날로그 / 디지털)
+        this.$emit('save', this.is_analog, this.data.NAME, save_data);
+    }
+
+    deleteThreshold() {
+        this.$emit('delete', this.is_analog, this.$props.id, this.data.NAME);
     }
 
     get saveButtonDisabled(): boolean {
