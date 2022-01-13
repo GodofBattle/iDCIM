@@ -8,70 +8,72 @@
     >
         <template #header> 제품 추가 </template>
 
-        <div class="p-fluid p-input-filled">
-            <div class="p-field">
-                <small>{{ subTitle }}</small>
+        <ScrollPanel style="height: 50vh; padding: 0.4rem">
+            <div class="p-fluid p-input-filled">
+                <div class="p-field">
+                    <small>{{ subTitle }}</small>
+                </div>
+                <div class="p-field">
+                    <label for="asset-code">자산분류</label>
+                    <Dropdown
+                        id="asset-code"
+                        v-model="newData.ASSET_CD"
+                        :options="assetCodeList"
+                        option-label="NAME"
+                        option-value="CODE"
+                        placeholder="자산유형을 선택하세요"
+                        :filter="true"
+                        filter-placeholder="검색"
+                        empty-filter-message="해당 유형의 자산은 존재하지 않습니다"
+                    ></Dropdown>
+                </div>
+                <div class="p-field">
+                    <label for="name">제품명</label>
+                    <InputText
+                        id="name"
+                        v-model="newData.NAME"
+                        type="text"
+                        aria-describedby="name-help"
+                        autocomplete="off"
+                        :class="{ 'p-invalid': invalidMessage.NAME }"
+                        @input="validateName"
+                    ></InputText>
+                    <small id="name-help" class="p-error">
+                        {{ invalidMessage.NAME }}
+                    </small>
+                </div>
+                <div class="p-field">
+                    <label for="model-name">모델명</label>
+                    <InputText
+                        id="model-name"
+                        v-model="newData.MODEL_NAME"
+                        type="text"
+                        aria-describedby="model-name-help"
+                        autocomplete="off"
+                        :class="{ 'p-invalid': invalidMessage.MODEL_NAME }"
+                        @input="validateModelName"
+                    ></InputText>
+                    <small id="model-name-help" class="p-error">
+                        {{ invalidMessage.MODEL_NAME }}
+                    </small>
+                </div>
+                <div class="p-field">
+                    <label for="remark">설명</label>
+                    <Textarea
+                        id="remark"
+                        v-model="newData.REMARK"
+                        :auto-resize="false"
+                        rows="6"
+                        style="resize: none"
+                        :class="{ 'p-invalid': invalidMessage.REMARK }"
+                        @input="validateRemark"
+                    />
+                    <small id="remark-help" class="p-error">
+                        {{ invalidMessage.REMARK }}
+                    </small>
+                </div>
             </div>
-            <div class="p-field">
-                <label for="asset-code">자산분류</label>
-                <Dropdown
-                    id="asset-code"
-                    v-model="newData.ASSET_CD"
-                    :options="assetCodeList"
-                    option-label="NAME"
-                    option-value="CODE"
-                    placeholder="자산유형을 선택하세요"
-                    :filter="true"
-                    filter-placeholder="검색"
-                    empty-filter-message="해당 유형의 자산은 존재하지 않습니다"
-                ></Dropdown>
-            </div>
-            <div class="p-field">
-                <label for="name">제품명</label>
-                <InputText
-                    id="name"
-                    v-model="newData.NAME"
-                    type="text"
-                    aria-describedby="name-help"
-                    autocomplete="off"
-                    :class="{ 'p-invalid': invalidMessage.NAME }"
-                    @input="validateName"
-                ></InputText>
-                <small id="name-help" class="p-error">
-                    {{ invalidMessage.NAME }}
-                </small>
-            </div>
-            <div class="p-field">
-                <label for="model-name">모델명</label>
-                <InputText
-                    id="model-name"
-                    v-model="newData.MODEL_NAME"
-                    type="text"
-                    aria-describedby="model-name-help"
-                    autocomplete="off"
-                    :class="{ 'p-invalid': invalidMessage.MODEL_NAME }"
-                    @input="validateModelName"
-                ></InputText>
-                <small id="model-name-help" class="p-error">
-                    {{ invalidMessage.MODEL_NAME }}
-                </small>
-            </div>
-            <div class="p-field">
-                <label for="remark">설명</label>
-                <Textarea
-                    id="remark"
-                    v-model="newData.REMARK"
-                    :auto-resize="false"
-                    rows="6"
-                    style="resize: none"
-                    :class="{ 'p-invalid': invalidMessage.REMARK }"
-                    @input="validateRemark"
-                />
-                <small id="remark-help" class="p-error">
-                    {{ invalidMessage.REMARK }}
-                </small>
-            </div>
-        </div>
+        </ScrollPanel>
 
         <template #footer>
             <div class="p-fluid">
