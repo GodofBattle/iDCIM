@@ -4,7 +4,7 @@ import { getRepository } from 'typeorm';
 
 import { pd_sensor_threshold_ai, pd_sensor_threshold_ai_args } from "../entity/database/pd_sensor_threshold_ai";
 import { pd_sensor_threshold_di } from "../entity/database/pd_sensor_threshold_di";
-import { DIThreshold, DigitalValue } from '../entity/web/diThreshold';
+import { DIThreshold, DigitalValue, DigitalValueInput } from '../entity/web/diThreshold';
 
 @Resolver()
 export class PredefineThresholdResolver {
@@ -122,6 +122,49 @@ export class PredefineThresholdResolver {
     }
 
     @Mutation(() => Boolean)
+    async UpdatePredefineThresholdByDI(
+        @Arg('ID', () => ID!) id: number,
+        @Arg('NAME', () => String, { nullable: true }) name: string,
+        @Arg('HOLD_TIME', () => Int, { nullable: true }) hold_time: number,
+        @Arg('DI', () => [DigitalValueInput!], { nullable: true }) di: DigitalValueInput[],
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if(!id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+
+            const update_data = {};
+            if(name) update_data['NAME'] = name;
+            if(hold_time) update_data['HOLD_TIME'] = hold_time;
+
+            for(let idx = 0; idx < 30; idx++) {
+                let level = undefined;
+                let label = undefined;
+
+                const finder_di = di.find((_d: DigitalValueInput) => _d.INDEX  === idx);
+                if(finder_di) {
+                    level = finder_di.LEVEL;
+                    label = finder_di.LABEL;
+                }
+
+                update_data[`VALUE_${idx}_LEVEL`] = level;
+                update_data[`VALUE_${idx}_LABEL`] = label;
+            }
+
+            const result = await getRepository(pd_sensor_threshold_di).update({ ID: id }, update_data);
+            return result.affected > 0 ? true : false;
+        } catch(err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
     async CopyPredefineThresholdByAI(
         @Arg('SENSOR_CD', () => String!) sensor_cd: string,
         @Args() { NAME, HOLD_TIME, VALID_MIN, VALID_MAX, IS_VALID, POINT_N3, POINT_N2, POINT_N1, POINT_P1, POINT_P2, POINT_P3 }: pd_sensor_threshold_ai_args,
@@ -146,6 +189,52 @@ export class PredefineThresholdResolver {
             }
 
             const result = await getRepository(pd_sensor_threshold_ai).insert(copy_data);
+            return result.identifiers.length > 0 ? true : false;
+        } catch(err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async CopyPredefineThresholdByDI(
+        @Arg('SENSOR_CD', () => String!) sensor_cd: string,
+        @Arg('NAME', () => String, { nullable: true }) name: string,
+        @Arg('HOLD_TIME', () => Int, { nullable: true }) hold_time: number,
+        @Arg('DI', () => [DigitalValueInput!], { nullable: true }) di: DigitalValueInput[],
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if(!sensor_cd) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+
+            const copy_data = {
+                SENSOR_CD: sensor_cd
+            };
+
+            if(name) copy_data['NAME'] = name;
+            if(hold_time) copy_data['HOLD_TIME'] = hold_time;
+
+            for(let idx = 0; idx < 30; idx++) {
+                let level = undefined;
+                let label = undefined;
+
+                const finder_di = di.find((_d: DigitalValueInput) => _d.INDEX  === idx);
+                if(finder_di) {
+                    level = finder_di.LEVEL;
+                    label = finder_di.LABEL;
+                }
+
+                copy_data[`VALUE_${idx}_LEVEL`] = level;
+                copy_data[`VALUE_${idx}_LABEL`] = label;
+            }
+            
+            const result = await getRepository(pd_sensor_threshold_di).insert(copy_data);
             return result.identifiers.length > 0 ? true : false;
         } catch(err) {
             throw new SchemaError(err.message);

@@ -1,66 +1,71 @@
 <template>
-    <ScrollPanel v-if="sensorCode" id="predefineThresholdPanel">
+    <div v-if="sensorCode" id="predefineThresholdPanel">
         <div class="p-d-flex p-px-2">
             <div class="p-as-cneter i-title p-text-bold">
                 {{ sensorCodeName }}: {{ type }}
             </div>
         </div>
         <Divider />
-        <div class="p-grid p-px-2">
-            <DataTable
-                :value="thresholdList"
-                :scrollable="true"
-                scroll-height="calc(100vh - 20px - var(--header-height) - 30px - 12px -55px - 12px"
-                :row-hover="true"
-                data-key="ID"
-            >
-                <template #header>
-                    <div class="i-table-header p-d-flex">
-                        <div class="p-ml-auto">
-                            <Button
-                                icon="pi pi-save"
-                                label="SAVE ALL"
-                                class="
-                                    p-field p-button-outlined p-button-secondary
-                                "
-                            ></Button>
-                            <Button
-                                icon="pi pi-plus"
-                                label="ADD"
-                                class="
-                                    p-field p-button-outlined p-button-secondary
-                                "
-                            ></Button>
+        <ScrollPanel class="i-threshold-scrollpanel">
+            <div class="p-grid p-px-2">
+                <DataTable
+                    :value="thresholdList"
+                    :scrollable="true"
+                    scroll-height="calc(100vh - 20px - var(--header-height) - 30px - 12px - 55px - 12px"
+                    :row-hover="true"
+                    data-key="ID"
+                >
+                    <template #header>
+                        <div class="i-table-header p-d-flex">
+                            <div class="p-ml-auto">
+                                <Button
+                                    icon="pi pi-save"
+                                    label="SAVE ALL"
+                                    class="
+                                        p-field
+                                        p-button-outlined
+                                        p-button-secondary
+                                    "
+                                ></Button>
+                                <Button
+                                    icon="pi pi-plus"
+                                    label="ADD"
+                                    class="
+                                        p-field
+                                        p-button-outlined
+                                        p-button-secondary
+                                    "
+                                ></Button>
+                            </div>
                         </div>
-                    </div>
-                </template>
-                <template #empty>
-                    <div class="i-table-empty">
-                        {{ sensorCodeName }}의 임계치를 추가하세요
-                    </div>
-                </template>
-                <Column key="ID">
-                    <template #body="slotProps">
-                        <predefine-threshold-card
-                            :id="slotProps.data.ID"
-                            :type="type"
-                            :unit="sensorUnit"
-                            :name="slotProps.data.NAME"
-                            :hold-time="slotProps.data.HOLD_TIME"
-                            :level-codes="dbLevelCodes"
-                            @copy="copyPredefineThreshold"
-                            @save="savePredefineThreshold"
-                            @delete="deletePredefineThreshold"
-                        ></predefine-threshold-card>
                     </template>
-                </Column>
-            </DataTable>
-        </div>
-    </ScrollPanel>
+                    <template #empty>
+                        <div class="i-table-empty">
+                            {{ sensorCodeName }}의 임계치를 추가하세요
+                        </div>
+                    </template>
+                    <Column key="ID">
+                        <template #body="slotProps">
+                            <predefine-threshold-card
+                                :id="slotProps.data.ID"
+                                :type="type"
+                                :unit="sensorUnit"
+                                :name="slotProps.data.NAME"
+                                :hold-time="slotProps.data.HOLD_TIME"
+                                :level-codes="dbLevelCodes"
+                                @copy="copyPredefineThreshold"
+                                @save="savePredefineThreshold"
+                                @delete="deletePredefineThreshold"
+                            ></predefine-threshold-card>
+                        </template>
+                    </Column>
+                </DataTable>
+            </div>
+        </ScrollPanel>
+    </div>
 </template>
 
 <script lang="ts">
-import { BlobOptions } from 'buffer';
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
@@ -170,6 +175,8 @@ export default class PredefineThresholdPanel extends Vue {
     ) {
         if (is_analog) {
             this.copyAiPredefineThreshold(id, threshold_copy_info);
+        } else {
+            this.copyDiPredeineThreshold(id, threshold_copy_info);
         }
     }
 
@@ -235,6 +242,52 @@ export default class PredefineThresholdPanel extends Vue {
             });
     }
 
+    copyDiPredeineThreshold(id: number, di_threshold: any) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                mutation (
+                    $NAME: String
+                    $HOLD_TIME: Int
+                    $DI: [DigitalValueInput!]
+                ) {
+                    CopyPredefineThresholdByDI(
+                        SENSOR_CD: "${this.$props.sensorCode}"
+                        NAME: $NAME
+                        HOLD_TIME: $HOLD_TIME
+                        DI: $DI
+                    )
+                }
+            `,
+                variables: di_threshold
+            })
+            .then(() => {
+                this.refreshPredefineThreshold();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: 'DI 임계치 복사 완료',
+                    detail: `Digital ID: ${id} - ${di_threshold.NAME} 복사 완료`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: 'DI 임계치 복사 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
     savePredefineThreshold(
         is_analog: boolean,
         name: string,
@@ -242,6 +295,8 @@ export default class PredefineThresholdPanel extends Vue {
     ) {
         if (is_analog) {
             this.saveAiPredefineThreshold(name, threshold_info);
+        } else {
+            this.saveDiPredefineThreshold(name, threshold_info);
         }
     }
 
@@ -308,6 +363,53 @@ export default class PredefineThresholdPanel extends Vue {
             });
     }
 
+    saveDiPredefineThreshold(name: string, di_threshold: any) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation (
+                        $ID: ID!
+                        $NAME: String
+                        $HOLD_TIME: Int
+                        $DI: [DigitalValueInput!]
+                    ) {
+                        UpdatePredefineThresholdByDI(
+                            ID: $ID
+                            NAME: $NAME
+                            HOLD_TIME: $HOLD_TIME
+                            DI: $DI
+                        )
+                    }
+                `,
+                variables: di_threshold
+            })
+            .then(() => {
+                this.refreshPredefineThreshold();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: 'DI 임계치 적용 완료',
+                    detail: `Digital ID: ${di_threshold.ID} - ${name} 적용 완료`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: 'DI 임계치 적용 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
     deletePredefineThreshold(is_analog: boolean, id: number, name: string) {
         this.$nuxt.$loading.start();
 
@@ -358,12 +460,14 @@ export default class PredefineThresholdPanel extends Vue {
 
 <style lang="scss" scoped>
 #predefineThresholdPanel::v-deep {
-    height: calc(100vh - 20px - var(--header-height));
-
     .i-title {
         font-size: 1.6rem;
         color: --var(--text-color);
         width: 20vw;
+    }
+
+    .i-threshold-scrollpanel {
+        height: calc(100vh - 20px - var(--header-height) - 40px - 1rem);
     }
 
     .i-table-empty {

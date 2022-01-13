@@ -1,5 +1,5 @@
 <template>
-    <ScrollPanel v-if="interfaceId > 0" id="interfacePanel">
+    <div v-if="interfaceId > 0" id="interfacePanel">
         <div class="p-d-flex p-px-2">
             <div class="p-as-center i-title p-text-bold">
                 {{ interfaceData.NAME }}
@@ -28,49 +28,57 @@
                     <i class="pi pi-home p-mr-2"></i>
                     <span>기본정보</span>
                 </template>
-                <interface-panel-info
-                    v-if="interfaceTabIndex === 0"
-                    :id="interfaceId"
-                    ref="interfacePanelInfo"
-                    :apply-button-disabled.sync="applyButtonDisabled"
-                    @completeInterfaceUpdate="completeInterfaceUpdate"
-                ></interface-panel-info>
+                <ScrollPanel class="i-interface-scrollpanel">
+                    <interface-panel-info
+                        v-if="interfaceTabIndex === 0"
+                        :id="interfaceId"
+                        ref="interfacePanelInfo"
+                        :apply-button-disabled.sync="applyButtonDisabled"
+                        @completeInterfaceUpdate="completeInterfaceUpdate"
+                    ></interface-panel-info>
+                </ScrollPanel>
             </TabPanel>
             <TabPanel :disabled="isDisabledComm">
                 <template #header>
                     <i class="pi pi-wifi p-mr-2"></i>
                     <span>통신방법</span>
                 </template>
-                <interface-panel-comm
-                    v-if="interfaceTabIndex === 1"
-                    :id="interfaceId"
-                    ref="interfacePanelComm"
-                    :apply-button-disabled.sync="applyButtonDisabled"
-                >
-                </interface-panel-comm>
+                <ScrollPanel class="i-interface-scrollpanel">
+                    <interface-panel-comm
+                        v-if="interfaceTabIndex === 1"
+                        :id="interfaceId"
+                        ref="interfacePanelComm"
+                        :apply-button-disabled.sync="applyButtonDisabled"
+                    >
+                    </interface-panel-comm>
+                </ScrollPanel>
             </TabPanel>
             <TabPanel>
                 <template #header>
                     <i class="pi pi-list p-mr-2"></i>
                     <span>수집항목</span>
                 </template>
-                <interface-panel-sensor
-                    v-if="interfaceTabIndex === 2"
-                    :id="interfaceId"
-                    ref="interfacePanelSensor"
-                    :has-comm="!isDisabledComm"
-                >
-                </interface-panel-sensor>
+                <ScrollPanel class="i-interface-scrollpanel">
+                    <interface-panel-sensor
+                        v-if="interfaceTabIndex === 2"
+                        :id="interfaceId"
+                        ref="interfacePanelSensor"
+                        :has-comm="!isDisabledComm"
+                    >
+                    </interface-panel-sensor>
+                </ScrollPanel>
             </TabPanel>
             <TabPanel>
                 <template #header>
                     <i class="pi pi-sliders-v p-mr-2"></i>
                     <span>제어항목</span>
                 </template>
-                <div v-if="interfaceTabIndex === 3">미구현 - 3</div>
+                <ScrollPanel class="i-interface-scrollpanel">
+                    <div v-if="interfaceTabIndex === 3">미구현 - 3</div>
+                </ScrollPanel>
             </TabPanel>
         </TabView>
-    </ScrollPanel>
+    </div>
 </template>
 
 <script lang="ts">
@@ -184,8 +192,6 @@ export default class InterfacePanel extends Vue {
 
 <style lang="scss" scoped>
 #interfacePanel::v-deep {
-    height: calc(100vh - 20px - var(--header-height));
-
     .i-title {
         font-size: 1.6rem;
         color: var(--text-color);
@@ -193,7 +199,14 @@ export default class InterfacePanel extends Vue {
     }
 
     .p-tabview-panels {
-        padding: 1rem 0.5rem;
+        padding: 1rem 0;
+    }
+
+    .i-interface-scrollpanel {
+        height: calc(
+            100vh - 20px - var(--header-height) - 10px - 30px - 40px - 1rem
+        );
+        padding: 0.4rem;
     }
 }
 </style>

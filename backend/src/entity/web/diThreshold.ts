@@ -1,4 +1,4 @@
-import { Field, ObjectType, Int } from "type-graphql";
+import { Field, ObjectType, Int, ArgsType, InputType } from "type-graphql";
 
 @ObjectType()
 export class DigitalValue {
@@ -28,4 +28,16 @@ export class DIThreshold {
 
     @Field(() => [DigitalValue], { nullable: true })
     DI: DigitalValue[];
+}
+
+@InputType('DigitalValueInput')
+export class DigitalValueInput {
+    @Field(() => Int!)
+    INDEX: number;
+
+    @Field(() => Int!)
+    LEVEL: number;
+
+    @Field(() => String!)
+    LABEL: string;
 }

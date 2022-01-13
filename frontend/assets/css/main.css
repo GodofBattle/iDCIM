@@ -7,10 +7,27 @@
     --critical: #ee6666;
 }
 
+::-webkit-scrollbar {
+    width: 0.5em;
+    background: none;
+    z-index: 1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #304562;
+    border-radius: 3px;
+    z-index: 2;
+}
+
+::-webkit-scrollbar-track {
+    background: none;
+}
+
 html {
     font-size: 12px;
     background: var(--surface-a);
     color: var(--text-color);
+    overflow: hidden;
 }
 
 body {

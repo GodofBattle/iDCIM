@@ -25,7 +25,7 @@
                     <Button
                         class="p-button-rounded p-button-text"
                         icon="pi pi-save"
-                        :disabled="saveButtonDisabled"
+                        :disabled="saveButtonDisabled || checkThresholdDI"
                         @click="saveThreshold"
                     ></Button>
                     <Button
@@ -273,7 +273,6 @@ export default class PredefineThresholdCard extends Vue {
 
     diThresholdData: DigitalThreshold = {
         ID: 0,
-        HOLD_TIME: 0,
         DI: []
     };
 
@@ -350,6 +349,19 @@ export default class PredefineThresholdCard extends Vue {
                     writable: true
                 });
             }
+        } else {
+            const _di = Array<any>();
+            for (let idx = 0; idx < this.diThresholdData.DI.length; idx++) {
+                const { INDEX, LEVEL, LABEL } = this.diThresholdData.DI[idx];
+                _di.push({ INDEX, LEVEL, LABEL });
+            }
+
+            Object.defineProperty(copy_data, 'DI', {
+                value: _di,
+                configurable: true,
+                enumerable: true,
+                writable: true
+            });
         }
 
         this.$emit('copy', this.is_analog, this.$props.id, copy_data);
@@ -384,6 +396,19 @@ export default class PredefineThresholdCard extends Vue {
                     });
                 }
             }
+        } else if (this.dbDiThresholdData) {
+            const _di = Array<any>();
+            for (let idx = 0; idx < this.diThresholdData.DI.length; idx++) {
+                const { INDEX, LEVEL, LABEL } = this.diThresholdData.DI[idx];
+                _di.push({ INDEX, LEVEL, LABEL });
+            }
+
+            Object.defineProperty(save_data, 'DI', {
+                value: _di,
+                configurable: true,
+                enumerable: true,
+                writable: true
+            });
         }
 
         // by shkoh 20220107: 임계치의 저장은 크게 2가지 형태로 구분(아날로그 / 디지털)
@@ -404,6 +429,25 @@ export default class PredefineThresholdCard extends Vue {
         }
 
         return is_disabled;
+    }
+
+    get checkThresholdDI(): boolean {
+        let checker = false;
+
+        // by shkoh 20220111: DI인 경우에 Threshold가 Editing 상황이거나, INDEX가 중복 상황에서는 save button을 비활성화한다
+        if (!this.is_analog) {
+            for (let idx = 0; idx < this.diThresholdData.DI.length; idx++) {
+                const { isEditableGrade, isEditableValue, hasSameINDEX } =
+                    this.diThresholdData.DI[idx];
+
+                if (isEditableGrade || isEditableValue || hasSameINDEX) {
+                    checker = true;
+                    break;
+                }
+            }
+        }
+
+        return checker;
     }
 
     get predefineThresholdCardClass(): Array<string | object> {
@@ -459,26 +503,22 @@ export default class PredefineThresholdCard extends Vue {
             if (this.diThresholdData.ID !== this.dbDiThresholdData.ID)
                 is_diff = true;
             else if (
-                this.diThresholdData.HOLD_TIME !==
-                this.dbDiThresholdData.HOLD_TIME
-            ) {
-                is_diff = true;
-            } else if (
                 this.diThresholdData.DI.length !==
                 this.dbDiThresholdData.DI.length
             ) {
                 is_diff = true;
             } else {
                 for (let idx = 0; idx < this.diThresholdData.DI.length; idx++) {
+                    const { INDEX, LEVEL, LABEL } =
+                        this.diThresholdData.DI[idx];
+
                     if (
-                        this.diThresholdData.DI[idx].INDEX !==
-                            this.dbDiThresholdData.DI[idx].INDEX ||
-                        this.diThresholdData.DI[idx].LEVEL !==
-                            this.dbDiThresholdData.DI[idx].LEVEL ||
-                        this.diThresholdData.DI[idx].LABEL !==
-                            this.dbDiThresholdData.DI[idx].LABEL
+                        INDEX !== this.dbDiThresholdData.DI[idx].INDEX ||
+                        LEVEL !== this.dbDiThresholdData.DI[idx].LEVEL ||
+                        LABEL !== this.dbDiThresholdData.DI[idx].LABEL
                     ) {
                         is_diff = true;
+                        break;
                     }
                 }
             }
@@ -504,7 +544,17 @@ export default class PredefineThresholdCard extends Vue {
     }
 
     get heightDIThresholdContent(): string {
-        return `${this.diThresholdData.DI.length * 46 + 24 + 12}px`;
+        let content_height = 24 + 12;
+
+        this.diThresholdData.DI.forEach((d: DIValue) => {
+            let di_heihgt = 6;
+            if (d.isEditableGrade || d.isEditableValue) di_heihgt += 53;
+            else di_heihgt += 40;
+
+            content_height += di_heihgt;
+        });
+
+        return `${content_height}px`;
     }
 }
 </script>
