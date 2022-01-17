@@ -10,6 +10,7 @@ import { buildSchemaSync } from 'type-graphql';
 import { ApolloServerLoaderPlugin } from 'type-graphql-dataloader';
 import { graphqlUploadExpress } from 'graphql-upload';
 
+import { SiteResolver } from './resolver/site';
 import { UserResolver } from './resolver/user';
 import { CodeResolver } from './resolver/code';
 import { SensorCodeResolver } from './resolver/sensorCode';
@@ -26,6 +27,7 @@ const graphql_path = '/api';
 
 const schemas = buildSchemaSync({
     resolvers: [
+        SiteResolver,
         UserResolver,
         CodeResolver,
         SensorCodeResolver,

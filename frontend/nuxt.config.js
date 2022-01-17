@@ -59,7 +59,8 @@ export default {
             '@/components/manufacturer',
             '@/components/product',
             '@/components/interface',
-            '@/components/threshold'
+            '@/components/threshold',
+            '@/components/site'
         ]
     },
 
@@ -210,6 +211,14 @@ export default {
                         component: 'pages/icomer/threshold.vue',
                         meta: {
                             title: '인터페이스'
+                        }
+                    },
+                    {
+                        path: '/site',
+                        name: 'site',
+                        component: 'pages/icomer/site.vue',
+                        meta: {
+                            title: '사이트'
                         }
                     }
                 ]
