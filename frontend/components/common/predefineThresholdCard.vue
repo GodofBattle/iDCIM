@@ -175,6 +175,14 @@ type DigitalThreshold = {
         holdTime: Number,
         levelCodes: Array
     },
+    watch: {
+        saveButtonDisabled(is_flag: boolean) {
+            this.$emit('change', is_flag || this.checkThresholdDI);
+        },
+        checkThresholdDI(is_flag: boolean) {
+            this.$emit('change', this.saveButtonDisabled || is_flag);
+        }
+    },
     apollo: {
         dbAiThresholdData: {
             query: gql`
@@ -368,55 +376,28 @@ export default class PredefineThresholdCard extends Vue {
     }
 
     saveThreshold() {
-        const save_data = {
-            ID: this.$props.id
-        };
-
-        // by shkoh 202201107: 저장할 임계치 데이터의 기본값 들 중에서 변경될 값을 비교하여 저장
-        for (const key of Object.keys(this.data)) {
-            if (this.data[key] !== this.initData[key]) {
-                Object.defineProperty(save_data, key, {
-                    value: this.data[key],
-                    configurable: true,
-                    enumerable: true,
-                    writable: true
-                });
-            }
-        }
-
-        // by shkoh 20220110: 아날로그 임계치인 경우
-        if (this.is_analog && this.dbAiThresholdData) {
-            for (const key of Object.keys(this.aiThresholdData)) {
-                if (this.aiThresholdData[key] !== this.dbAiThresholdData[key]) {
-                    Object.defineProperty(save_data, key, {
-                        value: this.aiThresholdData[key],
-                        configurable: true,
-                        enumerable: true,
-                        writable: true
-                    });
-                }
-            }
-        } else if (this.dbDiThresholdData) {
-            const _di = Array<any>();
-            for (let idx = 0; idx < this.diThresholdData.DI.length; idx++) {
-                const { INDEX, LEVEL, LABEL } = this.diThresholdData.DI[idx];
-                _di.push({ INDEX, LEVEL, LABEL });
-            }
-
-            Object.defineProperty(save_data, 'DI', {
-                value: _di,
-                configurable: true,
-                enumerable: true,
-                writable: true
-            });
-        }
-
         // by shkoh 20220107: 임계치의 저장은 크게 2가지 형태로 구분(아날로그 / 디지털)
-        this.$emit('save', this.is_analog, this.data.NAME, save_data);
+        this.$emit(
+            'save',
+            this.is_analog,
+            this.data.NAME,
+            this.changedThresholdData
+        );
     }
 
-    deleteThreshold() {
-        this.$emit('delete', this.is_analog, this.$props.id, this.data.NAME);
+    deleteThreshold() {        
+        this.$confirmDialog.require({
+            group: 'deleteConfirmDialog',
+            message: `[${this.data.NAME}] 임계치 항목을 삭제하시겠습니까?\n해당 임계치 정보는 영구히 삭제됩니다`,
+            header: `${this.$props.type} 임계치 - ${this.data.NAME} 삭제`,
+            position: 'top',
+            icon: 'pi pi-exclamation-triangle',
+            acceptClass: 'p-button-danger',
+            blockScroll: false,
+            accept: () => {
+                this.$emit('delete', this.is_analog, this.$props.id, this.data.NAME);
+            }
+        });
     }
 
     get saveButtonDisabled(): boolean {
@@ -555,6 +536,53 @@ export default class PredefineThresholdCard extends Vue {
         });
 
         return `${content_height}px`;
+    }
+
+    get changedThresholdData(): object {
+        const changed_data = {
+            ID: this.$props.id
+        };
+
+        // by shkoh 202201107: 저장할 임계치 데이터의 기본값 들 중에서 변경될 값을 비교하여 저장
+        for (const key of Object.keys(this.data)) {
+            if (this.data[key] !== this.initData[key]) {
+                Object.defineProperty(changed_data, key, {
+                    value: this.data[key],
+                    configurable: true,
+                    enumerable: true,
+                    writable: true
+                });
+            }
+        }
+
+        // by shkoh 20220110: 아날로그 임계치인 경우
+        if (this.is_analog && this.dbAiThresholdData) {
+            for (const key of Object.keys(this.aiThresholdData)) {
+                if (this.aiThresholdData[key] !== this.dbAiThresholdData[key]) {
+                    Object.defineProperty(changed_data, key, {
+                        value: this.aiThresholdData[key],
+                        configurable: true,
+                        enumerable: true,
+                        writable: true
+                    });
+                }
+            }
+        } else if (this.dbDiThresholdData) {
+            const _di = Array<any>();
+            for (let idx = 0; idx < this.diThresholdData.DI.length; idx++) {
+                const { INDEX, LEVEL, LABEL } = this.diThresholdData.DI[idx];
+                _di.push({ INDEX, LEVEL, LABEL });
+            }
+
+            Object.defineProperty(changed_data, 'DI', {
+                value: _di,
+                configurable: true,
+                enumerable: true,
+                writable: true
+            });
+        }
+
+        return changed_data;
     }
 }
 </script>

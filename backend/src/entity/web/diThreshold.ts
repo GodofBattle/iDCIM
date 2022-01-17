@@ -41,3 +41,18 @@ export class DigitalValueInput {
     @Field(() => String!)
     LABEL: string;
 }
+
+@InputType('PredefineThresholdDIInput')
+export class PredefineThresholdDIInput {
+    @Field(() => Int)
+    ID: number;
+
+    @Field(() => String, { nullable: true })
+    NAME: string;
+
+    @Field(() => Int, { nullable: true })
+    HOLD_TIME: number;
+
+    @Field(() => [DigitalValueInput], { nullable: true })
+    DI: DigitalValueInput[];
+}

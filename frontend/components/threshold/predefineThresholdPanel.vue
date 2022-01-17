@@ -26,6 +26,8 @@
                                         p-button-outlined
                                         p-button-secondary
                                     "
+                                    :disabled="applySaveAllButtonDisabled"
+                                    @click="saveAll"
                                 ></Button>
                                 <Button
                                     icon="pi pi-plus"
@@ -35,6 +37,7 @@
                                         p-button-outlined
                                         p-button-secondary
                                     "
+                                    @click="addThreshold"
                                 ></Button>
                             </div>
                         </div>
@@ -48,11 +51,13 @@
                         <template #body="slotProps">
                             <predefine-threshold-card
                                 :id="slotProps.data.ID"
+                                :ref="'threshold_' + slotProps.data.ID"
                                 :type="type"
                                 :unit="sensorUnit"
                                 :name="slotProps.data.NAME"
                                 :hold-time="slotProps.data.HOLD_TIME"
                                 :level-codes="dbLevelCodes"
+                                @change="changPredefineThreshold"
                                 @copy="copyPredefineThreshold"
                                 @save="savePredefineThreshold"
                                 @delete="deletePredefineThreshold"
@@ -147,6 +152,8 @@ export default class PredefineThresholdPanel extends Vue {
 
     dbLevelCodes: Array<any> = [];
 
+    applySaveAllButtonDisabled: boolean = true;
+
     reset() {
         this.thresholdList.splice(0, this.thresholdList.length);
     }
@@ -166,6 +173,209 @@ export default class PredefineThresholdPanel extends Vue {
                 this.thresholdList.push(threshold_info);
             });
         });
+    }
+
+    saveAll() {
+        const editable_list = this.thresholdList
+            .map((threshold: ThresholdInfo) => {
+                const threshold_card_ref: any =
+                    this.$refs[`threshold_${threshold.ID}`];
+
+                if (
+                    !threshold_card_ref.saveButtonDisabled &&
+                    !threshold_card_ref.checkThresholdDI
+                ) {
+                    return threshold_card_ref.changedThresholdData;
+                }
+            })
+            .filter((threshold) => threshold !== undefined);
+
+        if (editable_list.length === 0) {
+            return;
+        }
+
+        this.$props.sensorType === 'A'
+            ? this.SaveAllPredefineThresholdByAI(editable_list)
+            : this.SaveAllPredefineThresholdByDI(editable_list);
+    }
+
+    SaveAllPredefineThresholdByAI(threshold_list: any[]) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation ($Input: [PredefineThresholdAIInput!]) {
+                        UpdatePredefineThresholdsByAI(Input: $Input)
+                    }
+                `,
+                variables: {
+                    Input: threshold_list
+                }
+            })
+            .then(() => {
+                this.refreshPredefineThreshold();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '임계치 적용 완료',
+                    detail: `${threshold_list.length}개의 ${this.$props.sensorCodeName} 임계치가 갱신되었습니다`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '임계치 적용 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    SaveAllPredefineThresholdByDI(threshold_list: any[]) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation ($Input: [PredefineThresholdDIInput!]) {
+                        UpdatePredefineThresholdsByDI(Input: $Input)
+                    }
+                `,
+                variables: {
+                    Input: threshold_list
+                }
+            })
+            .then(() => {
+                this.refreshPredefineThreshold();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '임계치 적용 완료',
+                    detail: `${threshold_list.length}개의 ${this.$props.sensorCodeName} 임계치가 갱신되었습니다`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '임계치 적용 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    addThreshold() {
+        this.$props.sensorType === 'A'
+            ? this.AddPredefineThresholdByAI()
+            : this.AddPredefineThresholdByDI();
+    }
+
+    AddPredefineThresholdByAI() {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation {
+                        AddPredefineThresholdByAI(
+                            SENSOR_CD: "${this.$props.sensorCode}"
+                            NAME: "새로운 ${this.$props.sensorCodeName} 임계치"
+                            HOLD_TIME: 0
+                            VALID_MIN: 0
+                            VALID_MAX: 100
+                            IS_VALID: 1
+                            POINT_N3: 10
+                            POINT_N2: 20
+                            POINT_N1: 30
+                            POINT_P1: 60
+                            POINT_P2: 70
+                            POINT_P3: 80
+                        )
+                    }
+                    
+                `
+            })
+            .then(() => {
+                this.refreshPredefineThreshold();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: 'AI 임계치 추가 완료',
+                    detail: `${this.$props.sensorCodeName} 추가`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: 'AI 임계치 추가 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    AddPredefineThresholdByDI() {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation {
+                        AddPredefineThresholdByDI(
+                            SENSOR_CD: "${this.$props.sensorCode}"
+                            NAME: "새로운 ${this.$props.sensorCodeName} 임계치"
+                            HOLD_TIME: 0
+                        )
+                    }
+                    
+                `
+            })
+            .then(() => {
+                this.refreshPredefineThreshold();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: 'DI 임계치 추가 완료',
+                    detail: `${this.$props.sensorCodeName} 추가`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: 'DI 임계치 추가 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    changPredefineThreshold(isChanged: boolean) {
+        this.applySaveAllButtonDisabled = isChanged;
     }
 
     copyPredefineThreshold(
@@ -446,6 +656,7 @@ export default class PredefineThresholdPanel extends Vue {
 
     refreshPredefineThreshold() {
         this.$apollo.queries.dbThresholdList.refresh();
+        this.applySaveAllButtonDisabled = true;
     }
 
     get type(): string {
