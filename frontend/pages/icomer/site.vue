@@ -2,7 +2,9 @@
     <div id="icomer-site">
         <icomer-toolbar class="p-px-2" :title="title"></icomer-toolbar>
         <ScrollPanel class="p-px-2 i-site-content">
-            <site-name></site-name>
+            <site-name class="p-mb-6"></site-name>
+            <site-alert class="p-mb-6"></site-alert>
+            <site-theme class="p-mb-6"></site-theme>
         </ScrollPanel>
     </div>
 </template>

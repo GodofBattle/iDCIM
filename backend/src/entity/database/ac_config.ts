@@ -29,9 +29,9 @@ export class ac_config {
     @Column({ type: 'tinyint', nullable: false, default: 0, comment: '고객정의트리 허용여부' })
     IS_ENABLE_CUST_HIER_C: number;
 
-    @Field(() => Int, { nullable: true })
+    @Field(() => String, { nullable: true })
     @Column({ length: 1, type: 'char', nullable: false, default: 'B', comment: '테마코드(B: Black, W: White)' })
-    THEMA_TYPE: string;
+    THEME_TYPE: string;
 
     @Field(() => Int, { nullable: true })
     @Column({ type: 'int', nullable: true, default: null, comment: '변경사용자아이디' })
@@ -39,7 +39,7 @@ export class ac_config {
 
     @Field(() => nullableDate, { nullable: true })
     @Column({ type: 'datetime', nullable: true, default: null, comment: '변경일시' })
-    UPDATE_USER_DT?: number;
+    UPDATE_USER_DT?: Date;
 
     @Field(() => String, { nullable: true })
     @Column({ length: 256, type: 'varchar', nullable: true, default: null, comment: '설명' })

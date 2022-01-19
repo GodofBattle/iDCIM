@@ -32,6 +32,7 @@ export default {
 
     // Global CSS: https://go.nuxtjs.dev/config-css
     css: [
+        'primevue/resources/themes/saga-green/theme.css',
         'primeflex/primeflex.scss',
         '@/assets/css/main.css',
         '@/assets/css/custom.primevue.css'
@@ -113,7 +114,7 @@ export default {
 
     // by shkoh 20210709: primevue2
     primevue: {
-        theme: 'vela-blue',
+        // theme: 'vela-blue',
         // theme: 'saga-blue',
         // theme: 'arya-orange',
         // theme: 'nova-vue',

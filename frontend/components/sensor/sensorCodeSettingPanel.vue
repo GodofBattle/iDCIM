@@ -152,7 +152,6 @@ export default Vue.extend({
             },
             set(value: boolean) {
                 this.IS_DISP_CONV = value ? 1 : 0;
-                console.info(this.IS_DISP_CONV);
             }
         },
         applyDisabled() {

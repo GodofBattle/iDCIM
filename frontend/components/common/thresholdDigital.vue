@@ -251,27 +251,27 @@ export default class ThresholdDigital extends Vue {
 
 .i-normal {
     background: var(--normal);
-    color: var(--text-color);
+    color: var(--text-alert-color);
 }
 
 .i-warning {
     background: var(--warning);
-    color: var(--primary-color-text);
+    color: var(--text-alert-warning-color);
 }
 
 .i-major {
     background: var(--major);
-    color: var(--text-color);
+    color: var(--text-alert-color);
 }
 
 .i-critical {
     background: var(--critical);
-    color: var(--text-color);
+    color: var(--text-alert-color);
 }
 
 .i-digit-row {
     border-radius: var(--border-radius);
-    background: #304562;
+    background: var(--surface-d);
     cursor: pointer;
 }
 

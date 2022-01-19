@@ -879,16 +879,17 @@ export default class ThresholdAnalog extends Vue {
 
 .i-warning {
     background: var(--warning);
+    color: var(--text-alert-warning-color);
 }
 
 .i-major {
     background: var(--major);
-    color: var(--text-color);
+    color: var(--text-alert-color);
 }
 
 .i-critical {
     background: var(--critical);
-    color: var(--text-color);
+    color: var(--text-alert-color);
 }
 
 .i-input-minmax {

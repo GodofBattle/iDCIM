@@ -4,15 +4,14 @@
             <div class="p-as-center i-title p-text-bold">사이트명 설정</div>
             <div class="p-ml-auto">
                 <Button
-                    class="p-field"
-                    icon="pi pi-check"
-                    label="적용"
+                    class="p-button-rounded p-button-text"
+                    icon="pi pi-save"
                     :disabled="applyButtonDisabled"
                     @click="applySiteName"
                 />
             </div>
         </div>
-        <Divider />
+        <Divider class="p-mt-1 p-mb-3" />
         <div class="p-grid p-px-2">
             <div class="p-col-3 p-fluid p-input-filled">
                 <div class="p-field">
@@ -96,7 +95,7 @@ export default class IcomerSiteName extends Vue {
             .mutate({
                 mutation: gql`
                 mutation {
-                    SetSite(NAME: "${this.siteName}")
+                    SetSiteName(NAME: "${this.siteName}")
                 }
             `
             })
@@ -114,7 +113,7 @@ export default class IcomerSiteName extends Vue {
 
                 this.$toast.add({
                     severity: 'error',
-                    summary: 'AI 임계치 추가 실패',
+                    summary: '사이트명 설정 실패',
                     detail: error.message,
                     life: 2000
                 });
@@ -129,7 +128,7 @@ export default class IcomerSiteName extends Vue {
 <style lang="scss" scoped>
 #i-site-name::v-deep {
     .i-title {
-        font-size: 1.6rem;
+        font-size: 1.3rem;
         color: var(--text-color);
         width: 10vw;
     }
