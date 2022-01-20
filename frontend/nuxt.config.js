@@ -47,7 +47,7 @@ export default {
         '@/plugins/primevue.toastService.ts',
         '@/plugins/vueEventBus.ts',
         { src: '@/plugins/primevue.confirmEventBus.ts', mode: 'client' },
-        { src: '@/plugins/primevue.theme.ts', mode: 'server' }
+        { src: '@/plugins/primevue.theme.ts', mode: 'both' }
     ],
 
     // Auto import components: https://go.nuxtjs.dev/config-components
