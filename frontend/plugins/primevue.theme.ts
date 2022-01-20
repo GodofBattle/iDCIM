@@ -14,7 +14,6 @@ const install: Plugin = ({ app, store }) => {
             fetchResults: true
         })
         .then(({ data: { GetSiteTheme } }) => {
-            const theme = GetSiteTheme === 'W' ? 'saga-green' : 'vela-blue';
             store.dispatch('localStorage/CHANGETHEME', GetSiteTheme);
         })
         .catch((error) => {

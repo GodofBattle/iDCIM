@@ -20,6 +20,9 @@ export const actions = {
                 case 'W':
                     theme_name = 'saga-green';
                     break;
+                default:
+                    theme_name = 'vela-blue';
+                    break;
             }
 
             commit('SETTHEME', theme_name);
