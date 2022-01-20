@@ -69,14 +69,24 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
+import Component from '@/plugins/nuxt-class-component';
 
-export default Vue.extend({
-    data() {
+@Component<Login>({})
+export default class Login extends Vue {
+    username = '';
+    password = '';
+
+    head() {
+        const theme = this.$store.state.localStorage.theme;
+
         return {
-            username: '',
-            password: ''
+            link: [
+                { rel: 'icon', type: 'image/x-icon', href: 'favicon.ico' },
+                { rel: 'stylesheet', href: `themes/${theme}/theme.css` }
+            ]
         };
-    },
+    }
+
     mounted() {
         this.$store.dispatch('sessionStorage/SIGNOUT');
 
@@ -84,73 +94,68 @@ export default Vue.extend({
             this.$toast.add({
                 severity: 'error',
                 summary: '세션만료',
-                detail: '세션이 만료되어 로그인페이지로 이동합니다',
+                detail: '세션이 만료되어 로그인 페이지로 이동합니다',
                 life: 3000
             });
         }
-    },
-    methods: {
-        async signIn() {
-            const { username, password } = this.$data;
-
-            this.$apollo
-                .mutate({
-                    mutation: gql`
-                        mutation Login($userId: String!, $password: String!) {
-                            Login(userId: $userId, password: $password) {
-                                ROLE
-                                TOKEN {
-                                    ACCESS_TOKEN
-                                    REFRESH_TOKEN
-                                }
-                                USER {
-                                    USER_ID
-                                    USER_GROUP_ID
-                                    NAME
-                                }
-                            }
-                        }
-                    `,
-                    variables: {
-                        userId: username,
-                        password
-                    },
-                    errorPolicy: 'ignore'
-                })
-                .then(
-                    async ({
-                        data: {
-                            Login: {
-                                ROLE,
-                                TOKEN: { ACCESS_TOKEN, REFRESH_TOKEN },
-                                USER: { USER_ID, USER_GROUP_ID, NAME }
-                            }
-                        }
-                    }) => {
-                        await this.$store.dispatch('sessionStorage/SIGNIN', {
-                            role: ROLE,
-                            access_token: ACCESS_TOKEN,
-                            refresh_token: REFRESH_TOKEN,
-                            user_id: USER_ID,
-                            user_group_id: USER_GROUP_ID,
-                            user_name: NAME
-                        });
-                    }
-                )
-                .then(() => {
-                    this.$router.push('/icomer/code');
-                })
-                .catch(() => {
-                    this.$toast.add({
-                        severity: 'info',
-                        summary: '로그인 실패',
-                        detail: 'ID 혹은 패스워드를 확인하세요',
-                        life: 1500
-                    });
-                });
-        }
     }
-});
+
+    async signIn() {
+        const { username, password } = this.$data;
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                mutation {
+                    Login(userId: "${username}", password: "${password}") {
+                        ROLE
+                        TOKEN {
+                            ACCESS_TOKEN
+                            REFRESH_TOKEN
+                        }
+                        USER {
+                            USER_ID
+                            USER_GROUP_ID
+                            NAME
+                        }
+                    }
+                }
+            `,
+                errorPolicy: 'ignore'
+            })
+            .then(
+                async ({
+                    data: {
+                        Login: {
+                            ROLE,
+                            TOKEN: { ACCESS_TOKEN, REFRESH_TOKEN },
+                            USER: { USER_ID, USER_GROUP_ID, NAME }
+                        }
+                    }
+                }) => {
+                    await this.$store.dispatch('sessionStorage/SIGNIN', {
+                        role: ROLE,
+                        access_token: ACCESS_TOKEN,
+                        refresh_token: REFRESH_TOKEN,
+                        user_id: USER_ID,
+                        user_group_id: USER_GROUP_ID,
+                        user_name: NAME
+                    });
+                }
+            )
+            .then(() => {
+                this.$router.push('/icomer/code');
+            })
+            .catch(() => {
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '로그인 실패',
+                    detail: 'ID 혹은 패스워드를 확인하세요',
+                    life: 1500
+                });
+            });
+    }
+}
 </script>
 
 <style lang="scss">

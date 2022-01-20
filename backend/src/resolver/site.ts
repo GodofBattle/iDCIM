@@ -20,6 +20,15 @@ export class SiteResolver {
         }
     }
 
+    @Query(() => String)
+    async GetSiteTheme() {
+        try {
+            return (await getRepository(ac_config).findOne({ where: { ID: 1 } })).THEME_TYPE;
+        } catch(err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
     @Mutation(() => Boolean)
     async SetSiteName(
         @Arg('NAME', () => String!) name: string,

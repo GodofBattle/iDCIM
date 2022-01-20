@@ -75,6 +75,16 @@ export default class Icomer extends Vue {
         { label: '에디터' }
     ];
 
+    head() {
+        const theme = this.$store.state.localStorage.theme;
+        return {
+            link: [
+                { rel: 'icon', type: 'image/x-icon', href: 'favicon.ico' },
+                { rel: 'stylesheet', href: `themes/${theme}/theme.css` }
+            ]
+        };
+    }
+
     get isSidebar(): boolean {
         return this.$store.state.sessionStorage.ui.is_sidebar;
     }

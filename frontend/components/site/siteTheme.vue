@@ -93,6 +93,11 @@ export default class IcomerSiteTheme extends Vue {
             .then(() => {
                 this.dbSiteTheme = this.siteTheme;
 
+                this.$store.dispatch(
+                    'localStorage/CHANGETHEME',
+                    this.siteTheme
+                );
+
                 this.$toast.add({
                     severity: 'info',
                     summary: '사이트 테마 설정 완료',

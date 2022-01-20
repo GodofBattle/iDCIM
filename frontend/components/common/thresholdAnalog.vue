@@ -88,15 +88,15 @@
                     @touchend="onDragEnd($event, 'n1')"
                     @mousedown="onMouseDown($event, 'n1')"
                 >
-                    <Inplace :active.sync="new_value_active.n1">
+                    <Inplace
+                        :active.sync="new_value_active.n1"
+                        class="i-tag-position"
+                    >
                         <template #display>
-                            <Tag
-                                :value="n1"
-                                class="i-tag-position i-warning"
-                            ></Tag>
+                            <Tag :value="n1" class="i-warning"></Tag>
                         </template>
                         <template #content>
-                            <div class="p-inputgroup i-tag-position">
+                            <div class="p-inputgroup">
                                 <InputNumber
                                     v-model="inputValueN1"
                                     auto-focus
@@ -132,16 +132,16 @@
                     @touchend="onDragEnd($event, 'p1')"
                     @mousedown="onMouseDown($event, 'p1')"
                 >
-                    <Inplace :active.sync="new_value_active.p1">
+                    <Inplace
+                        :active.sync="new_value_active.p1"
+                        class="i-tag-position-top"
+                    >
                         <template #display>
-                            <Tag
-                                :value="p1"
-                                class="i-tag-position-top i-warning"
-                            ></Tag>
+                            <Tag :value="p1" class="i-warning"></Tag>
                         </template>
                         <template #content>
                             <div
-                                class="p-inputgroup i-tag-position-top"
+                                class="p-inputgroup"
                                 :style="{ 'margin-top': '-32px' }"
                             >
                                 <InputNumber
@@ -179,16 +179,16 @@
                     @touchend="onDragEnd($event, 'n2')"
                     @mousedown="onMouseDown($event, 'n2')"
                 >
-                    <Inplace :active.sync="new_value_active.n2">
+                    <Inplace
+                        :active.sync="new_value_active.n2"
+                        class="i-tag-position-top"
+                    >
                         <template #display>
-                            <Tag
-                                :value="n2"
-                                class="i-tag-position-top i-major"
-                            ></Tag>
+                            <Tag :value="n2" class="i-major"></Tag>
                         </template>
                         <template #content>
                             <div
-                                class="p-inputgroup i-tag-position-top"
+                                class="p-inputgroup"
                                 :style="{ 'margin-top': '-32px' }"
                             >
                                 <InputNumber
@@ -226,15 +226,15 @@
                     @touchend="onDragEnd($event, 'p2')"
                     @mousedown="onMouseDown($event, 'p2')"
                 >
-                    <Inplace :active.sync="new_value_active.p2">
+                    <Inplace
+                        :active.sync="new_value_active.p2"
+                        class="i-tag-position"
+                    >
                         <template #display>
-                            <Tag
-                                :value="p2"
-                                class="i-tag-position i-major"
-                            ></Tag>
+                            <Tag :value="p2" class="i-major"></Tag>
                         </template>
                         <template #content>
-                            <div class="p-inputgroup i-tag-position">
+                            <div class="p-inputgroup">
                                 <InputNumber
                                     v-model="inputValueP2"
                                     auto-focus
@@ -869,12 +869,11 @@ export default class ThresholdAnalog extends Vue {
 .i-tag-position-top {
     margin-left: auto;
     margin-top: -24px;
-    position: absolute;
 }
 
 .i-tag-position {
     margin-left: auto;
-    margin-top: 15px;
+    margin-top: 16px;
 }
 
 .i-warning {
