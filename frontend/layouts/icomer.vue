@@ -68,7 +68,7 @@ export default class Icomer extends Vue {
         { label: '임계치', to: '/icomer/threshold' },
         { separator: true },
         { label: '사이트', to: '/icomer/site' },
-        { label: '트리' },
+        { label: '트리', to: '/icomer/tree' },
         { label: '운영페이지' },
         { label: '계정' },
         { separator: true },

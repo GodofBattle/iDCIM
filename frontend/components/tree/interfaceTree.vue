@@ -83,7 +83,7 @@ import { eventBus } from '@/plugins/vueEventBus';
                 AssetSelectable: false
             },
             fetchResults: true,
-            fetchPolicy: 'cache-and-network',
+            fetchPolicy: 'no-cache',
             manual: false,
             prefetch: false,
             update({ PredefinedInterfaces }) {
