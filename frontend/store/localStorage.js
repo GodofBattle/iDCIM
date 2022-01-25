@@ -1,6 +1,6 @@
 export const state = () => ({
     theme: '',
-    version: 2
+    version: 3
 });
 
 export const mutations = {

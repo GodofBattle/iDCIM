@@ -13,11 +13,6 @@
 import Vue from 'vue';
 import Component from '@/plugins/nuxt-class-component';
 
-type SiteInfo = {
-    [index: string]: string;
-    SITE_NAME: string;
-};
-
 @Component<IcomerSite>({
     layout: 'icomer',
     props: {

@@ -77,7 +77,7 @@ export default class Login extends Vue {
     password = '';
 
     head() {
-        const theme = this.$store.state.localStorage.theme;
+        const theme = this.theme;
 
         return {
             link: [
@@ -154,6 +154,10 @@ export default class Login extends Vue {
                     life: 1500
                 });
             });
+    }
+
+    get theme(): string {
+        return this.$store.state.localStorage.theme;
     }
 }
 </script>

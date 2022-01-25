@@ -47,7 +47,7 @@ export default {
         '@/plugins/primevue.toastService.ts',
         '@/plugins/vueEventBus.ts',
         { src: '@/plugins/primevue.confirmEventBus.ts', mode: 'client' },
-        { src: '@/plugins/primevue.theme.ts', mode: 'both' }
+        { src: '@/plugins/primevue.theme.ts', mode: 'server' }
     ],
 
     // Auto import components: https://go.nuxtjs.dev/config-components
@@ -161,7 +161,8 @@ export default {
             'TieredMenu',
             'Toolbar',
             'Toast',
-            'Tree'
+            'Tree',
+            'TreeTable'
         ],
         directives: ['Tooltip']
     },
@@ -225,6 +226,14 @@ export default {
                         component: 'pages/icomer/site.vue',
                         meta: {
                             title: '사이트'
+                        }
+                    },
+                    {
+                        path: '/tree',
+                        name: 'tree',
+                        component: 'pages/icomer/tree.vue',
+                        meta: {
+                            title: '트리'
                         }
                     }
                 ]
