@@ -8,14 +8,14 @@
     --text-alert-color: #ffffffde;
     --text-alert-warning-color: #212529;
 }
-s ::-webkit-scrollbar {
+::-webkit-scrollbar {
     width: 0.5em;
     background: none;
     z-index: 1;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #304562;
+    background: var(--surface-border);
     border-radius: 3px;
     z-index: 2;
 }
