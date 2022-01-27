@@ -12,7 +12,7 @@
                         @click="copyModbusCmdCard"
                     ></Button>
                     <Button
-                        class="p-button-rounded p-button-text p-buttom-success"
+                        class="p-button-rounded p-button-text"
                         icon="pi pi-save"
                         :disabled="saveButtonDisabled"
                         @click="saveModbusCmdCard"
@@ -99,8 +99,8 @@
                         data-key="CODE"
                         placeholder="데이터 타입을 선택하세요"
                         empty-filter-message="데이터 타입이 존재하지 않습니디"
-                        @input="inputDtype"
                         append-to="body"
+                        @input="inputDtype"
                     ></Dropdown>
                 </div>
             </div>
@@ -131,12 +131,9 @@ type ModbusCmd = {
         pointCnt: Number,
         dtypeCd: String,
         initData: Object,
-        isEditable: Boolean,
+        isEditable: Boolean
     },
     watch: {
-        idx(new_val) {
-            console.info(new_val);
-        },
         funcNo(new_val) {
             this.data.FUNC_NO = new_val;
         },
@@ -151,7 +148,7 @@ type ModbusCmd = {
         },
         isEditable() {
             this.$emit('change');
-        },
+        }
     },
     apollo: {
         dtype: {
@@ -165,16 +162,16 @@ type ModbusCmd = {
             `,
             prefetch: false,
             fetchPolicy: 'cache-and-network',
-            update: ({ Codes }) => Codes,
-        },
-    },
+            update: ({ Codes }) => Codes
+        }
+    }
 })
 export default class ModbusCmdPanel extends Vue {
     data: ModbusCmd = {
         FUNC_NO: this.$props.funcNo,
         START_ADDR: this.$props.startAddr,
         POINT_CNT: this.$props.pointCnt,
-        DTYPE_CD: this.$props.dtypeCd,
+        DTYPE_CD: this.$props.dtypeCd
     };
 
     dtype: Array<any> = [];
@@ -230,7 +227,7 @@ export default class ModbusCmdPanel extends Vue {
             FUNC_NO: this.data.FUNC_NO,
             START_ADDR: this.data.START_ADDR,
             POINT_CNT: this.data.POINT_CNT,
-            DTYPE_CD: this.data.DTYPE_CD,
+            DTYPE_CD: this.data.DTYPE_CD
         });
     }
 
@@ -240,16 +237,17 @@ export default class ModbusCmdPanel extends Vue {
                 severity: 'warn',
                 summary: '통신방법 유효성 실패',
                 detail: 'DTYPE을 확인하세요',
-                life: 2000,
+                life: 2000
             });
             return;
         }
 
+        // by shkoh 20211026. 저장버튼을 클릭하는 순간 editable 상태는 종료된다.
         this.$emit('save', this.$props.idx, {
             FUNC_NO: this.data.FUNC_NO,
             START_ADDR: this.data.START_ADDR,
             POINT_CNT: this.data.POINT_CNT,
-            DTYPE_CD: this.data.DTYPE_CD,
+            DTYPE_CD: this.data.DTYPE_CD
         });
     }
 }

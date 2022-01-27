@@ -9,82 +9,84 @@
     >
         <template #header> {{ title }} </template>
 
-        <div class="p-fluid p-input-filled">
-            <div class="p-field">
-                <small>{{ subTitle }}</small>
+        <ScrollPanel style="height: 50vh; padding: 0.4rem">
+            <div class="p-fluid p-input-filled">
+                <div class="p-field">
+                    <small>{{ subTitle }}</small>
+                </div>
+                <div class="p-field">
+                    <label for="code">코드명</label>
+                    <InputText
+                        id="code"
+                        v-model="CODE"
+                        type="text"
+                        aria-describedby="code-help"
+                        autocomplete="off"
+                        :class="{ 'p-invalid': invalidMessageCode }"
+                    ></InputText>
+                    <small id="code-help" class="p-error">
+                        {{ invalidMessageCode }}
+                    </small>
+                </div>
+                <div class="p-field">
+                    <label for="name">센서명</label>
+                    <InputText
+                        id="name"
+                        v-model="NAME"
+                        type="text"
+                        aria-describedby="name-help"
+                        autocomplete="off"
+                        :class="{ 'p-invalid': invalidMessageName }"
+                    ></InputText>
+                    <small id="name-help" class="p-error">
+                        {{ invalidMessageName }}
+                    </small>
+                </div>
+                <div class="p-field">
+                    <label for="type">타입</label>
+                    <SelectButton
+                        v-model="TYPE"
+                        :options="types"
+                        option-label="name"
+                        option-value="value"
+                    />
+                </div>
+                <div class="p-field">
+                    <label for="unit">단위</label>
+                    <InputText
+                        id="unit"
+                        v-model="UNIT"
+                        type="text"
+                        aria-describedby="unit-help"
+                        autocomplete="off"
+                        :class="{ 'p-invalid': invalidMessageUnit }"
+                    ></InputText>
+                    <small id="unit-help" class="p-error">
+                        {{ invalidMessageUnit }}
+                    </small>
+                </div>
+                <div class="p-field-checkbox">
+                    <InputSwitch id="is_disp_conv" v-model="is_disp_conv">
+                    </InputSwitch>
+                    <label for="is_disp_conv">환산지수 사용여부</label>
+                </div>
+                <Divider />
+                <div class="p-field">
+                    <label for="remark">설명</label>
+                    <Textarea
+                        id="remark"
+                        v-model="REMARK"
+                        :auto-resize="false"
+                        rows="6"
+                        style="resize: none"
+                        :class="{ 'p-invalid': invalidMessageRemark }"
+                    />
+                    <small id="remark-help" class="p-error">
+                        {{ invalidMessageRemark }}
+                    </small>
+                </div>
             </div>
-            <div class="p-field">
-                <label for="code">코드명</label>
-                <InputText
-                    id="code"
-                    v-model="CODE"
-                    type="text"
-                    aria-describedby="code-help"
-                    autocomplete="off"
-                    :class="{ 'p-invalid': invalidMessageCode }"
-                ></InputText>
-                <small id="code-help" class="p-error">
-                    {{ invalidMessageCode }}
-                </small>
-            </div>
-            <div class="p-field">
-                <label for="name">센서명</label>
-                <InputText
-                    id="name"
-                    v-model="NAME"
-                    type="text"
-                    aria-describedby="name-help"
-                    autocomplete="off"
-                    :class="{ 'p-invalid': invalidMessageName }"
-                ></InputText>
-                <small id="name-help" class="p-error">
-                    {{ invalidMessageName }}
-                </small>
-            </div>
-            <div class="p-field">
-                <label for="type">타입</label>
-                <SelectButton
-                    v-model="TYPE"
-                    :options="types"
-                    option-label="name"
-                    option-value="value"
-                />
-            </div>
-            <div class="p-field">
-                <label for="unit">단위</label>
-                <InputText
-                    id="unit"
-                    v-model="UNIT"
-                    type="text"
-                    aria-describedby="unit-help"
-                    autocomplete="off"
-                    :class="{ 'p-invalid': invalidMessageUnit }"
-                ></InputText>
-                <small id="unit-help" class="p-error">
-                    {{ invalidMessageUnit }}
-                </small>
-            </div>
-            <div class="p-field-checkbox">
-                <InputSwitch id="is_disp_conv" v-model="is_disp_conv">
-                </InputSwitch>
-                <label for="is_disp_conv">환산지수 사용여부</label>
-            </div>
-            <Divider />
-            <div class="p-field">
-                <label for="remark">설명</label>
-                <Textarea
-                    id="remark"
-                    v-model="REMARK"
-                    :auto-resize="false"
-                    rows="6"
-                    style="resize: none"
-                    :class="{ 'p-invalid': invalidMessageRemark }"
-                />
-                <small id="remark-help" class="p-error">
-                    {{ invalidMessageRemark }}
-                </small>
-            </div>
-        </div>
+        </ScrollPanel>
 
         <template #footer>
             <div class="p-fluid">
@@ -109,7 +111,7 @@ export default Vue.extend({
         isEdit: Boolean,
         visibleSensorCodeDialog: Boolean,
         sensorCodeData: Object,
-        sensorCodes: Array,
+        sensorCodes: Array
     },
     data() {
         return {
@@ -119,7 +121,7 @@ export default Vue.extend({
             invalidMessageRemark: undefined as String | undefined,
             types: [
                 { name: 'Analog', value: 'A' },
-                { name: 'Digital', value: 'D' },
+                { name: 'Digital', value: 'D' }
             ],
             subTitle: '',
             CODE: '',
@@ -127,7 +129,7 @@ export default Vue.extend({
             TYPE: 'A',
             UNIT: '',
             IS_DISP_CONV: 0,
-            REMARK: '',
+            REMARK: ''
         };
     },
     computed: {
@@ -137,12 +139,12 @@ export default Vue.extend({
             },
             set(is_show: Boolean) {
                 this.$emit('update:visibleSensorCodeDialog', is_show);
-            },
+            }
         },
         title: {
             get(): string {
                 return `센서코드 ${this.isEdit ? '수정' : '추가'}`;
-            },
+            }
         },
         is_disp_conv: {
             get(): boolean {
@@ -150,8 +152,7 @@ export default Vue.extend({
             },
             set(value: boolean) {
                 this.IS_DISP_CONV = value ? 1 : 0;
-                console.info(this.IS_DISP_CONV);
-            },
+            }
         },
         applyDisabled() {
             let is_disabled = true;
@@ -166,7 +167,7 @@ export default Vue.extend({
             );
 
             return is_disabled === true;
-        },
+        }
     },
     watch: {
         CODE(_code) {
@@ -206,7 +207,7 @@ export default Vue.extend({
             } else {
                 this.invalidMessageRemark = undefined;
             }
-        },
+        }
     },
     methods: {
         setSubTitle() {
@@ -248,7 +249,7 @@ export default Vue.extend({
                     severity: 'warn',
                     summary: '센서코드 유효성 실패',
                     detail: '센서코드 내용을 확인하세요',
-                    life: 2000,
+                    life: 2000
                 });
                 return;
             }
@@ -287,15 +288,15 @@ export default Vue.extend({
                         TYPE: this.TYPE,
                         UNIT: this.UNIT,
                         IS_DISP_CONV: this.IS_DISP_CONV,
-                        REMARK: this.REMARK,
-                    },
+                        REMARK: this.REMARK
+                    }
                 })
                 .then(() => {
                     this.$toast.add({
                         severity: 'success',
                         summary: '센서코드 등록',
                         detail: `${this.CODE} | ${this.NAME} 등록완료`,
-                        life: 1500,
+                        life: 1500
                     });
 
                     this.$emit('refresh');
@@ -308,7 +309,7 @@ export default Vue.extend({
                         severity: 'error',
                         summary: '센서코드 적용 실패',
                         detail: error.message,
-                        life: 2000,
+                        life: 2000
                     });
                 });
         },
@@ -317,7 +318,7 @@ export default Vue.extend({
                 ID: this.sensorCodeData.CODE as string,
                 CODE: this.CODE,
                 NAME: this.NAME,
-                TYPE: this.TYPE,
+                TYPE: this.TYPE
             };
 
             ['UNIT', 'IS_DISP_CONV', 'REMARK'].forEach((key: string) => {
@@ -326,7 +327,7 @@ export default Vue.extend({
                         value: this.$data[key],
                         configurable: true,
                         enumerable: true,
-                        writable: true,
+                        writable: true
                     });
                 }
             });
@@ -354,7 +355,7 @@ export default Vue.extend({
                             )
                         }
                     `,
-                    variables,
+                    variables
                 })
                 .then(() => {
                     this.$emit('refresh');
@@ -367,10 +368,10 @@ export default Vue.extend({
                         severity: 'error',
                         summary: '센서코드 적용 실패',
                         detail: error.message,
-                        life: 2000,
+                        life: 2000
                     });
                 });
-        },
-    },
+        }
+    }
 });
 </script>

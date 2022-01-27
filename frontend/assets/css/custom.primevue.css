@@ -9,3 +9,15 @@
 .p-datatable-reorderablerow-handle {
     cursor: pointer;
 }
+
+.p-scrollpanel .p-scrollpanel-bar-y {
+    width: 0.5em;
+}
+
+.p-scrollpanel .p-scrollpanel-bar-x {
+    height: 0.5em;
+}
+
+.p-inplace .p-inplace-display {
+    padding: 0.2rem;
+}

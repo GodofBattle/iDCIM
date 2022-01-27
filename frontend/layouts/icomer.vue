@@ -14,8 +14,9 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
+import Component from '@/plugins/nuxt-class-component';
 
-export default Vue.extend({
+@Component<Icomer>({
     apollo: {
         $subscribe: {
             refreshToken: {
@@ -51,35 +52,43 @@ export default Vue.extend({
                 }
             }
         }
-    },
-    data: () => {
+    }
+})
+export default class Icomer extends Vue {
+    is_sidebar = true;
+
+    menuItems = [
+        { label: 'HOME' },
+        { separator: true },
+        { label: '코드', to: '/icomer/code' },
+        { label: '센서코드', to: '/icomer/sensor' },
+        { separator: true },
+        { label: '제품', to: '/icomer/product' },
+        { label: '인터페이스', to: '/icomer/interface' },
+        { label: '임계치', to: '/icomer/threshold' },
+        { separator: true },
+        { label: '사이트', to: '/icomer/site' },
+        { label: '트리', to: '/icomer/tree' },
+        { label: '운영페이지' },
+        { label: '계정' },
+        { separator: true },
+        { label: '에디터' }
+    ];
+
+    head() {
+        const theme = this.$store.state.localStorage.theme;
         return {
-            is_sidebar: true,
-            menuItems: [
-                { label: 'HOME' },
-                { separator: true },
-                { label: '코드', to: '/icomer/code' },
-                { label: '센서코드', to: '/icomer/sensor' },
-                { separator: true },
-                { label: '제품', to: '/icomer/product' },
-                { label: '인터페이스', to: '/icomer/interface' },
-                { label: '임계치' },
-                { separator: true },
-                { label: '사이트' },
-                { label: '트리' },
-                { label: '운영페이지' },
-                { label: '계정' },
-                { separator: true },
-                { label: '에디터' }
+            link: [
+                { rel: 'icon', type: 'image/x-icon', href: 'favicon.ico' },
+                { rel: 'stylesheet', href: `themes/${theme}/theme.css` }
             ]
         };
-    },
-    computed: {
-        isSidebar() {
-            return this.$store.state.sessionStorage.ui.is_sidebar;
-        }
     }
-});
+
+    get isSidebar(): boolean {
+        return this.$store.state.sessionStorage.ui.is_sidebar;
+    }
+}
 </script>
 
 <style lang="scss">

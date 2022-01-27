@@ -1,7 +1,9 @@
 <template>
-    <ScrollPanel v-if="productId > 0" id="productPanel">
+    <div v-if="productId > 0" id="productPanel">
         <div class="p-d-flex p-px-2">
-            <div class="p-as-center i-title p-text-bold">{{ productName }}</div>
+            <div class="p-as-center i-title p-text-bold">
+                {{ productName }}
+            </div>
             <div class="p-ml-auto">
                 <Button
                     icon="pi pi-check"
@@ -20,226 +22,237 @@
             </div>
         </div>
         <Divider />
-        <div class="p-grid p-px-2">
-            <div class="p-col-3 p-fluid p-input-filled p-mr-6">
-                <div class="p-field">
-                    <label for="asset_cd">자산분류</label>
-                    <Dropdown
-                        id="asset-code"
-                        v-model="newProductData.ASSET_CD"
-                        :options="assetCodeList"
-                        option-label="NAME"
-                        option-value="CODE"
-                        placeholder="자산유형을 선택하세요"
-                        :filter="true"
-                        filter-placeholder="검색"
-                        empty-filter-message="해당 유형의 자산은 존재하지 않습니다"
-                    ></Dropdown>
-                </div>
-                <div class="p-field">
-                    <label for="name">제품명</label>
-                    <InputText
-                        id="name"
-                        v-model="newProductData.NAME"
-                        type="text"
-                        aria-describedby="name-help"
-                        autocomplete="off"
-                        :class="{ 'p-invalid': invalidMessage.NAME }"
-                        @input="validateName"
-                    ></InputText>
-                    <small id="name-help" class="p-error">
-                        {{ invalidMessage.NAME }}
-                    </small>
-                </div>
-                <div class="p-field">
-                    <label for="model-name">모델명</label>
-                    <InputText
-                        id="model-name"
-                        v-model="newProductData.MODEL_NAME"
-                        type="text"
-                        aria-describedby="model-name-help"
-                        autocomplete="off"
-                        :class="{ 'p-invalid': invalidMessage.MODEL_NAME }"
-                        @input="validateModelName"
-                    ></InputText>
-                    <small id="model-name-help" class="p-error">
-                        {{ invalidMessage.MODEL_NAME }}
-                    </small>
-                </div>
+        <ScrollPanel class="i-product-scrollpanel">
+            <div class="p-grid p-px-2">
+                <div class="p-col-3 p-fluid p-input-filled p-mr-6">
+                    <div class="p-field">
+                        <label for="asset_cd">자산분류</label>
+                        <Dropdown
+                            id="asset-code"
+                            v-model="newProductData.ASSET_CD"
+                            :options="assetCodeList"
+                            option-label="NAME"
+                            option-value="CODE"
+                            placeholder="자산유형을 선택하세요"
+                            :filter="true"
+                            filter-placeholder="검색"
+                            empty-filter-message="해당 유형의 자산은 존재하지 않습니다"
+                        ></Dropdown>
+                    </div>
+                    <div class="p-field">
+                        <label for="name">제품명</label>
+                        <InputText
+                            id="name"
+                            v-model="newProductData.NAME"
+                            type="text"
+                            aria-describedby="name-help"
+                            autocomplete="off"
+                            :class="{ 'p-invalid': invalidMessage.NAME }"
+                            @input="validateName"
+                        ></InputText>
+                        <small id="name-help" class="p-error">
+                            {{ invalidMessage.NAME }}
+                        </small>
+                    </div>
+                    <div class="p-field">
+                        <label for="model-name">모델명</label>
+                        <InputText
+                            id="model-name"
+                            v-model="newProductData.MODEL_NAME"
+                            type="text"
+                            aria-describedby="model-name-help"
+                            autocomplete="off"
+                            :class="{ 'p-invalid': invalidMessage.MODEL_NAME }"
+                            @input="validateModelName"
+                        ></InputText>
+                        <small id="model-name-help" class="p-error">
+                            {{ invalidMessage.MODEL_NAME }}
+                        </small>
+                    </div>
 
-                <Divider />
+                    <Divider />
 
-                <div class="p-field">
-                    <div class="p-field-check">
-                        <Checkbox
-                            id="manual-file"
-                            v-model="chkManualFileField"
-                            class="p-mr-1"
-                            :binary="true"
-                        >
-                        </Checkbox>
-                        <label for="manual-file">제품 매뉴얼</label>
+                    <div class="p-field">
+                        <div class="p-field-check">
+                            <Checkbox
+                                id="manual-file"
+                                v-model="chkManualFileField"
+                                class="p-mr-1"
+                                :binary="true"
+                            >
+                            </Checkbox>
+                            <label for="manual-file">제품 매뉴얼</label>
 
-                        <div v-if="chkManualFileField" class="p-mt-2">
+                            <div v-if="chkManualFileField" class="p-mt-2">
+                                <div class="p-d-flex">
+                                    <div class="p-mr-1" style="width: 100%">
+                                        <i-file-upload
+                                            ref="manualFileUploader"
+                                            name="MANUAL_FILE"
+                                            mode="basic"
+                                            accept=""
+                                            choose-label="매뉴얼 추가"
+                                            :custom-upload="true"
+                                            :max-file-size="100 * 1024 * 1024"
+                                            :auto="true"
+                                            :show-cancel-button="true"
+                                            @uploader="manualFileUpload"
+                                            @clear="manualFileClear"
+                                        />
+                                    </div>
+                                </div>
+                                <Button
+                                    v-if="manual_file_name.length > 0"
+                                    class="
+                                        p-mt-2
+                                        p-text-left
+                                        p-button-sm
+                                        p-button-outlined
+                                        p-button-secondary
+                                    "
+                                    :label="manual_file_name"
+                                    icon="pi pi-download"
+                                    @click="manualFileDownload"
+                                ></Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <Divider />
+
+                    <div class="p-field">
+                        <div class="p-field-check">
+                            <Checkbox
+                                id="image-file"
+                                v-model="chkImageFileField"
+                                class="p-mr-1"
+                                :binary="true"
+                            ></Checkbox>
+                            <label for="image-file">제품 이미지</label>
+                        </div>
+
+                        <div v-if="chkImageFileField" class="p-mt-2">
                             <div class="p-d-flex">
                                 <div class="p-mr-1" style="width: 100%">
                                     <i-file-upload
-                                        ref="manualFileUploader"
-                                        name="MANUAL_FILE"
+                                        ref="imageFileUploader"
+                                        name="IMAGE_FILE"
                                         mode="basic"
-                                        accept=""
-                                        choose-label="매뉴얼 추가"
                                         :custom-upload="true"
-                                        :max-file-size="100 * 1024 * 1024"
+                                        accept="image/*"
+                                        :max-file-size="10 * 1024 * 1024"
+                                        choose-label="이미지 추가"
                                         :auto="true"
                                         :show-cancel-button="true"
-                                        @uploader="manualFileUpload"
-                                        @clear="manualFileClear"
+                                        @uploader="imageFileUpload"
+                                        @clear="imageFileClear"
                                     />
                                 </div>
                             </div>
-                            <Button
-                                v-if="manual_file_name.length > 0"
-                                class="
-                                    p-mt-2
-                                    p-text-left
-                                    p-button-sm
-                                    p-button-outlined
-                                    p-button-secondary
-                                "
-                                :label="manual_file_name"
-                                icon="pi pi-download"
-                                @click="manualFileDownload"
-                            ></Button>
+                            <img
+                                class="p-mt-2 product-image"
+                                :src="image_file"
+                            />
                         </div>
                     </div>
-                </div>
 
-                <Divider />
+                    <Divider />
 
-                <div class="p-field">
-                    <div class="p-field-check">
-                        <Checkbox
-                            id="image-file"
-                            v-model="chkImageFileField"
-                            class="p-mr-1"
-                            :binary="true"
-                        ></Checkbox>
-                        <label for="image-file">제품 이미지</label>
-                    </div>
-
-                    <div v-if="chkImageFileField" class="p-mt-2">
-                        <div class="p-d-flex">
-                            <div class="p-mr-1" style="width: 100%">
-                                <i-file-upload
-                                    ref="imageFileUploader"
-                                    name="IMAGE_FILE"
-                                    mode="basic"
-                                    :custom-upload="true"
-                                    accept="image/*"
-                                    :max-file-size="10 * 1024 * 1024"
-                                    choose-label="이미지 추가"
-                                    :auto="true"
-                                    :show-cancel-button="true"
-                                    @uploader="imageFileUpload"
-                                    @clear="imageFileClear"
-                                />
-                            </div>
-                        </div>
-                        <img class="p-mt-2 product-image" :src="image_file" />
+                    <div class="p-field">
+                        <label for="remark">설명</label>
+                        <Textarea
+                            id="remark"
+                            v-model="newProductData.REMARK"
+                            :auto-resize="false"
+                            rows="6"
+                            style="resize: none"
+                            :class="{ 'p-invalid': invalidMessage.REMARK }"
+                            @input="validateRemark"
+                        />
+                        <small id="remark-help" class="p-error">
+                            {{ invalidMessage.REMARK }}
+                        </small>
                     </div>
                 </div>
-
-                <Divider />
-
-                <div class="p-field">
-                    <label for="remark">설명</label>
-                    <Textarea
-                        id="remark"
-                        v-model="newProductData.REMARK"
-                        :auto-resize="false"
-                        rows="6"
-                        style="resize: none"
-                        :class="{ 'p-invalid': invalidMessage.REMARK }"
-                        @input="validateRemark"
-                    />
-                    <small id="remark-help" class="p-error">
-                        {{ invalidMessage.REMARK }}
-                    </small>
+                <div class="p-col-3 p-fluid p-input-filled">
+                    <div class="p-field">
+                        <label for="info">부가정보(스펙)</label>
+                        <DataTable
+                            :value="productInfo"
+                            class="p-datatable-sm"
+                            edit-mode="cell"
+                            @row-reorder="onRowReorder"
+                            @cell-edit-complete="onCellEditComplete"
+                        >
+                            <Column
+                                :row-reorder="true"
+                                header-style="width: 2rem;"
+                            ></Column>
+                            <Column
+                                field="key"
+                                header-style="width: 30%;"
+                                body-style="overflow-wrap: break-word"
+                            >
+                                <template #editor="slotProps">
+                                    <InputText
+                                        v-model="
+                                            slotProps.data[
+                                                slotProps.column.field
+                                            ]
+                                        "
+                                        autofocus
+                                    ></InputText>
+                                </template>
+                            </Column>
+                            <Column
+                                field="value"
+                                body-style="overflow-wrap: break-word"
+                            >
+                                <template #editor="slotProps">
+                                    <InputText
+                                        v-model="
+                                            slotProps.data[
+                                                slotProps.column.field
+                                            ]
+                                        "
+                                        autofocus
+                                    ></InputText>
+                                </template>
+                            </Column>
+                            <Column
+                                :row-reorder="false"
+                                header-style="width: 3rem;"
+                            >
+                                <template #body="slotProps">
+                                    <Button
+                                        icon="pi pi-times"
+                                        class="
+                                            p-button-rounded
+                                            p-button-danger
+                                            p-button-text
+                                        "
+                                        @click="
+                                            deleteProductInfo(slotProps.index)
+                                        "
+                                    ></Button>
+                                </template>
+                            </Column>
+                        </DataTable>
+                        <Button
+                            class="p-mt-2"
+                            icon="pi pi-plus"
+                            :style="{
+                                width: '20px',
+                                height: '20px',
+                                padding: '0px'
+                            }"
+                            @click="addProductInfo"
+                        ></Button>
+                    </div>
                 </div>
             </div>
-            <div class="p-col-3 p-fluid p-input-filled">
-                <div class="p-field">
-                    <label for="info">부가정보(스펙)</label>
-                    <DataTable
-                        :value="productInfo"
-                        class="p-datatable-sm"
-                        edit-mode="cell"
-                        @row-reorder="onRowReorder"
-                        @cell-edit-complete="onCellEditComplete"
-                    >
-                        <Column
-                            :row-reorder="true"
-                            header-style="width: 2rem;"
-                        ></Column>
-                        <Column
-                            field="key"
-                            header-style="width: 30%;"
-                            body-style="overflow-wrap: break-word"
-                        >
-                            <template #editor="slotProps">
-                                <InputText
-                                    v-model="
-                                        slotProps.data[slotProps.column.field]
-                                    "
-                                    autofocus
-                                ></InputText>
-                            </template>
-                        </Column>
-                        <Column
-                            field="value"
-                            body-style="overflow-wrap: break-word"
-                        >
-                            <template #editor="slotProps">
-                                <InputText
-                                    v-model="
-                                        slotProps.data[slotProps.column.field]
-                                    "
-                                    autofocus
-                                ></InputText>
-                            </template>
-                        </Column>
-                        <Column
-                            :row-reorder="false"
-                            header-style="width: 3rem;"
-                        >
-                            <template #body="slotProps">
-                                <Button
-                                    icon="pi pi-times"
-                                    class="
-                                        p-button-rounded
-                                        p-button-danger
-                                        p-button-text
-                                    "
-                                    @click="deleteProductInfo(slotProps.index)"
-                                ></Button>
-                            </template>
-                        </Column>
-                    </DataTable>
-                    <Button
-                        class="p-mt-2"
-                        icon="pi pi-plus"
-                        :style="{
-                            width: '20px',
-                            height: '20px',
-                            padding: '0px'
-                        }"
-                        @click="addProductInfo"
-                    ></Button>
-                </div>
-            </div>
-        </div>
-    </ScrollPanel>
+        </ScrollPanel>
+    </div>
 </template>
 
 <script lang="ts">
@@ -883,14 +896,17 @@ export default class ProductPanel extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.i-title {
-    font-size: 1.6rem;
-    color: var(--text-color);
-    width: 10vw;
-}
+#productPanel::v-deep {
+    .i-title {
+        font-size: 1.6rem;
+        color: var(--text-color);
+        width: 10vw;
+    }
 
-#productPanel {
-    height: calc(100vh - 20px - var(--header-height));
+    .i-product-scrollpanel {
+        height: calc(100vh - 20px - var(--header-height) - 10px - 30px - 16px);
+        padding: 0.4rem;
+    }
 
     .p-datatable.p-datatable-sm .p-datatable-thead > tr > th {
         padding: 0px;

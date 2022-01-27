@@ -2,7 +2,6 @@ import { AuthenticationError, SchemaError } from "apollo-server-express";
 import { Ctx, Mutation, Resolver, PubSub, Publisher, Arg, Query } from "type-graphql";
 import { GraphQLUpload, Upload, FileUpload } from 'graphql-upload';
 import { getRepository } from "typeorm";
-import FileType from 'file-type';
 
 import { pd_file } from '../entity/database/pd_file';
 import { DataBaseFile } from '../entity/web/databaseFile';
@@ -42,7 +41,6 @@ export class FileResolver extends Upload {
             const file = new DataBaseFile();
             file.FILE_NAME = result.NAME;
 
-            // const type = (await FileType.fromBuffer(result.DATA));
             file.MIMETYPE = result.MIME_TYPE ? result.MIME_TYPE : 'application/octet-stream';
             file.DATA = result.DATA.toString('base64');
 

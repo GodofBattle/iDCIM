@@ -2,10 +2,9 @@
     <div v-if="showCommPanel" id="interfacePanelComm" class="p-grid">
         <DataTable
             :value="commList"
-            @row-reorder="onRowReorder"
             data-key="MC_ID"
             :scrollable="true"
-            scrollHeight="calc(100vh - 20px - var(--header-height) - 30px - 42px - 12px - 55px - 12px"
+            scroll-height="calc(100vh - 20px - var(--header-height) - 30px - 42px - 12px - 55px - 12px"
             :style="{ height: '100%' }"
             :row-hover="true"
         >
@@ -14,8 +13,10 @@
                     <div class="p-ml-auto">
                         <Button
                             icon="pi pi-save"
-                            label="일괄적용"
+                            label="SAVE ALL"
                             class="p-field p-button-outlined p-button-secondary"
+                            :disabled="applyButtonDisabled"
+                            @click="saveAll"
                         ></Button>
                         <Button
                             icon="pi pi-plus"
@@ -29,7 +30,6 @@
             <template #empty>
                 <div class="i-table-empty">통신방법을 추가하세요</div>
             </template>
-            <Column header-style="width: 2rem;" :row-reorder="true"></Column>
             <Column>
                 <template #body="slotProps">
                     <modbus-cmd-card
@@ -68,10 +68,22 @@ type ModbusCmd = {
     is_editable: boolean;
 };
 
+enum MODE {
+    'ADD',
+    'DELETE',
+    'SAVE',
+    'COPY'
+}
+
 @Component<InterfacePanelComm>({
     props: {
         id: Number,
-        applyButtonDisabled: Boolean,
+        applyButtonDisabled: Boolean
+    },
+    watch: {
+        id() {
+            this.reset();
+        }
     },
     apollo: {
         dbCommList: {
@@ -88,7 +100,7 @@ type ModbusCmd = {
             `,
             variables(): any {
                 return {
-                    ID: this.id ? this.id : -1,
+                    ID: this.id ? this.id : -1
                 };
             },
             update: ({ PredefineModbusCommands }) => PredefineModbusCommands,
@@ -102,9 +114,9 @@ type ModbusCmd = {
                 }
             },
             fetchPolicy: 'cache-and-network',
-            deep: true,
-        },
-    },
+            deep: true
+        }
+    }
 })
 export default class InterfacePanelComm extends Vue {
     dbCommList: Array<ModbusCmd> = [];
@@ -122,13 +134,21 @@ export default class InterfacePanelComm extends Vue {
         this.commList.splice(0, this.commList.length);
     }
 
-    onRowReorder(event: any) {
-        // const new_order_list = event.value.map((data: any, index: any) => {
-        //     data.MC_ID = index + 1;
-        //     return data;
-        // });
+    apolloFetch(data: Array<ModbusCmd>) {
+        this.reset();
 
-        this.commList = event.value;
+        data.forEach((datum) => {
+            const db_comm_data: ModbusCmd = Object.create({
+                MC_ID: datum.MC_ID,
+                FUNC_NO: datum.FUNC_NO,
+                START_ADDR: datum.START_ADDR,
+                POINT_CNT: datum.POINT_CNT,
+                DTYPE_CD: datum.DTYPE_CD,
+                is_editable: false
+            });
+
+            this.commList.push(db_comm_data);
+        });
     }
 
     addModbusCmdCard() {
@@ -137,7 +157,7 @@ export default class InterfacePanelComm extends Vue {
                 severity: 'warn',
                 summary: '통신방법 추가 불가',
                 detail: `인터페이스당 통신방법은 최대 127개까지 가능합니다`,
-                life: 2000,
+                life: 2000
             });
 
             return;
@@ -158,7 +178,7 @@ export default class InterfacePanelComm extends Vue {
                             DTYPE_CD: "DT_F4"
                         )
                     }
-                `,
+                `
             })
             .then(() => {
                 this.refreshCommList();
@@ -167,7 +187,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'info',
                     summary: '통신방법 추가 완료',
                     detail: `MC ID: ${this.commList.length + 1} 추가`,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .catch((error) => {
@@ -177,31 +197,12 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'error',
                     summary: '통신방법 추가 실패',
                     detail: error.message,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .finally(() => {
                 this.$nuxt.$loading.finish();
             });
-    }
-
-    apolloFetch(data: Array<ModbusCmd>) {
-        // by shkoh 20211022: 여기서부터 합시다.
-
-        this.reset();
-
-        data.forEach((datum) => {
-            const new_cmd_data: ModbusCmd = Object.create({
-                MC_ID: datum.MC_ID,
-                FUNC_NO: datum.FUNC_NO,
-                START_ADDR: datum.START_ADDR,
-                POINT_CNT: datum.POINT_CNT,
-                DTYPE_CD: datum.DTYPE_CD,
-                is_editable: false,
-            });
-
-            this.commList.push(new_cmd_data);
-        });
     }
 
     deleteModbusCmdCard(index: number) {
@@ -216,7 +217,7 @@ export default class InterfacePanelComm extends Vue {
                             MC_ID: ${index + 1}
                         )
                     }
-                `,
+                `
             })
             .then(() => {
                 this.refreshCommList();
@@ -225,7 +226,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'info',
                     summary: '통신방법 삭제 완료',
                     detail: `MC ID: ${index + 1} 삭제 완료`,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .catch((error) => {
@@ -235,7 +236,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'error',
                     summary: '통신방법 삭제 실패',
                     detail: error.message,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .finally(() => {
@@ -247,7 +248,7 @@ export default class InterfacePanelComm extends Vue {
         const variables = {
             PD_INTF_ID: this.$props.id,
             MC_ID: index + 1,
-            ...modbusCmd,
+            ...modbusCmd
         };
 
         this.$nuxt.$loading.start();
@@ -280,7 +281,7 @@ export default class InterfacePanelComm extends Vue {
                         }
                     }
                 `,
-                variables: variables,
+                variables
             })
             .then(() => {
                 this.refreshCommList();
@@ -289,7 +290,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'info',
                     summary: '통신방법 적용 완료',
                     detail: `MC ID: ${index + 1} 적용 완료`,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .catch((error) => {
@@ -299,7 +300,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'error',
                     summary: '통신방법 적용 실패',
                     detail: error.message,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .finally(() => {
@@ -313,7 +314,7 @@ export default class InterfacePanelComm extends Vue {
                 severity: 'warn',
                 summary: '통신방법 복사 불가',
                 detail: `인터페이스당 통신방법은 최대 127개까지 가능합니다`,
-                life: 2000,
+                life: 2000
             });
 
             return;
@@ -342,7 +343,7 @@ export default class InterfacePanelComm extends Vue {
                         )
                     }
                 `,
-                variables: modbusCmd,
+                variables: modbusCmd
             })
             .then(() => {
                 this.refreshCommList();
@@ -351,7 +352,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'info',
                     summary: '통신방법 복사 완료',
                     detail: `MC ID: ${modbusCmd.MC_ID} 복사`,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .catch((error) => {
@@ -361,7 +362,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'error',
                     summary: '통신방법 복사 실패',
                     detail: error.message,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .finally(() => {
@@ -376,6 +377,63 @@ export default class InterfacePanelComm extends Vue {
 
     refreshCommList() {
         this.$apollo.queries.dbCommList.refresh();
+    }
+
+    saveAll() {
+        const editableCommList = this.commList
+            .filter((comm) => comm.is_editable === true)
+            .map((comm) => {
+                return {
+                    PD_INTF_ID: this.$props.id,
+                    MC_ID: comm.MC_ID,
+                    FUNC_NO: comm.FUNC_NO,
+                    START_ADDR: comm.START_ADDR,
+                    POINT_CNT: comm.POINT_CNT,
+                    DTYPE_CD: comm.DTYPE_CD,
+                    REMARK: ''
+                };
+            });
+
+        if (editableCommList.length === 0) {
+            return;
+        }
+
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation ($Input: [PdModbusCmdInput!]) {
+                        UpdatePredefineModbusCommands(Input: $Input)
+                    }
+                `,
+                variables: {
+                    Input: editableCommList
+                }
+            })
+            .then(() => {
+                this.refreshCommList();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '통신방법 적용 완료',
+                    detail: `${editableCommList.length}개의 통신방법이 갱신되었습니다`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '통신방법 적용 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
     }
 }
 </script>

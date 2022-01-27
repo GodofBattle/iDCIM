@@ -1,3 +1,5 @@
+import path from 'path';
+
 require('dotenv').config({ path: __dirname + '/../.env' });
 
 export default {
@@ -44,7 +46,8 @@ export default {
         '@/plugins/apolloHelper.ts',
         '@/plugins/primevue.toastService.ts',
         '@/plugins/vueEventBus.ts',
-        { src: '@/plugins/primevue.confirmEventBus.ts', mode: 'client' }
+        { src: '@/plugins/primevue.confirmEventBus.ts', mode: 'client' },
+        { src: '@/plugins/primevue.theme.ts', mode: 'server' }
     ],
 
     // Auto import components: https://go.nuxtjs.dev/config-components
@@ -58,7 +61,9 @@ export default {
             '@/components/tree',
             '@/components/manufacturer',
             '@/components/product',
-            '@/components/interface'
+            '@/components/interface',
+            '@/components/threshold',
+            '@/components/site'
         ]
     },
 
@@ -77,10 +82,13 @@ export default {
     modules: [
         // https://go.nuxtjs.dev/axios
         '@nuxtjs/axios',
-        'primevue/nuxt',
         '@nuxtjs/apollo',
         ['nuxt-vuex-localstorage', { mode: 'debug' }],
-        '@nuxtjs/style-resources'
+        '@nuxtjs/style-resources',
+
+        // by shkoh 20220120: primevue/nuxt를 생성하는 모듈에서 theme에 따라 css style을 변경하기 위해서는 기본적으로 제공하는 모듈을 사용할 수 없어서 따로 모듈 만들어서 필요한 부분만 수행함
+        // 'primevue/nuxt'
+        '@/modules/primevue.custom.module.js'
     ],
 
     // Axios module configuration: https://go.nuxtjs.dev/config-axios
@@ -111,7 +119,7 @@ export default {
 
     // by shkoh 20210709: primevue2
     primevue: {
-        theme: 'vela-blue',
+        // theme: 'vela-blue',
         // theme: 'saga-blue',
         // theme: 'arya-orange',
         // theme: 'nova-vue',
@@ -122,6 +130,7 @@ export default {
         ripple: true,
         components: [
             'AutoComplete',
+            'Avatar',
             'Button',
             'Card',
             'Checkbox',
@@ -143,6 +152,7 @@ export default {
             'PickList',
             'ScrollPanel',
             'SelectButton',
+            'Slider',
             'Tag',
             'TabMenu',
             'TabPanel',
@@ -151,7 +161,8 @@ export default {
             'TieredMenu',
             'Toolbar',
             'Toast',
-            'Tree'
+            'Tree',
+            'TreeTable'
         ],
         directives: ['Tooltip']
     },
@@ -199,6 +210,30 @@ export default {
                         component: 'pages/icomer/interface.vue',
                         meta: {
                             title: '인터페이스'
+                        }
+                    },
+                    {
+                        path: '/threshold',
+                        name: 'threshold',
+                        component: 'pages/icomer/threshold.vue',
+                        meta: {
+                            title: '인터페이스'
+                        }
+                    },
+                    {
+                        path: '/site',
+                        name: 'site',
+                        component: 'pages/icomer/site.vue',
+                        meta: {
+                            title: '사이트'
+                        }
+                    },
+                    {
+                        path: '/tree',
+                        name: 'tree',
+                        component: 'pages/icomer/tree.vue',
+                        meta: {
+                            title: '트리'
                         }
                     }
                 ]

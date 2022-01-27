@@ -10,57 +10,59 @@
     >
         <template #header> 인터페이스 추가 </template>
 
-        <div class="p-fluid p-input-filled">
-            <div class="p-field">
-                <small>{{ assetCodeName }} 인터페이스를 추가합니다</small>
+        <ScrollPanel style="height: 50vh; padding: 0.4rem">
+            <div class="p-fluid p-input-filled">
+                <div class="p-field">
+                    <small>{{ assetCodeName }} 인터페이스를 추가합니다</small>
+                </div>
+                <div class="p-field">
+                    <label for="name">인터페이스명</label>
+                    <InputText
+                        id="name"
+                        v-model="addInterfaceData.NAME"
+                        type="text"
+                        aria-describedby="name-help"
+                        autocomplete="off"
+                        :class="{ 'p-invalid': invalidMessage.NAME }"
+                        @input="validateName"
+                    ></InputText>
+                    <small id="name-help" class="p-error">
+                        {{ invalidMessage.NAME }}
+                    </small>
+                </div>
+                <div class="p-field">
+                    <label for="type">통신타입</label>
+                    <Dropdown
+                        id="type"
+                        v-model="addInterfaceData.INTF_CD"
+                        :options="interfaceTypeList"
+                        option-label="NAME"
+                        option-value="CODE"
+                        data-key="CODE"
+                        placeholder="통신타입을 선택하세요"
+                        :filter="true"
+                        filter-placeholder="검색"
+                        empty-filter-message="해당 유형의 통신타입은 존재하지 않습니다"
+                        append-to="body"
+                    ></Dropdown>
+                </div>
+                <div class="p-field">
+                    <label for="remark">설명</label>
+                    <Textarea
+                        id="remark"
+                        v-model="addInterfaceData.REMARK"
+                        :auto-resize="false"
+                        rows="6"
+                        style="resize: none"
+                        :class="{ 'p-invalid': invalidMessage.REMARK }"
+                        @input="validateRemark"
+                    />
+                    <small id="remark-help" class="p-error">
+                        {{ invalidMessage.REMARK }}
+                    </small>
+                </div>
             </div>
-            <div class="p-field">
-                <label for="name">인터페이스명</label>
-                <InputText
-                    id="name"
-                    v-model="addInterfaceData.NAME"
-                    type="text"
-                    aria-describedby="name-help"
-                    autocomplete="off"
-                    :class="{ 'p-invalid': invalidMessage.NAME }"
-                    @input="validateName"
-                ></InputText>
-                <small id="name-help" class="p-error">
-                    {{ invalidMessage.NAME }}
-                </small>
-            </div>
-            <div class="p-field">
-                <label for="type">통신타입</label>
-                <Dropdown
-                    id="type"
-                    v-model="addInterfaceData.INTF_CD"
-                    :options="interfaceTypeList"
-                    option-label="NAME"
-                    option-value="CODE"
-                    data-key="CODE"
-                    placeholder="통신타입을 선택하세요"
-                    :filter="true"
-                    filter-placeholder="검색"
-                    empty-filter-message="해당 유형의 통신타입은 존재하지 않습니다"
-                    append-to="body"
-                ></Dropdown>
-            </div>
-            <div class="p-field">
-                <label for="remark">설명</label>
-                <Textarea
-                    id="remark"
-                    v-model="addInterfaceData.REMARK"
-                    :auto-resize="false"
-                    rows="6"
-                    style="resize: none"
-                    :class="{ 'p-invalid': invalidMessage.REMARK }"
-                    @input="validateRemark"
-                />
-                <small id="remark-help" class="p-error">
-                    {{ invalidMessage.REMARK }}
-                </small>
-            </div>
-        </div>
+        </ScrollPanel>
 
         <template #footer>
             <div class="p-fluid">

@@ -16,45 +16,45 @@
 <script lang="ts">
 import { setInterval, clearInterval } from 'timers';
 import Vue from 'vue';
+import Component from '@/plugins/nuxt-class-component';
 
 let timerId: NodeJS.Timeout;
 
-export default Vue.extend({
+@Component<HeadLeft>({
     props: {
-        items: Array,
-    },
-    data: () => {
-        return {
-            nowTime: new String('0000/00/00 00:00:00'),
-        };
-    },
+        items: Array
+    }
+})
+export default class HeadLeft extends Vue {
+    nowTime = new String('0000/00/00 00:00:00');
+
+    beforeDestroy() {
+        clearInterval(timerId);
+    }
+
     mounted() {
         timerId = setInterval(() => {
             this.updateTime();
         }, 1000);
-    },
-    beforeDestroy() {
-        clearInterval(timerId);
-    },
-    methods: {
-        updateTime() {
-            const dt = new Date();
+    }
 
-            this.nowTime = `${dt.getFullYear()}/${(
-                '0' + (dt.getMonth() + 1).toString()
-            ).slice(-2)}/${('0' + dt.getDate()).slice(-2)} ${(
-                '0' + dt.getHours()
-            ).slice(-2)}:${('0' + dt.getMinutes()).slice(-2)}:${(
-                '0' + dt.getSeconds()
-            ).slice(-2)}`;
-        },
-    },
-});
+    updateTime() {
+        const dt = new Date();
+
+        this.nowTime = `${dt.getFullYear()}/${(
+            '0' + (dt.getMonth() + 1).toString()
+        ).slice(-2)}/${('0' + dt.getDate()).slice(-2)} ${(
+            '0' + dt.getHours()
+        ).slice(-2)}:${('0' + dt.getMinutes()).slice(-2)}:${(
+            '0' + dt.getSeconds()
+        ).slice(-2)}`;
+    }
+}
 </script>
 
 <style lang="scss" scoped>
 .i-head-left-main {
-    height: 100%;
+    height: 100vh;
     padding: 1rem;
 }
 </style>

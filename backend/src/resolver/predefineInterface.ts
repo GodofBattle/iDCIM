@@ -1,12 +1,12 @@
 import { AuthenticationError, SchemaError, UserInputError } from 'apollo-server-express';
 import { FileUpload, GraphQLUpload } from 'graphql-upload';
 import { Ctx, Mutation, Query, Resolver, PubSub, Publisher, Args, ID, Arg, Int } from "type-graphql";
-import { getRepository, MoreThan, MoreThanOrEqual, Raw } from 'typeorm';
+import { getRepository, MoreThan } from 'typeorm';
 
 import { pd_asset_code } from '../entity/database/pd_asset_code';
 import { pd_file } from '../entity/database/pd_file';
 import { pd_interface, pd_interface_args } from '../entity/database/pd_interface';
-import { pd_modbus_cmd, pd_modbus_cmd_arg } from '../entity/database/pd_modbus_cmd';
+import { pd_modbus_cmd, pd_modbus_cmd_arg, pd_modbus_cmd_input } from '../entity/database/pd_modbus_cmd';
 
 import streamToBuffer from '../utils/streamToBuffer';
 
@@ -273,15 +273,15 @@ export class PredefinedInterfaceResolver {
             if (!mc_id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
 
             let is_result = 0;
-            const previous_data: pd_modbus_cmd[] = await getRepository(pd_modbus_cmd).find({ PD_INTF_ID: pd_interface_id, MC_ID: MoreThan(mc_id) });
+            const previous_data: pd_modbus_cmd[] = await getRepository(pd_modbus_cmd).find({ where: { PD_INTF_ID: pd_interface_id, MC_ID: MoreThan(mc_id) }, order: { PD_INTF_ID: 'ASC', MC_ID: 'ASC' } });
             previous_data.unshift({
+                ID: 0,
                 PD_INTF_ID: pd_interface_id,
                 MC_ID: mc_id,
                 FUNC_NO: FUNC_NO,
                 START_ADDR: START_ADDR,
                 POINT_CNT: POINT_CNT,
-                DTYPE_CD: DTYPE_CD,
-                REMARK: ''
+                DTYPE_CD: DTYPE_CD
             });
 
             previous_data.forEach(async (pdModbusCmd: pd_modbus_cmd, index: number, pData: pd_modbus_cmd[]) => {
@@ -295,6 +295,34 @@ export class PredefinedInterfaceResolver {
                     const result = await getRepository(pd_modbus_cmd).update({ PD_INTF_ID: pd_interface_id, MC_ID: MC_ID + 1 }, { FUNC_NO, START_ADDR, POINT_CNT, DTYPE_CD });
                     is_result += result.affected;
                 }
+            });
+
+            return is_result > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean, { nullable: true })
+    async UpdatePredefineModbusCommands(
+        @Arg('Input', () => [pd_modbus_cmd_input], { nullable: true }) input: pd_modbus_cmd_input[],
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if(input.length === 0) throw new UserInputError('전달한 인자의 데이터가 존재하지 않습니다');
+
+            let is_result: number = 0;
+            input.forEach(async (comm: pd_modbus_cmd_input) => {
+                const { PD_INTF_ID, MC_ID, FUNC_NO, START_ADDR, POINT_CNT, DTYPE_CD } = comm;
+                const result = await getRepository(pd_modbus_cmd).update({ PD_INTF_ID, MC_ID }, { FUNC_NO, START_ADDR, POINT_CNT, DTYPE_CD });
+                is_result += result.affected;
             });
 
             return is_result > 0 ? true : false;

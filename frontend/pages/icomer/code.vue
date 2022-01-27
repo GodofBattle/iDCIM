@@ -56,8 +56,9 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
+import Component from '@/plugins/nuxt-class-component';
 
-export default Vue.extend({
+@Component<IcomerCode>({
     apollo: {
         codes: {
             query: gql`
@@ -92,29 +93,27 @@ export default Vue.extend({
             type: String,
             default: '코드'
         }
-    },
-    data: () => {
-        return {
-            codes: [],
-            expandedRows: []
-        };
-    },
+    }
+})
+export default class IcomerCode extends Vue {
+    codes = [];
+    expandedRows = [];
+
     head() {
         return {
-            title: `[iDCIM] 구축계정 - ${this.title}`
+            title: `[iDCIM] 구축계정 - ${this.$props.title}`
         };
-    },
-    computed: {
-        codeType() {
-            return Array.from(this.codes);
-        }
-    },
-    methods: {
-        isExpander: (data: any) => {
-            return data.some((datum: any) => !!datum.REMARK);
-        }
     }
-});
+
+    get codeType() {
+        return Array.from(this.codes);
+    }
+
+    // by shkoh 20220117: code 데이터 중에서 REMARK에 CODE 설명이 존재하는 경우에는 리스트 안에 expansion 옵션을 추가함
+    isExpander(data: any) {
+        return data.some((datum: any) => !!datum.REMARK);
+    }
+}
 </script>
 
 <style lang="scss" scoped>

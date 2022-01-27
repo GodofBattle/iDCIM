@@ -1,9 +1,13 @@
 import { ObjectType, Field, Int } from "type-graphql";
-import { Column, Entity, PrimaryColumn } from "typeorm";
+import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 
 @ObjectType()
 @Entity({ synchronize: false })
 export class pd_code {
+    @Field(() => Int)
+    @PrimaryGeneratedColumn('increment', { type: 'int', comment: '아이디' })
+    ID: number;
+
     @Field(() => String)
     @PrimaryColumn({ type: 'varchar', length: 8, nullable: false, default: '', comment: '분류' })
     TYPE: string;

@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { privateKey, accessTokenExpiresIn } from '../utils/privatekey';
 
 import { AuthenticationError, SchemaError } from 'apollo-server-express';
-import { Resolver, Arg, Query, Mutation, Ctx, Subscription, Publisher, PubSub, Root } from 'type-graphql';
+import { Resolver, Arg, Query, Mutation, Ctx, Subscription, Publisher, PubSub } from 'type-graphql';
 import { getRepository } from 'typeorm';
 
 import { ac_user } from '../entity/database/ac_user';
@@ -36,7 +36,10 @@ export class UserResolver {
 
         try {
             await publish();
-            await getRepository(ac_user).update( { USER_ID: user_id }, { NAME: new_name, UPDATE_USER_ID: 0, UPDATE_USER_DT: new Date() } );
+
+            const user = await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } });
+            
+            await getRepository(ac_user).update( { USER_ID: user_id }, { NAME: new_name, UPDATE_USER_ID: user.ID, UPDATE_USER_DT: new Date() } );
             return new_name;
         } catch (err) {
             throw new SchemaError(err.message);
