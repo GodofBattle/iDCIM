@@ -21,6 +21,20 @@ const DomHandler = {
         }
     },
 
+    hasClass: (element: any, className: any) => {
+        if (element) {
+            if (element.classList) {
+                return element.classList.contains(className);
+            } else {
+                return new RegExp('(^| )' + className + '( |$)', 'gi').test(
+                    element.className
+                );
+            }
+        }
+
+        return false;
+    },
+
     getWindowScrollLeft: () => {
         const doc = document.documentElement;
         return (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);

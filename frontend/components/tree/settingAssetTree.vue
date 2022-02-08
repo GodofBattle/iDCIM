@@ -1,13 +1,12 @@
 <template>
     <div id="setting-asset-tree">
-        <TreeTable :value="assets">
-            <Column field="label" header="Name" :expander="true">
-                <template #body="slotProps">
-                    {{ slotProps.node.label }}
-                </template>
-            </Column>
-            <Column field="type" header="TYPE"></Column>
-        </TreeTable>
+        <i-movable-tree
+            :value="assets"
+            :filter="true"
+            selection-mode="multiple"
+            :selection-keys.sync="checkedTree"
+        >
+        </i-movable-tree>
     </div>
 </template>
 
@@ -56,8 +55,9 @@ import Component from '@/plugins/nuxt-class-component';
 })
 export default class SettingAssetTree extends Vue {
     assets: Array<any> = [];
+    checkedTree: any = null;
 
-    lable(_val: any): string {
+    label(_val: any): string {
         console.info(_val);
         return 'test';
     }
@@ -66,8 +66,16 @@ export default class SettingAssetTree extends Vue {
 
 <style lang="scss" scoped>
 #setting-asset-tree::v-deep {
+    .p-tree {
+        border: none;
+    }
+
     .p-tree-container {
-        height: calc(100vh - 20px - var(--header-height) - 30px - 26px - 16px);
+        height: calc(
+            100vh - 16px - 28px - var(--header-height) - 30px - 29px - 2rem
+        );
+
+        margin: 0 0.3rem;
     }
 }
 </style>
