@@ -1,19 +1,24 @@
-<template functional>
-    <div v-if="props.template">{{ props.template({ node: props.node }) }}</div>
-    <div v-else-if="props.node">{{ props.node.label }}</div>
-</template>
-
 <script>
 export default {
+    functional: true,
     props: {
         node: {
-            type: Object,
+            type: null,
             default: null
         },
         template: {
-            type: Object,
+            type: null,
             default: null
         }
+    },
+    render(createElement, context) {
+        const content = context.props.template
+            ? context.props.template({
+                  node: context.props.node
+              })
+            : context.props.node.label;
+
+        return [content];
     }
 };
 </script>

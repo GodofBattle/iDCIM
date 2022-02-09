@@ -5,7 +5,19 @@
             :filter="true"
             selection-mode="multiple"
             :selection-keys.sync="checkedTree"
+            :movable="true"
         >
+            <template #default="slotProps">
+                <div class="p-d-flex">
+                    <i
+                        class="pi pi-inbox p-p-1 p-mr-1"
+                        style="font-size: 1.2rem"
+                    ></i>
+                    <div class="p-p-1">
+                        {{ slotProps.node.label }}
+                    </div>
+                </div>
+            </template>
         </i-movable-tree>
     </div>
 </template>

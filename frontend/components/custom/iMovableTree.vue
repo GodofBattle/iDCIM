@@ -1,5 +1,5 @@
 <template>
-    <div :class="containerClass">
+    <div id="i-movable-tree" :class="containerClass">
         <template v-if="loading">
             <div class="p-tree-loading-overlay p-component-overlay">
                 <i :class="loadingIconClass" />
@@ -25,8 +25,15 @@
                 :selection-mode="selectionMode"
                 :expanded-keys="d_expandedKeys"
                 :selection-keys="selectionKeys"
-                @node-toggle="onNodeToggle"
+                :movable="movable"
                 @node-click="onNodeClick"
+                @node-dragstart="onNodeDragStart"
+                @node-dragover="onNodeDragOver"
+                @node-dragleave="onNodeDragLeave"
+                @node-dragend="onNodeDragEnd"
+                @node-drop="onNodeDrop"
+                @node-mousedown="onNodeMouseDown"
+                @node-toggle="onNodeToggle"
                 @checkbox-change="onCheckboxChange"
             ></i-movable-tree-node>
         </ul>
@@ -37,6 +44,7 @@
 import Vue from 'vue';
 import ObjectUtils from '@/plugins/primevue.ObjectUtils';
 import Component from '@/plugins/nuxt-class-component';
+import DomHandler from '~/plugins/primevue.DomHandler';
 
 @Component<IMovableTree>({
     props: {
@@ -87,6 +95,10 @@ import Component from '@/plugins/nuxt-class-component';
         filterMode: {
             type: String,
             default: 'lenient'
+        },
+        movable: {
+            type: Boolean,
+            default: false
         }
     },
     watch: {
@@ -98,6 +110,10 @@ import Component from '@/plugins/nuxt-class-component';
 export default class IMovableTree extends Vue {
     filterValue: null | string = null;
     d_expandedKeys: null | any = this.$props.expandedKeys || {};
+
+    nodeDragging: boolean | null = null;
+    draggedNodeKey: string | null = null;
+    droppedNodeKey: string | null = null;
 
     findFilteredNodes(node: any, paramsWithoutNode: any) {
         if (node) {
@@ -268,6 +284,155 @@ export default class IMovableTree extends Vue {
         }
     }
 
+    // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 시작
+    onNodeMouseDown(event: any) {
+        if (DomHandler.hasClass(event.target, 'i-movable')) {
+            event.currentTarget.draggable = true;
+        } else {
+            event.currentTarget.draggable = false;
+        }
+    }
+
+    onNodeDragStart({ originalEvent, key }: any) {
+        this.nodeDragging = true;
+        this.draggedNodeKey = key;
+
+        // by shkoh 20220208: 이유는 모르지만 firebfox
+        originalEvent.dataTransfer.setData('text', 'b');
+
+        console.info('start');
+    }
+
+    onNodeDragOver({ originalEvent, key }: any) {
+        const event = originalEvent as DragEvent;
+
+        if (this.nodeDragging) {
+            const node_element = event.currentTarget as HTMLElement;
+
+            if (this.draggedNodeKey === key) {
+                const offset = DomHandler.getOffset(node_element);
+                const scrolltop = DomHandler.getWindowScrollTop();
+                const row_y = offset.top + scrolltop;
+                const page_y = event.pageY;
+                const ele_outer_h = DomHandler.getOuterHeight(
+                    node_element,
+                    true
+                );
+                const row_mid_y = row_y + ele_outer_h / 2;
+
+                console.info(
+                    `${offset.top}, ${scrolltop}, ${row_y}, ${page_y}, ${ele_outer_h}, ${row_mid_y}`
+                );
+
+                if (page_y > row_mid_y) {
+                    DomHandler.addClass(
+                        node_element,
+                        'i-movable-dragpoint-bottom'
+                    );
+                } else if (page_y < row_mid_y) {
+                    DomHandler.addClass(
+                        node_element,
+                        'i-movable-dragpoint-top'
+                    );
+                }
+            } else if (this.draggedNodeKey !== key) {
+                console.info('new_over');
+            }
+
+            event.preventDefault();
+        }
+
+        // if (this.nodeDragging && this.draggedNodeKey !== key) {
+        //     const node_element = event.currentTarget as HTMLElement;
+
+        //     const row_y =
+        //         DomHandler.getOffset(node_element).top +
+        //         DomHandler.getWindowScrollTop();
+
+        //     const page_y = event.pageY;
+
+        //     const row_mid_y =
+        //         row_y + DomHandler.getOuterHeight(node_element, true) / 2;
+
+        //     const prev_node_element =
+        //         node_element.previousElementSibling as HTMLElement;
+
+        //     if (page_y < row_mid_y) {
+        //         DomHandler.removeClass(
+        //             node_element,
+        //             'i-movable-dragpoint-bottom'
+        //         );
+
+        //         this.droppedNodeKey = key;
+        //         if (prev_node_element) {
+        //             DomHandler.addClass(
+        //                 prev_node_element,
+        //                 'i-movable-dragpoint-bottom'
+        //             );
+        //         } else {
+        //             DomHandler.addClass(
+        //                 node_element,
+        //                 'i-movable-dragpoint-top'
+        //             );
+        //         }
+        //     } else {
+        //         if (prev_node_element) {
+        //             DomHandler.removeClass(
+        //                 prev_node_element,
+        //                 'i-movable-dragpoint-bottom'
+        //             );
+        //         } else {
+        //             DomHandler.addClass(
+        //                 node_element,
+        //                 'i-movable-dragpoint-top'
+        //             );
+        //         }
+
+        //         this.droppedNodeKey = key;
+        //         DomHandler.addClass(node_element, 'i-movable-dragpoint-bottom');
+        //     }
+
+        //     event.preventDefault();
+        // }
+    }
+
+    onNodeDragLeave(event: DragEvent) {
+        const node_element = event.currentTarget as HTMLElement;
+        const prev_node_element = node_element.previousElementSibling;
+
+        if (prev_node_element) {
+            DomHandler.removeClass(
+                prev_node_element,
+                'i-movable-dragpoint-bottom'
+            );
+        }
+
+        DomHandler.removeClass(node_element, 'i-movable-dragpoint-bottom');
+        DomHandler.removeClass(node_element, 'i-movable-dragpoint-top');
+
+        console.info('onNodeDragLeave');
+        event.preventDefault();
+    }
+
+    onNodeDragEnd(event: DragEvent) {
+        this.nodeDragging = false;
+        this.draggedNodeKey = null;
+        this.droppedNodeKey = null;
+        (event.currentTarget as HTMLElement).draggable = false;
+    }
+
+    onNodeDrop(event: DragEvent) {
+        if (this.droppedNodeKey !== null) {
+            console.info('onNodeDrop');
+        }
+
+        // by shkoh 20220209: Drag 내용 정리
+        this.onNodeDragLeave(event);
+        this.onNodeDragEnd(event);
+        event.preventDefault();
+    }
+    // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 끝
+
     onNodeToggle(node: any) {
         const key = node.key;
 
@@ -333,71 +498,3 @@ export default class IMovableTree extends Vue {
     }
 }
 </script>
-
-<style lang="scss" scoped>
-.p-tree-container {
-    margin: 0;
-    padding: 0;
-    list-style-type: none;
-    overflow: auto;
-}
-
-.p-treenode-children {
-    margin: 0;
-    padding: 0;
-    list-style-type: none;
-}
-
-.p-treenode-selectable {
-    cursor: pointer;
-    user-select: none;
-}
-
-.p-tree-toggler {
-    cursor: pointer;
-    user-select: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    position: relative;
-}
-
-.p-treenode-leaf > .p-treenode-content .p-tree-toggle {
-    visibility: hidden;
-}
-
-.p-treenode-content {
-    display: flex;
-    align-items: center;
-}
-
-.p-treenode-filter {
-    width: 100%;
-}
-
-.p-tree-filter-container {
-    position: relative;
-    display: block;
-    width: 100%;
-}
-
-.p-tree-filter-icon {
-    position: absolute;
-    top: 50%;
-    margin-top: -0.5rem;
-}
-
-.p-tree-loading {
-    position: relative;
-    min-height: 4rem;
-}
-
-.p-tree .p-tree-loading-overlay {
-    position: absolute;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-</style>
