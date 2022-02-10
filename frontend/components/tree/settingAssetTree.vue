@@ -1,12 +1,6 @@
 <template>
     <div id="setting-asset-tree">
-        <i-movable-tree
-            :value="assets"
-            :filter="true"
-            selection-mode="multiple"
-            :selection-keys.sync="checkedTree"
-            :movable="true"
-        >
+        <i-movable-tree :value="assets" :filter="true" :movable="true">
             <template #default="slotProps">
                 <div class="p-d-flex">
                     <i

@@ -1,5 +1,6 @@
 <template>
     <li :class="containerClass">
+        <Skeleton v-show="false" height="0.2rem"></Skeleton>
         <div
             :class="contentClass"
             :style="node.style"
@@ -9,12 +10,14 @@
             @click="onClick"
             @keydown="onKeyDown"
             @touchend="onTouchEnd"
-            @mousedown="onNodeMouseDown($event)"
-            @dragstart="onNodeDragStart($event, node.key)"
-            @dragover="onNodeDragOver($event, node.key)"
-            @dragleave="onNodeDragLeave($event)"
-            @dragend="onNodeDragEnd($event)"
-            @drop="onNodeDrop($event)"
+            @mousedown="onMouseDown($event)"
+            @dragstart="onDragStart($event, node.key)"
+            @dragover="onDragOver($event, node.key)"
+            @drag="onDrag($event, node.key)"
+            @dragenter="onDragEnter($event, node.key)"
+            @dragleave="onDragLeave($event, node.key)"
+            @dragend="onDragEnd($event)"
+            @drop="onDrop($event)"
         >
             <Button
                 type="button"
@@ -40,8 +43,8 @@
                     :template="templates[node.type] || templates['default']"
                 ></i-movable-tree-node-template>
             </span>
-            <span v-if="movable" :class="movableClass"></span>
         </div>
+        <Skeleton v-show="false" height="0.2rem"></Skeleton>
         <ul
             v-if="hasChildren && expanded"
             class="p-treenode-children"
@@ -59,12 +62,13 @@
                 @node-toggle="onChildNodeToggle"
                 @node-click="onChildNodeClick"
                 @checkbox-change="propagateUp"
-                @node-mousedown="onChildNodeMouseDown($event)"
-                @node-dragstart="onChildNodeDragStart($event, childNode.key)"
-                @node-dragover="onChildNodeDragOver($event, childNode.key)"
-                @node-dragleave="onChildNodeDragLeave($event)"
-                @node-dragend="onChildNodeDragEnd($event)"
-                @node-drop="onChildNodeDrop($event)"
+                @node-mousedown="onChildMouseDown($event)"
+                @node-dragstart="onChildDragStart($event, childNode.key)"
+                @node-dragover="onChildDragOver($event, childNode.key)"
+                @node-dragenter="onChildDragEnter($event, childNode.key)"
+                @node-dragleave="onChildDragLeave($event)"
+                @node-dragend="onChildDragEnd($event)"
+                @node-drop="onChildDrop($event)"
             ></sub-treenode>
         </ul>
     </li>
@@ -239,61 +243,74 @@ export default class IMovableTreeNode extends Vue {
     }
 
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 시작
-    onChildNodeMouseDown(event: any) {
-        this.$emit('node-mousedown', event);
+    onMouseDown(event: MouseEvent) {
+        const element = event.currentTarget as HTMLElement;
+
+        element.draggable = true;
+        DomHandler.addClass(element, 'i-treenode-movable');
     }
 
-    onChildNodeDragStart(event: any, key: string) {
-        // by shkoh 20220209: Child Node는 부모의 이벤트를 먼저 수행하고 해당 인자를 전달 받음
-        this.$emit('node-dragstart', {
-            originalEvent: event.originalEvent,
-            key
-        });
+    onDrag(event: DragEvent, key: string) {
+        console.info(
+            (event.currentTarget as HTMLElement).previousElementSibling
+        );
     }
 
-    onChildNodeDragOver(event: any, key: string) {
-        // by shkoh 20220209: Child Node는 부모의 이벤트를 먼저 수행하고 해당 인자를 전달 받음
-        this.$emit('node-dragover', {
-            originalEvent: event.originalEvent,
-            key
-        });
-    }
+    onDragStart(event: DragEvent, key: string) {
+        const element = event.currentTarget as HTMLElement;
 
-    onChildNodeDragLeave(event: any) {
-        this.$emit('node-dragleave', event);
-    }
+        if (event.dataTransfer) {
+            const drag_ele = element.querySelector(
+                '.p-treenode-label'
+            ) as Element;
 
-    onChildNodeDragEnd(event: any) {
-        this.$emit('node-dragend', event);
-    }
+            event.dataTransfer?.setDragImage(drag_ele, 100, 25);
+            event.dataTransfer.effectAllowed = 'linkMove';
+        }
 
-    onChildNodeDrop(event: any) {
-        this.$emit('node-drop', event);
-    }
-
-    onNodeMouseDown(event: MouseEvent) {
-        this.$emit('node-mousedown', event);
-    }
-
-    onNodeDragStart(event: DragEvent, key: string) {
         this.$emit('node-dragstart', { originalEvent: event, key });
     }
 
-    onNodeDragOver(event: DragEvent, key: string) {
+    onDragOver(event: DragEvent, key: string) {
         this.$emit('node-dragover', { originalEvent: event, key });
     }
 
-    onNodeDragLeave(event: DragEvent) {
-        this.$emit('node-dragleave', event);
+    onDragEnter(event: DragEvent, key: string) {
+        this.$emit('node-dragenter', { originalEvent: event, key });
     }
 
-    onNodeDragEnd(event: DragEvent) {
+    onDragLeave(event: DragEvent, key: string) {
+        this.$emit('node-dragleave', { originalEvent: event, key });
+    }
+
+    onDragEnd(event: DragEvent) {
+        const element = event.currentTarget as HTMLElement;
+
+        element.draggable = false;
+        DomHandler.removeClass(element, 'i-treenode-movable');
+        DomHandler.removeClass(element, 'i-treenode-enter');
+
         this.$emit('node-dragend', event);
     }
 
-    onNodeDrop(event: DragEvent) {
+    onDrop(event: DragEvent) {
+        this.onDragEnd(event);
         this.$emit('node-drop', event);
     }
+
+    onChildMouseDown(event: any) {}
+
+    onChildDragStart(event: any, key: string) {}
+
+    onChildDragOver(event: any, key: string) {}
+
+    onChildDragEnter(event: any, key: string) {}
+
+    onChildDragLeave(event: any, key: string) {}
+
+    onChildDragEnd(event: any) {}
+
+    onChildDrop(event: any) {}
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 끝
 
     onTouchEnd() {
@@ -492,8 +509,12 @@ export default class IMovableTreeNode extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.i-movable {
+.i-treenode-movable {
     cursor: move;
+}
+
+.i-treenode-enter {
+    background-color: var(--text-color-secondary);
 }
 
 .i-movable:hover {

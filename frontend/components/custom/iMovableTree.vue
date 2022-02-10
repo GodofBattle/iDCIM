@@ -25,16 +25,17 @@
                 :selection-mode="selectionMode"
                 :expanded-keys="d_expandedKeys"
                 :selection-keys="selectionKeys"
-                :movable="movable"
+                :movable="node_movable"
+                @node-toggle="onNodeToggle"
                 @node-click="onNodeClick"
+                @checkbox-change="onCheckboxChange"
+                @node-mousedown="onNodeMouseDown"
                 @node-dragstart="onNodeDragStart"
                 @node-dragover="onNodeDragOver"
+                @node-dragenter="onNodeDragEnter"
                 @node-dragleave="onNodeDragLeave"
                 @node-dragend="onNodeDragEnd"
                 @node-drop="onNodeDrop"
-                @node-mousedown="onNodeMouseDown"
-                @node-toggle="onNodeToggle"
-                @checkbox-change="onCheckboxChange"
             ></i-movable-tree-node>
         </ul>
     </div>
@@ -44,7 +45,7 @@
 import Vue from 'vue';
 import ObjectUtils from '@/plugins/primevue.ObjectUtils';
 import Component from '@/plugins/nuxt-class-component';
-import DomHandler from '~/plugins/primevue.DomHandler';
+import DomHandler from '@/plugins/primevue.DomHandler';
 
 @Component<IMovableTree>({
     props: {
@@ -113,7 +114,21 @@ export default class IMovableTree extends Vue {
 
     nodeDragging: boolean | null = null;
     draggedNodeKey: string | null = null;
+    draggedNodeIndex: number = -1;
     droppedNodeKey: string | null = null;
+    droppedNodeIndex: number = -1;
+
+    deleteDropzone() {
+        const dropzone_node_index = this.findIndexNodes('dropzone');
+        if (dropzone_node_index !== -1) {
+            this.valueToRender.splice(dropzone_node_index, 1);
+        }
+    }
+
+    findIndexNodes(key: any) {
+        // by shkoh 20220210: Rendering된 value에서 Index를 찾음
+        return this.valueToRender.findIndex((n: any) => n.key === key);
+    }
 
     findFilteredNodes(node: any, paramsWithoutNode: any) {
         if (node) {
@@ -285,150 +300,48 @@ export default class IMovableTree extends Vue {
     }
 
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 시작
-    onNodeMouseDown(event: any) {
-        if (DomHandler.hasClass(event.target, 'i-movable')) {
-            event.currentTarget.draggable = true;
-        } else {
-            event.currentTarget.draggable = false;
-        }
-    }
+    onNodeMouseDown(event: MouseEvent) {}
 
     onNodeDragStart({ originalEvent, key }: any) {
         this.nodeDragging = true;
         this.draggedNodeKey = key;
-
-        // by shkoh 20220208: 이유는 모르지만 firebfox
-        originalEvent.dataTransfer.setData('text', 'b');
-
-        console.info('start');
     }
 
     onNodeDragOver({ originalEvent, key }: any) {
         const event = originalEvent as DragEvent;
+        const element = originalEvent.currentTarget as HTMLLabelElement;
 
-        if (this.nodeDragging) {
-            const node_element = event.currentTarget as HTMLElement;
-
-            if (this.draggedNodeKey === key) {
-                const offset = DomHandler.getOffset(node_element);
-                const scrolltop = DomHandler.getWindowScrollTop();
-                const row_y = offset.top + scrolltop;
-                const page_y = event.pageY;
-                const ele_outer_h = DomHandler.getOuterHeight(
-                    node_element,
-                    true
-                );
-                const row_mid_y = row_y + ele_outer_h / 2;
-
-                console.info(
-                    `${offset.top}, ${scrolltop}, ${row_y}, ${page_y}, ${ele_outer_h}, ${row_mid_y}`
-                );
-
-                if (page_y > row_mid_y) {
-                    DomHandler.addClass(
-                        node_element,
-                        'i-movable-dragpoint-bottom'
-                    );
-                } else if (page_y < row_mid_y) {
-                    DomHandler.addClass(
-                        node_element,
-                        'i-movable-dragpoint-top'
-                    );
-                }
-            } else if (this.draggedNodeKey !== key) {
-                console.info('new_over');
-            }
-
-            event.preventDefault();
+        console.info(element.textContent?.trim());
+        if (DomHandler.hasClass(element, 'p-skeleton')) {
+            console.info('ske');
         }
 
-        // if (this.nodeDragging && this.draggedNodeKey !== key) {
-        //     const node_element = event.currentTarget as HTMLElement;
-
-        //     const row_y =
-        //         DomHandler.getOffset(node_element).top +
-        //         DomHandler.getWindowScrollTop();
-
-        //     const page_y = event.pageY;
-
-        //     const row_mid_y =
-        //         row_y + DomHandler.getOuterHeight(node_element, true) / 2;
-
-        //     const prev_node_element =
-        //         node_element.previousElementSibling as HTMLElement;
-
-        //     if (page_y < row_mid_y) {
-        //         DomHandler.removeClass(
-        //             node_element,
-        //             'i-movable-dragpoint-bottom'
-        //         );
-
-        //         this.droppedNodeKey = key;
-        //         if (prev_node_element) {
-        //             DomHandler.addClass(
-        //                 prev_node_element,
-        //                 'i-movable-dragpoint-bottom'
-        //             );
-        //         } else {
-        //             DomHandler.addClass(
-        //                 node_element,
-        //                 'i-movable-dragpoint-top'
-        //             );
-        //         }
-        //     } else {
-        //         if (prev_node_element) {
-        //             DomHandler.removeClass(
-        //                 prev_node_element,
-        //                 'i-movable-dragpoint-bottom'
-        //             );
-        //         } else {
-        //             DomHandler.addClass(
-        //                 node_element,
-        //                 'i-movable-dragpoint-top'
-        //             );
-        //         }
-
-        //         this.droppedNodeKey = key;
-        //         DomHandler.addClass(node_element, 'i-movable-dragpoint-bottom');
-        //     }
-
-        //     event.preventDefault();
-        // }
+        event.preventDefault();
     }
 
-    onNodeDragLeave(event: DragEvent) {
-        const node_element = event.currentTarget as HTMLElement;
-        const prev_node_element = node_element.previousElementSibling;
-
-        if (prev_node_element) {
-            DomHandler.removeClass(
-                prev_node_element,
-                'i-movable-dragpoint-bottom'
-            );
+    onNodeDragEnter({ originalEvent, key }: any) {
+        if (this.nodeDragging && this.draggedNodeKey !== key) {
+            const element = originalEvent.currentTarget as HTMLElement;
+            DomHandler.addClass(element, 'i-treenode-enter');
         }
+    }
 
-        DomHandler.removeClass(node_element, 'i-movable-dragpoint-bottom');
-        DomHandler.removeClass(node_element, 'i-movable-dragpoint-top');
+    onNodeDragLeave({ originalEvent, key }: any) {
+        const element = originalEvent.currentTarget as HTMLElement;
+        DomHandler.removeClass(element, 'i-treenode-enter');
 
-        console.info('onNodeDragLeave');
-        event.preventDefault();
+        const prev_element = element.previousElementSibling;
+        if (prev_element) {
+            DomHandler.removeClass(prev_element, 'i-treenode-enter');
+        }
     }
 
     onNodeDragEnd(event: DragEvent) {
         this.nodeDragging = false;
         this.draggedNodeKey = null;
-        this.droppedNodeKey = null;
-        (event.currentTarget as HTMLElement).draggable = false;
     }
 
     onNodeDrop(event: DragEvent) {
-        if (this.droppedNodeKey !== null) {
-            console.info('onNodeDrop');
-        }
-
-        // by shkoh 20220209: Drag 내용 정리
-        this.onNodeDragLeave(event);
-        this.onNodeDragEnd(event);
         event.preventDefault();
     }
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 끝
@@ -491,10 +404,17 @@ export default class IMovableTree extends Vue {
 
     get valueToRender(): any | null {
         if (this.filterValue && this.filterValue.trim().length > 0) {
-            return this.$props.filteredValue;
+            return this.filteredValue;
         } else {
             return this.$props.value;
         }
+    }
+
+    get node_movable(): boolean {
+        return (
+            this.$props.movable &&
+            !(this.filterValue && this.filterValue.trim().length > 0)
+        );
     }
 }
 </script>
