@@ -1,6 +1,6 @@
 <template>
-    <li :class="containerClass">
-        <Skeleton v-show="false" height="0.2rem"></Skeleton>
+    <li :class="containerClass" :data-id="node.key" :data-depth="depth">
+        <Skeleton v-show="false" width="40%" height="0.3rem"></Skeleton>
         <div
             :class="contentClass"
             :style="node.style"
@@ -11,11 +11,9 @@
             @keydown="onKeyDown"
             @touchend="onTouchEnd"
             @mousedown="onMouseDown($event)"
-            @dragstart="onDragStart($event, node.key)"
-            @dragover="onDragOver($event, node.key)"
-            @drag="onDrag($event, node.key)"
-            @dragenter="onDragEnter($event, node.key)"
-            @dragleave="onDragLeave($event, node.key)"
+            @dragstart="onDragStart($event, node)"
+            @drag="onDrag($event)"
+            @dragover="onDragOver($event, node)"
             @dragend="onDragEnd($event)"
             @drop="onDrop($event)"
         >
@@ -44,7 +42,7 @@
                 ></i-movable-tree-node-template>
             </span>
         </div>
-        <Skeleton v-show="false" height="0.2rem"></Skeleton>
+        <Skeleton v-show="false" width="40%" height="0.3rem"></Skeleton>
         <ul
             v-if="hasChildren && expanded"
             class="p-treenode-children"
@@ -53,6 +51,7 @@
             <sub-treenode
                 v-for="childNode of node.children"
                 :key="childNode.key"
+                :depth="depth + 1"
                 :node="childNode"
                 :templates="templates"
                 :expanded-keys="expandedKeys"
@@ -62,13 +61,12 @@
                 @node-toggle="onChildNodeToggle"
                 @node-click="onChildNodeClick"
                 @checkbox-change="propagateUp"
-                @node-mousedown="onChildMouseDown($event)"
-                @node-dragstart="onChildDragStart($event, childNode.key)"
-                @node-dragover="onChildDragOver($event, childNode.key)"
-                @node-dragenter="onChildDragEnter($event, childNode.key)"
-                @node-dragleave="onChildDragLeave($event)"
-                @node-dragend="onChildDragEnd($event)"
-                @node-drop="onChildDrop($event)"
+                @node-mousedown="onNodeMouseDown($event)"
+                @node-dragstart="onNodeDragStart($event, childNode)"
+                @node-drag="onNodeDrag($event)"
+                @node-dragover="onNodeDragOver($event, childNode)"
+                @node-dragend="onNodeDragEnd($event)"
+                @node-drop="onNodeDrop($event)"
             ></sub-treenode>
         </ul>
     </li>
@@ -105,6 +103,10 @@ import DomHandler from '@/plugins/primevue.DomHandler';
         movable: {
             type: Boolean,
             default: false
+        },
+        depth: {
+            type: Number,
+            default: 1
         }
     }
 })
@@ -187,6 +189,7 @@ export default class IMovableTreeNode extends Vue {
         switch (event.code) {
             case 'ArrowDown': {
                 const listElement = nodeElement?.children[1];
+                console.info(listElement);
                 if (listElement) {
                     this.focusNode(listElement.children[0]);
                 } else {
@@ -244,73 +247,69 @@ export default class IMovableTreeNode extends Vue {
 
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 시작
     onMouseDown(event: MouseEvent) {
-        const element = event.currentTarget as HTMLElement;
-
-        element.draggable = true;
-        DomHandler.addClass(element, 'i-treenode-movable');
-    }
-
-    onDrag(event: DragEvent, key: string) {
-        console.info(
-            (event.currentTarget as HTMLElement).previousElementSibling
-        );
-    }
-
-    onDragStart(event: DragEvent, key: string) {
-        const element = event.currentTarget as HTMLElement;
-
-        if (event.dataTransfer) {
-            const drag_ele = element.querySelector(
-                '.p-treenode-label'
-            ) as Element;
-
-            event.dataTransfer?.setDragImage(drag_ele, 100, 25);
-            event.dataTransfer.effectAllowed = 'linkMove';
+        if (this.$props.movable) {
+            this.$emit('node-mousedown', event);
         }
-
-        this.$emit('node-dragstart', { originalEvent: event, key });
     }
 
-    onDragOver(event: DragEvent, key: string) {
-        this.$emit('node-dragover', { originalEvent: event, key });
+    onDragStart(event: DragEvent, node: any) {
+        if (this.$props.movable)
+            this.$emit('node-dragstart', { originalEvent: event, node });
     }
 
-    onDragEnter(event: DragEvent, key: string) {
-        this.$emit('node-dragenter', { originalEvent: event, key });
+    onDrag(event: DragEvent) {
+        if (this.$props.movable) this.$emit('node-drag', event);
     }
 
-    onDragLeave(event: DragEvent, key: string) {
-        this.$emit('node-dragleave', { originalEvent: event, key });
+    onDragOver(event: DragEvent, node: any) {
+        if (this.$props.movable) {
+            this.$emit('node-dragover', { originalEvent: event, node });
+        }
     }
 
     onDragEnd(event: DragEvent) {
-        const element = event.currentTarget as HTMLElement;
-
-        element.draggable = false;
-        DomHandler.removeClass(element, 'i-treenode-movable');
-        DomHandler.removeClass(element, 'i-treenode-enter');
-
-        this.$emit('node-dragend', event);
+        if (this.$props.movable) this.$emit('node-dragend', event);
     }
 
     onDrop(event: DragEvent) {
-        this.onDragEnd(event);
-        this.$emit('node-drop', event);
+        if (this.$props.movable) this.$emit('node-drop', event);
     }
 
-    onChildMouseDown(event: any) {}
+    onNodeMouseDown(event: MouseEvent) {
+        if (this.$props.movable) {
+            this.$emit('node-mousedown', event);
+        }
+    }
 
-    onChildDragStart(event: any, key: string) {}
+    onNodeDragStart({ originalEvent, p_node }: any, node: any) {
+        if (this.$props.movable) {
+            this.$emit('node-dragstart', { originalEvent, node });
+        }
+    }
 
-    onChildDragOver(event: any, key: string) {}
+    onNodeDrag(event: DragEvent) {
+        if (this.$props.movable) {
+            this.$emit('node-drag', event);
+        }
+    }
 
-    onChildDragEnter(event: any, key: string) {}
+    onNodeDragOver({ originalEvent, p_node }: any, node: any) {
+        if (this.$props.movable) {
+            this.$emit('node-dragover', { originalEvent, node });
+        }
+    }
 
-    onChildDragLeave(event: any, key: string) {}
+    onNodeDragEnd(event: DragEvent) {
+        if (this.$props.movable) {
+            this.$emit('node-dragend', event);
+        }
+    }
 
-    onChildDragEnd(event: any) {}
-
-    onChildDrop(event: any) {}
+    onNodeDrop(event: DragEvent) {
+        if (this.$props.movable) {
+            this.$emit('node-drop', event);
+        }
+    }
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 끝
 
     onTouchEnd() {
@@ -430,7 +429,13 @@ export default class IMovableTreeNode extends Vue {
     }
 
     get containerClass(): Array<string | object> {
-        return ['p-treenode', { 'p-treenode-leaf': this.leaf }];
+        return [
+            'p-treenode',
+            {
+                'p-treenode-leaf': this.leaf,
+                'i-movable': this.$props.movable
+            }
+        ];
     }
 
     get contentClass(): Array<string | object> {
@@ -440,7 +445,8 @@ export default class IMovableTreeNode extends Vue {
             this.$props.node.styleClass,
             {
                 'p-treenode-selectable': this.selectable,
-                'p-highlight': this.checkboxMode ? this.checked : this.selected
+                'p-highlight': this.checkboxMode ? this.checked : this.selected,
+                'i-movable-content': this.$props.movable
             }
         ];
     }
@@ -466,15 +472,6 @@ export default class IMovableTreeNode extends Vue {
         return this.$props.node.leaf === false
             ? false
             : !(this.$props.node.children && this.$props.node.children.length);
-    }
-
-    get movableClass(): Array<string | object> {
-        return [
-            'p-ml-auto p-p-2',
-            {
-                'pi pi-bars i-movable': this.$props.movable
-            }
-        ];
     }
 
     get partialChecked(): boolean {
@@ -509,32 +506,17 @@ export default class IMovableTreeNode extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.i-treenode-movable {
-    cursor: move;
+.p-tree .p-tree-container .p-treenode .p-treenode-content.i-movable-content {
+    user-select: none;
+
+    &:focus {
+        cursor: move;
+    }
 }
 
-.i-treenode-enter {
-    background-color: var(--text-color-secondary);
-}
-
-.i-movable:hover {
-    background-color: var(--primary-color);
-}
-
-.i-movable-dragpoint-bottom {
-    padding-bottom: 24px;
-    // border-bottom: 20px solid var(--primary-color);
-    // box-shadow: inset 0 2px 0 0 rgba(100, 181, 246, 0.16);
-    // border-top: 20px solid var(--primary-color);
-    // border-top-left-radius: 0;
-    // border-top-right-radius: 0;
-}
-
-.i-movable-dragpoint-top {
-    padding-top: 24px;
-    // box-shadow: inset 0 -2px 0 0 rgba(100, 181, 246, 0.16);
-    // border-bottom: 20px solid var(--primary-color);
-    // border-bottom-left-radius: 0;
-    // border-bottom-right-radius: 0;
+.i-node-enter {
+    outline: 1px dotted var(--text-color-secondary);
+    opacity: 0.3;
+    background-color: var(--surface-hover);
 }
 </style>

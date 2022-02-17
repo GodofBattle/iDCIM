@@ -62,11 +62,6 @@ import Component from '@/plugins/nuxt-class-component';
 export default class SettingAssetTree extends Vue {
     assets: Array<any> = [];
     checkedTree: any = null;
-
-    label(_val: any): string {
-        console.info(_val);
-        return 'test';
-    }
 }
 </script>
 

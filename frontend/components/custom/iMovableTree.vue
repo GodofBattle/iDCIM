@@ -1,43 +1,54 @@
 <template>
-    <div id="i-movable-tree" :class="containerClass">
-        <template v-if="loading">
-            <div class="p-tree-loading-overlay p-component-overlay">
-                <i :class="loadingIconClass" />
-            </div>
-        </template>
-        <div v-if="filter" class="p-tree-filter-container">
-            <input
-                v-model="filterValue"
-                type="text"
-                autocomplete="off"
-                class="p-tree-filter p-inputtext p-component"
-                :placeholder="filterPlaceholder"
-                @keydown="onFilterKeydown"
-            />
-            <span class="p-tree-filter-icon pi pi-search"></span>
+    <div id="i-movable-tree">
+        <div ref="iFakeDragImage" class="i-fake-dragimage">.</div>
+
+        <div
+            v-show="nodeDragging"
+            ref="iRealDragImage"
+            class="i-real-dragimage"
+        >
+            <Chip :label="getDraggedNodeLabel" :icon="dragIconClass"></Chip>
         </div>
-        <ul class="p-tree-container" role="tree">
-            <i-movable-tree-node
-                v-for="node of valueToRender"
-                :key="node.key"
-                :node="node"
-                :templates="$scopedSlots"
-                :selection-mode="selectionMode"
-                :expanded-keys="d_expandedKeys"
-                :selection-keys="selectionKeys"
-                :movable="node_movable"
-                @node-toggle="onNodeToggle"
-                @node-click="onNodeClick"
-                @checkbox-change="onCheckboxChange"
-                @node-mousedown="onNodeMouseDown"
-                @node-dragstart="onNodeDragStart"
-                @node-dragover="onNodeDragOver"
-                @node-dragenter="onNodeDragEnter"
-                @node-dragleave="onNodeDragLeave"
-                @node-dragend="onNodeDragEnd"
-                @node-drop="onNodeDrop"
-            ></i-movable-tree-node>
-        </ul>
+
+        <div :class="containerClass">
+            <template v-if="loading">
+                <div class="p-tree-loading-overlay p-component-overlay">
+                    <i :class="loadingIconClass" />
+                </div>
+            </template>
+            <div v-if="filter" class="p-tree-filter-container">
+                <input
+                    v-model="filterValue"
+                    type="text"
+                    autocomplete="off"
+                    class="p-tree-filter p-inputtext p-component"
+                    :placeholder="filterPlaceholder"
+                    @keydown="onFilterKeydown"
+                />
+                <span class="p-tree-filter-icon pi pi-search"></span>
+            </div>
+            <ul class="p-tree-container" role="tree">
+                <i-movable-tree-node
+                    v-for="node of valueToRender"
+                    :key="node.key"
+                    :node="node"
+                    :templates="$scopedSlots"
+                    :selection-mode="selectionMode"
+                    :expanded-keys="d_expandedKeys"
+                    :selection-keys="selectionKeys"
+                    :movable="node_movable"
+                    @node-toggle="onNodeToggle"
+                    @node-click="onNodeClick"
+                    @checkbox-change="onCheckboxChange"
+                    @node-mousedown="onNodeMouseDown"
+                    @node-dragstart="onNodeDragStart"
+                    @node-drag="onNodeDrag"
+                    @node-dragover="onNodeDragOver"
+                    @node-dragend="onNodeDragEnd"
+                    @node-drop="onNodeDrop"
+                ></i-movable-tree-node>
+            </ul>
+        </div>
     </div>
 </template>
 
@@ -109,26 +120,24 @@ import DomHandler from '@/plugins/primevue.DomHandler';
     }
 })
 export default class IMovableTree extends Vue {
+    $refs!: {
+        iFakeDragImage: HTMLElement;
+        iRealDragImage: HTMLElement;
+    };
+
     filterValue: null | string = null;
     d_expandedKeys: null | any = this.$props.expandedKeys || {};
 
     nodeDragging: boolean | null = null;
-    draggedNodeKey: string | null = null;
-    draggedNodeIndex: number = -1;
-    droppedNodeKey: string | null = null;
-    droppedNodeIndex: number = -1;
 
-    deleteDropzone() {
-        const dropzone_node_index = this.findIndexNodes('dropzone');
-        if (dropzone_node_index !== -1) {
-            this.valueToRender.splice(dropzone_node_index, 1);
-        }
-    }
+    treeContainer: Element | null = null;
+    draggedIconState: string = 'bars';
 
-    findIndexNodes(key: any) {
-        // by shkoh 20220210: Rendering된 value에서 Index를 찾음
-        return this.valueToRender.findIndex((n: any) => n.key === key);
-    }
+    target: HTMLElement | null = null;
+    targetNode: any | null = null;
+
+    dest: HTMLElement | null = null;
+    destNode: any | null = null;
 
     findFilteredNodes(node: any, paramsWithoutNode: any) {
         if (node) {
@@ -300,50 +309,282 @@ export default class IMovableTree extends Vue {
     }
 
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 시작
-    onNodeMouseDown(event: MouseEvent) {}
-
-    onNodeDragStart({ originalEvent, key }: any) {
-        this.nodeDragging = true;
-        this.draggedNodeKey = key;
+    onNodeMouseDown(event: MouseEvent) {
+        const element = event.currentTarget as HTMLElement;
+        element.draggable = true;
     }
 
-    onNodeDragOver({ originalEvent, key }: any) {
+    onNodeDragStart({ originalEvent, node }: any) {
         const event = originalEvent as DragEvent;
-        const element = originalEvent.currentTarget as HTMLLabelElement;
 
-        console.info(element.textContent?.trim());
-        if (DomHandler.hasClass(element, 'p-skeleton')) {
-            console.info('ske');
+        this.nodeDragging = true;
+        this.targetNode = node;
+        this.target = (event.currentTarget as Element).closest(
+            '.i-movable'
+        ) as HTMLElement;
+
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', 'b');
+
+            event.dataTransfer.setDragImage(this.$refs.iFakeDragImage, 0, 0);
+        }
+    }
+
+    onNodeDrag(event: DragEvent) {
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'move';
+        }
+
+        if (!event.pageX && !event.pageY) return;
+
+        if (this.nodeDragging) {
+            this.$refs.iRealDragImage.style.left = `${event.pageX + 15}px`;
+            this.$refs.iRealDragImage.style.top = `${event.pageY - 15}px`;
+        }
+    }
+
+    onNodeDragOver({ originalEvent, node }: any) {
+        const event = originalEvent as DragEvent;
+
+        if (this.nodeDragging) {
+            // by shkoh 20220216: dragover 이벤트 동안에 전체 tree-container를 가져옴
+            const container = (event.target as HTMLElement).closest(
+                '.p-tree-container'
+            );
+
+            if (container === null) {
+                // by shkoh 20220215: tree 영역을 벗어난 경우에 이용할 수 없도록 표시
+                this.draggedIconState = 'ban';
+                this.removeDraggingNodeEffect();
+            } else if (this.target?.getAttribute('data-id') === node.key) {
+                // by shkoh 20220215: dragstart를 통해서 받아온 시작 Node와 dragover에서 받아온 현재 Node의 키를 비교하여 자기 자신에 대해서는 어떤 조치도 취하지 않음
+                this.draggedIconState = 'ban';
+            } else {
+                // by shkoh 20220216: 일반적인 Drag 상황
+                this.draggedIconState = 'bars';
+
+                // by shkoh 20220216: 최종 목적 대상이 될 destination을 지정
+                this.dest = (event.currentTarget as Element).closest(
+                    '.i-movable'
+                ) as HTMLElement;
+                this.destNode = node;
+
+                // by shkoh 20220216: 이동할 target이 존재할 경우
+                if (this.target && this.dest) {
+                    this.removeDraggingNodeEffect();
+
+                    // by shkoh 20220216: 목적 Node의 위치와 크기를 게산
+                    const item_h = DomHandler.getOuterHeight(this.dest);
+                    const item_pos = DomHandler.getOffset(this.dest);
+                    const delta = item_h / 4;
+
+                    // by shkoh 20220216: Node를 4등분하여, 한 개의 Node를 기준으로 상단에 커서가 위치하는 경우, 하단에 위치하는 경우, 중앙에 위치하는 경우로 분리
+                    const itemOnTop = event.pageY < item_pos.top + delta;
+                    const itemOnBottom =
+                        item_pos.top + item_h - delta < event.pageY;
+
+                    // by shkoh 20220216: dragover 시, target node 위에 존재하는지 여부 판단에 사용
+                    let on_target = false;
+                    if (itemOnTop) {
+                        this.draggedIconState = 'up';
+                        // by shkoh 20220217: drag node의 바로 아래 노드의 up 부분을 선택할 때도 target 위에 존재하는 것으로 간주함
+                        on_target = this.target.isEqualNode(
+                            this.dest.previousElementSibling
+                        );
+                    } else if (itemOnBottom) {
+                        this.draggedIconState = 'down';
+
+                        // by shkoh 20220217: drag node의 바로 위 노드의 down 부분을 선택할 때도 target 위에 존재하는 것으로 간주함
+                        on_target = this.target.isEqualNode(
+                            this.dest.nextElementSibling
+                        );
+                    } else {
+                        this.draggedIconState = 'plus';
+                    }
+
+                    // by shkoh 20220216: target node 위에 dragover하고 있는 경우에는 move를 할 수 없다
+                    if (on_target) {
+                        this.draggedIconState = 'ban';
+                    } else {
+                        let is_ban = false;
+
+                        // by shkoh 20220217: target node에 Drag를 하지 않더라도
+                        const target_depth =
+                            this.target.getAttribute('data-depth') ?? '-1';
+
+                        // by shkoh 20220217: dest node의 부모들을 훑어서 target의 Depth까지 올라가 일치여부를 판단함. 일치할 경우에는 이동 작업 불가
+                        const dest_ancestor = this.findClosestAcestor(
+                            this.dest,
+                            target_depth
+                        );
+                        if (dest_ancestor) {
+                            is_ban = dest_ancestor.isEqualNode(this.target);
+                        }
+
+                        // by shkoh 20220217: target node의 바로 위 부모를 검색하여 dest node인 경우에는 아무 일도 일어나지 않음
+                        const target_parent =
+                            this.target.parentElement?.closest(`[data-depth]`);
+                        if (!is_ban && target_parent) {
+                            is_ban = target_parent.isEqualNode(this.dest);
+                        }
+
+                        if (is_ban) {
+                            this.draggedIconState = 'ban';
+                        }
+                    }
+
+                    // by shkoh 20220216: 현재 사용 중인 container를 지정함
+                    this.treeContainer = container;
+
+                    const hover_node = this.dest.querySelector(
+                        '.i-movable-content'
+                    ) as HTMLElement;
+                    const target_pos = DomHandler.getOffset(this.target);
+
+                    if (this.draggedIconState === 'plus') {
+                        DomHandler.addClass(hover_node, 'i-node-enter');
+                    } else if (this.draggedIconState === 'up') {
+                        let top_line: HTMLElement | null;
+                        if (target_pos.top < target_pos.top) {
+                            top_line = this.dest.children[0] as HTMLElement;
+                        } else {
+                            const prev = this.dest
+                                .previousElementSibling as HTMLElement;
+                            if (prev) {
+                                top_line = prev.children[2] as HTMLElement;
+                            } else {
+                                top_line = this.dest.children[0] as HTMLElement;
+                            }
+                        }
+
+                        if (top_line) {
+                            top_line.style.display = 'block';
+                            DomHandler.addClass(top_line, 'i-show');
+                        }
+                    } else if (this.draggedIconState === 'down') {
+                        let bottom_line: HTMLElement | null;
+                        if (target_pos.top < target_pos.top) {
+                            bottom_line = this.dest.nextElementSibling
+                                ?.children[0] as HTMLElement;
+                        } else {
+                            bottom_line = this.dest.children[2] as HTMLElement;
+                        }
+
+                        if (bottom_line) {
+                            bottom_line.style.display = 'block';
+                            DomHandler.addClass(bottom_line, 'i-show');
+                        }
+                    }
+                } else {
+                    // by shkoh 20220216: 마지막으로 선택된 노드에 대한 처리
+                    this.removeDraggingNodeEffect();
+                }
+            }
         }
 
         event.preventDefault();
     }
 
-    onNodeDragEnter({ originalEvent, key }: any) {
-        if (this.nodeDragging && this.draggedNodeKey !== key) {
-            const element = originalEvent.currentTarget as HTMLElement;
-            DomHandler.addClass(element, 'i-treenode-enter');
-        }
-    }
-
-    onNodeDragLeave({ originalEvent, key }: any) {
-        const element = originalEvent.currentTarget as HTMLElement;
-        DomHandler.removeClass(element, 'i-treenode-enter');
-
-        const prev_element = element.previousElementSibling;
-        if (prev_element) {
-            DomHandler.removeClass(prev_element, 'i-treenode-enter');
-        }
-    }
-
     onNodeDragEnd(event: DragEvent) {
+        const element = event.currentTarget as HTMLElement;
+        element.draggable = false;
+
+        if (
+            this.draggedIconState === 'up' ||
+            this.draggedIconState === 'down'
+        ) {
+            // by shkoh 20220216: move
+        } else if (this.draggedIconState === 'plus') {
+            // by shkoh 20220216: insert
+            this.addNode();
+        }
+
         this.nodeDragging = false;
-        this.draggedNodeKey = null;
+        this.targetNode = null;
+        this.target = null;
+        this.dest = null;
+        this.destNode = null;
+
+        this.draggedIconState = 'bars';
+
+        this.removeDraggingNodeEffect();
     }
 
     onNodeDrop(event: DragEvent) {
         event.preventDefault();
     }
+
+    removeDraggingNodeEffect() {
+        if (this.treeContainer) {
+            this.treeContainer
+                .querySelectorAll('.i-node-enter')
+                .forEach((n: Element) => {
+                    DomHandler.removeClass(n, 'i-node-enter');
+                });
+
+            this.treeContainer
+                .querySelectorAll('.i-show')
+                .forEach((n: Element) => {
+                    DomHandler.removeClass(n, 'i-show');
+                    (n as HTMLElement).style.display = 'none';
+                });
+            this.treeContainer = null;
+        }
+    }
+
+    findClosestAcestor(
+        ele: HTMLElement,
+        target_depth: string
+    ): HTMLElement | null {
+        const parent = ele.parentElement?.closest(
+            '[data-depth]'
+        ) as HTMLElement;
+
+        if (!parent) {
+            return null;
+        } else {
+            const depth = parent.getAttribute('data-depth');
+            if (depth === target_depth) {
+                return parent;
+            } else {
+                return this.findClosestAcestor(parent, target_depth);
+            }
+        }
+    }
+
+    findIndexNodes(key: any) {
+        // by shkoh 20220210: Rendering된 value에서 Index를 찾음
+        return this.valueToRender.findIndex((n: any) => n.key === key);
+    }
+
+    moveNode() {}
+
+    addNode() {
+        const target_id = this.target?.getAttribute('data-id') ?? '';
+        const dest_id = this.dest?.getAttribute('data-id') ?? '';
+
+        const root_id = this.target
+            ? this.findClosestAcestor(this.target, '1')?.getAttribute(
+                  'data-id'
+              ) ?? target_id
+            : target_id;
+
+        this.deleteTreeNode(this.valueToRender, 1, this.target);
+
+        if (this.destNode.children) {
+            this.destNode.children.push(this.targetNode);
+        } else {
+            Object.defineProperty(this.destNode, 'children', {
+                value: [{ ...this.targetNode }],
+                configurable: true,
+                enumerable: true,
+                writable: true
+            });
+        }
+    }
+
+    deleteTreeNode(arr: any[], depth: number, ele: HTMLElement | null) {}
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 끝
 
     onNodeToggle(node: any) {
@@ -416,5 +657,52 @@ export default class IMovableTree extends Vue {
             !(this.filterValue && this.filterValue.trim().length > 0)
         );
     }
+
+    get getDraggedNodeLabel(): string {
+        return this.targetNode?.label ?? 'UNKNOWN';
+    }
+
+    get dragIconClass(): string {
+        let icon = 'pi ';
+        switch (this.draggedIconState) {
+            case 'bars':
+                icon += 'pi-bars';
+                break;
+            case 'plus':
+                icon += 'pi-plus';
+                break;
+            case 'ban':
+                icon += 'pi-ban';
+                break;
+            case 'up':
+            case 'down':
+                icon += 'pi-angle-double-right';
+                break;
+            default:
+                break;
+        }
+        return icon;
+    }
 }
 </script>
+
+<style lang="scss" scoped>
+#i-movable-tree::v-deep {
+    .i-fake-dragimage {
+        display: block;
+        pointer-events: none;
+        opacity: 0;
+    }
+}
+
+.i-real-dragimage {
+    position: absolute;
+    z-index: 1002;
+
+    .p-chip {
+        padding: 0.3rem 0.6rem;
+        user-select: none;
+        border-radius: 10px;
+    }
+}
+</style>

@@ -134,6 +134,7 @@ export default {
             'Button',
             'Card',
             'Checkbox',
+            'Chip',
             'Column',
             'ColumnGroup',
             'DataTable',
