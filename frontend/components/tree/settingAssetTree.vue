@@ -1,6 +1,6 @@
 <template>
     <div id="setting-asset-tree">
-        <i-movable-tree :value="assets" :filter="true" :movable="true">
+        <i-movable-tree :value="assetTree" :filter="true" :movable="true">
             <template #default="slotProps">
                 <div class="p-d-flex">
                     <i
@@ -53,14 +53,30 @@ import Component from '@/plugins/nuxt-class-component';
             fetchPolicy: 'no-cache',
             manual: false,
             prefetch: false,
+            skip: true,
             update({ PredefinedInterfaces }) {
                 return PredefinedInterfaces;
+            }
+        },
+        assetTree: {
+            query: gql`
+                query {
+                    AssetTree
+                }
+            `,
+            fetchResults: true,
+            fetchPolicy: 'no-cache',
+            manual: false,
+            prefetch: false,
+            update({ AssetTree }) {
+                return AssetTree;
             }
         }
     }
 })
 export default class SettingAssetTree extends Vue {
     assets: Array<any> = [];
+    assetTree: Array<any> = [];
     checkedTree: any = null;
 }
 </script>
