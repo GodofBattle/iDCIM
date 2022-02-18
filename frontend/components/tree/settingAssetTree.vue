@@ -1,13 +1,18 @@
 <template>
     <div id="setting-asset-tree">
-        <TreeTable :value="assets">
-            <Column field="label" header="Name" :expander="true">
-                <template #body="slotProps">
-                    {{ slotProps.node.label }}
-                </template>
-            </Column>
-            <Column field="type" header="TYPE"></Column>
-        </TreeTable>
+        <i-movable-tree :value="assetTree" :filter="true" :movable="true">
+            <template #default="slotProps">
+                <div class="p-d-flex">
+                    <i
+                        class="pi pi-inbox p-p-1 p-mr-1"
+                        style="font-size: 1.2rem"
+                    ></i>
+                    <div class="p-p-1">
+                        {{ slotProps.node.label }}
+                    </div>
+                </div>
+            </template>
+        </i-movable-tree>
     </div>
 </template>
 
@@ -48,26 +53,46 @@ import Component from '@/plugins/nuxt-class-component';
             fetchPolicy: 'no-cache',
             manual: false,
             prefetch: false,
+            skip: true,
             update({ PredefinedInterfaces }) {
                 return PredefinedInterfaces;
+            }
+        },
+        assetTree: {
+            query: gql`
+                query {
+                    AssetTree
+                }
+            `,
+            fetchResults: true,
+            fetchPolicy: 'no-cache',
+            manual: false,
+            prefetch: false,
+            update({ AssetTree }) {
+                return AssetTree;
             }
         }
     }
 })
 export default class SettingAssetTree extends Vue {
     assets: Array<any> = [];
-
-    lable(_val: any): string {
-        console.info(_val);
-        return 'test';
-    }
+    assetTree: Array<any> = [];
+    checkedTree: any = null;
 }
 </script>
 
 <style lang="scss" scoped>
 #setting-asset-tree::v-deep {
+    .p-tree {
+        border: none;
+    }
+
     .p-tree-container {
-        height: calc(100vh - 20px - var(--header-height) - 30px - 26px - 16px);
+        height: calc(
+            100vh - 16px - 28px - var(--header-height) - 30px - 29px - 2rem
+        );
+
+        margin: 0 0.3rem;
     }
 }
 </style>

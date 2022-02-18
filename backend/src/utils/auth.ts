@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
+import jwt, { JsonWebTokenError } from 'jsonwebtoken';
 import { privateKey } from './privatekey';
 import { AuthenticationError, ExpressContext } from 'apollo-server-express';
 
-export default ({ req, connection }: ExpressContext) => {    
+export default ({ req, connection }: ExpressContext) => {
     let request_token = connection ? connection.context.authorization : req.headers.authorization;
 
     // by shkoh 20210727: Header Not Found
@@ -18,7 +18,8 @@ export default ({ req, connection }: ExpressContext) => {
     try {
         decode_token = jwt.verify(token[1], privateKey, { algorithms: [ 'HS256' ] });
     } catch(err) {
-        throw new AuthenticationError(err.name);
+        // by shkoh 20220126: token을 파싱할 경우에 jwt가 완성되지 않은 경우에는 인증절차 없이 데이터를 넘김
+        console.info(`token error: ${err.name}`);
     }
 
     // by shkoh 20210727: In case any error found

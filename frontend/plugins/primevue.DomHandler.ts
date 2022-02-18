@@ -21,6 +21,55 @@ const DomHandler = {
         }
     },
 
+    hasClass: (element: any, className: any) => {
+        if (element) {
+            if (element.classList) {
+                return element.classList.contains(className);
+            } else {
+                return new RegExp('(^| )' + className + '( |$)', 'gi').test(
+                    element.className
+                );
+            }
+        }
+
+        return false;
+    },
+
+    getOffset: (element: HTMLElement) => {
+        const rect = element.getBoundingClientRect();
+        return {
+            top:
+                rect.top +
+                (window.pageYOffset ||
+                    document.documentElement.scrollTop ||
+                    document.body.scrollTop ||
+                    0),
+            left:
+                rect.left +
+                (window.pageXOffset ||
+                    document.documentElement.scrollLeft ||
+                    document.body.scrollLeft ||
+                    0)
+        };
+    },
+
+    getOuterHeight: (element: HTMLElement, margin = false) => {
+        if (element) {
+            let height = element.offsetHeight;
+
+            if (margin) {
+                const style = getComputedStyle(element);
+                height +=
+                    parseFloat(style.marginTop) +
+                    parseFloat(style.marginBottom);
+            }
+
+            return height;
+        } else {
+            return 0;
+        }
+    },
+
     getWindowScrollLeft: () => {
         const doc = document.documentElement;
         return (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
