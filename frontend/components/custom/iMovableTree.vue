@@ -62,62 +62,62 @@ import DomHandler from '@/plugins/primevue.DomHandler';
     props: {
         value: {
             type: Array,
-            default: null
+            default: null,
         },
         expandedKeys: {
             type: Object,
-            default: null
+            default: null,
         },
         selectionKeys: {
             type: Object,
-            default: null
+            default: null,
         },
         selectionMode: {
             type: String,
-            default: null
+            default: null,
         },
         metaKeySelection: {
             type: Boolean,
-            default: true
+            default: true,
         },
         loading: {
             type: Boolean,
-            default: false
+            default: false,
         },
         loadingIcon: {
             type: String,
-            default: 'pi pi-spinner'
+            default: 'pi pi-spinner',
         },
         filter: {
             type: Boolean,
-            default: false
+            default: false,
         },
         filterPlaceholder: {
             type: String,
-            default: null
+            default: null,
         },
         filterBy: {
             type: String,
-            default: 'label'
+            default: 'label',
         },
         filterLocale: {
             type: String,
-            default: undefined
+            default: undefined,
         },
         filterMode: {
             type: String,
-            default: 'lenient'
+            default: 'lenient',
         },
         movable: {
             type: Boolean,
-            default: false
-        }
+            default: false,
+        },
     },
     watch: {
         expandedKeys(new_value) {
             this.d_expandedKeys = new_value;
-        }
-    }
+        },
+    },
 })
 export default class IMovableTree extends Vue {
     $refs!: {
@@ -135,6 +135,7 @@ export default class IMovableTree extends Vue {
 
     target: HTMLElement | null = null;
     targetNode: any | null = null;
+    target_pNode: any | null = null;
 
     dest: HTMLElement | null = null;
     destNode: any | null = null;
@@ -242,7 +243,7 @@ export default class IMovableTree extends Vue {
                 this.findFilteredNodes(node, {
                     searchFields,
                     filterText,
-                    strict
+                    strict,
                 }) || matched;
         }
 
@@ -314,11 +315,12 @@ export default class IMovableTree extends Vue {
         element.draggable = true;
     }
 
-    onNodeDragStart({ originalEvent, node }: any) {
+    onNodeDragStart({ originalEvent, node }: any, p_node: any) {
         const event = originalEvent as DragEvent;
 
         this.nodeDragging = true;
         this.targetNode = node;
+        this.target_pNode = p_node;
         this.target = (event.currentTarget as Element).closest(
             '.i-movable'
         ) as HTMLElement;
@@ -495,6 +497,7 @@ export default class IMovableTree extends Vue {
             this.draggedIconState === 'down'
         ) {
             // by shkoh 20220216: move
+            this.moveNode();
         } else if (this.draggedIconState === 'plus') {
             // by shkoh 20220216: insert
             this.addNode();
@@ -558,33 +561,32 @@ export default class IMovableTree extends Vue {
         return this.valueToRender.findIndex((n: any) => n.key === key);
     }
 
-    moveNode() {}
-
-    addNode() {
-        const target_id = this.target?.getAttribute('data-id') ?? '';
-        const dest_id = this.dest?.getAttribute('data-id') ?? '';
-
-        const root_id = this.target
-            ? this.findClosestAcestor(this.target, '1')?.getAttribute(
-                  'data-id'
-              ) ?? target_id
-            : target_id;
-
-        this.deleteTreeNode(this.valueToRender, 1, this.target);
-
-        if (this.destNode.children) {
-            this.destNode.children.push(this.targetNode);
-        } else {
-            Object.defineProperty(this.destNode, 'children', {
-                value: [{ ...this.targetNode }],
-                configurable: true,
-                enumerable: true,
-                writable: true
-            });
-        }
+    moveNode() {
+        this.$emit('move-tree', this.targetNode, this.destNode);
     }
 
-    deleteTreeNode(arr: any[], depth: number, ele: HTMLElement | null) {}
+    addNode() {
+        this.deleteNode();
+
+        this.destNode.children.push(this.targetNode);
+        if (!this.d_expandedKeys[this.destNode.key]) {
+            this.onNodeToggle(this.destNode);
+        }
+
+        this.$emit('add-tree', this.targetNode, this.destNode);
+    }
+
+    deleteNode() {
+        const target_index = this.target_pNode.children.findIndex(
+            (n: any) => n.key === this.targetNode.key
+        );
+
+        console.info(target_index);
+
+        if (target_index !== -1) {
+            this.target_pNode.children.splice(target_index, 1);
+        }
+    }
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 끝
 
     onNodeToggle(node: any) {
@@ -607,8 +609,8 @@ export default class IMovableTree extends Vue {
             'p-tree p-component',
             {
                 'p-tree-selectable': this.$props.selectionMode !== null,
-                'p-tree-loading': this.$props.loading
-            }
+                'p-tree-loading': this.$props.loading,
+            },
         ];
     }
 

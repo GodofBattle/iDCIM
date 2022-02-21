@@ -1,6 +1,11 @@
 <template>
     <li :class="containerClass" :data-id="node.key" :data-depth="depth">
-        <Skeleton v-show="false" width="40%" height="0.3rem"></Skeleton>
+        <Skeleton
+            class="i-tree-line"
+            v-show="false"
+            width="40%"
+            height="0.3rem"
+        ></Skeleton>
         <div
             :class="contentClass"
             :style="node.style"
@@ -42,7 +47,12 @@
                 ></i-movable-tree-node-template>
             </span>
         </div>
-        <Skeleton v-show="false" width="40%" height="0.3rem"></Skeleton>
+        <Skeleton
+            class="i-tree-line"
+            v-show="false"
+            width="40%"
+            height="0.3rem"
+        ></Skeleton>
         <ul
             v-if="hasChildren && expanded"
             class="p-treenode-children"
@@ -82,33 +92,33 @@ import DomHandler from '@/plugins/primevue.DomHandler';
     props: {
         node: {
             type: Object,
-            default: null
+            default: null,
         },
         expandedKeys: {
             type: undefined,
-            default: null
+            default: null,
         },
         selectionMode: {
             type: String,
-            default: null
+            default: null,
         },
         selectionKeys: {
             type: Object,
-            default: null
+            default: null,
         },
         templates: {
             type: Object,
-            default: null
+            default: null,
         },
         movable: {
             type: Boolean,
-            default: false
+            default: false,
         },
         depth: {
             type: Number,
-            default: 1
-        }
-    }
+            default: 1,
+        },
+    },
 })
 export default class IMovableTreeNode extends Vue {
     nodeTouched: boolean = false;
@@ -176,7 +186,7 @@ export default class IMovableTreeNode extends Vue {
             this.$emit('node-click', {
                 originalEvent: event,
                 nodeTouched: this.nodeTouched,
-                node: this.$props.node
+                node: this.$props.node,
             });
         }
 
@@ -247,14 +257,14 @@ export default class IMovableTreeNode extends Vue {
 
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 시작
     onMouseDown(event: MouseEvent) {
-        if (this.$props.movable) {
+        if (this.$props.depth > 1 && this.$props.movable) {
             this.$emit('node-mousedown', event);
         }
     }
 
     onDragStart(event: DragEvent, node: any) {
         if (this.$props.movable)
-            this.$emit('node-dragstart', { originalEvent: event, node });
+            this.$emit('node-dragstart', { originalEvent: event, node }, node);
     }
 
     onDrag(event: DragEvent) {
@@ -281,9 +291,10 @@ export default class IMovableTreeNode extends Vue {
         }
     }
 
-    onNodeDragStart({ originalEvent, p_node }: any, node: any) {
+    onNodeDragStart(event: any, p_node: any) {
+        // by shkoh 20220221: event parameter는 originalEvent와 최초 이벤트 발생 노드의 정보를 가지고 있다
         if (this.$props.movable) {
-            this.$emit('node-dragstart', { originalEvent, node });
+            this.$emit('node-dragstart', event, p_node);
         }
     }
 
@@ -293,9 +304,9 @@ export default class IMovableTreeNode extends Vue {
         }
     }
 
-    onNodeDragOver({ originalEvent, p_node }: any, node: any) {
+    onNodeDragOver(event: any) {
         if (this.$props.movable) {
-            this.$emit('node-dragover', { originalEvent, node });
+            this.$emit('node-dragover', event);
         }
     }
 
@@ -348,7 +359,7 @@ export default class IMovableTreeNode extends Vue {
         if (check && checkedChildCount === this.$props.node.children.length) {
             _selectionKeys[this.$props.node.key] = {
                 checked: true,
-                partialChecked: false
+                partialChecked: false,
             };
         } else {
             if (!check) {
@@ -362,19 +373,19 @@ export default class IMovableTreeNode extends Vue {
             )
                 _selectionKeys[this.$props.node.key] = {
                     checked: false,
-                    partialChecked: true
+                    partialChecked: true,
                 };
             else
                 _selectionKeys[this.$props.node.key] = {
                     checked: false,
-                    partialChecked: false
+                    partialChecked: false,
                 };
         }
 
         this.$emit('checkbox-change', {
             node,
             check,
-            selectionKeys: _selectionKeys
+            selectionKeys: _selectionKeys,
         });
     }
 
@@ -393,7 +404,7 @@ export default class IMovableTreeNode extends Vue {
         this.$emit('checkbox-change', {
             node: this.$props.node,
             check: _check,
-            selectionKeys: _selectionKeys
+            selectionKeys: _selectionKeys,
         });
     }
 
@@ -402,15 +413,15 @@ export default class IMovableTreeNode extends Vue {
             'p-checkbox-box',
             {
                 'p-highlight': this.checked,
-                'p-indeterminate': this.partialChecked
-            }
+                'p-indeterminate': this.partialChecked,
+            },
         ];
     }
 
     get checkboxIcon(): Array<string | object> {
         return [
             'p-checkbox-icon',
-            { 'pi pi-check': this.checked, 'pi pi-minus': this.partialChecked }
+            { 'pi pi-check': this.checked, 'pi pi-minus': this.partialChecked },
         ];
     }
 
@@ -433,8 +444,8 @@ export default class IMovableTreeNode extends Vue {
             'p-treenode',
             {
                 'p-treenode-leaf': this.leaf,
-                'i-movable': this.$props.movable
-            }
+                'i-movable': this.$props.depth > 1 && this.$props.movable,
+            },
         ];
     }
 
@@ -446,8 +457,9 @@ export default class IMovableTreeNode extends Vue {
             {
                 'p-treenode-selectable': this.selectable,
                 'p-highlight': this.checkboxMode ? this.checked : this.selected,
-                'i-movable-content': this.$props.movable
-            }
+                'i-movable-content':
+                    this.$props.depth > 1 && this.$props.movable,
+            },
         ];
     }
 
@@ -498,8 +510,8 @@ export default class IMovableTreeNode extends Vue {
             'p-tree-toggler-icon pi pi-fw',
             {
                 'pi-chevron-down': this.expanded,
-                'pi-chevron-right': !this.expanded
-            }
+                'pi-chevron-right': !this.expanded,
+            },
         ];
     }
 }
@@ -514,9 +526,13 @@ export default class IMovableTreeNode extends Vue {
     }
 }
 
+.i-tree-line {
+    background-color: var(--primary-color);
+}
+
 .i-node-enter {
     outline: 1px dotted var(--text-color-secondary);
     opacity: 0.3;
-    background-color: var(--surface-hover);
+    background-color: var(--primary-color);
 }
 </style>

@@ -1,6 +1,13 @@
 <template>
     <div id="setting-asset-tree">
-        <i-movable-tree :value="assetTree" :filter="true" :movable="true">
+        <i-movable-tree
+            :value="assetTree"
+            :filter="true"
+            :movable="true"
+            :expandedKeys="treeExpandedKey"
+            @move-tree="assetMove"
+            @add-tree="assetAdd"
+        >
             <template #default="slotProps">
                 <div class="p-d-flex">
                     <i
@@ -47,7 +54,7 @@ import Component from '@/plugins/nuxt-class-component';
                 }
             `,
             variables: {
-                AssetSelectable: false
+                AssetSelectable: false,
             },
             fetchResults: true,
             fetchPolicy: 'no-cache',
@@ -56,12 +63,34 @@ import Component from '@/plugins/nuxt-class-component';
             skip: true,
             update({ PredefinedInterfaces }) {
                 return PredefinedInterfaces;
-            }
+            },
         },
         assetTree: {
             query: gql`
+                fragment assetTreeFields on AssetTree {
+                    key
+                    label
+                    alias
+                    order
+                    parent_key
+                }
+
                 query {
-                    AssetTree
+                    AssetTree {
+                        ...assetTreeFields
+                        children {
+                            ...assetTreeFields
+                            children {
+                                ...assetTreeFields
+                                children {
+                                    ...assetTreeFields
+                                    children {
+                                        ...assetTreeFields
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             `,
             fetchResults: true,
@@ -70,14 +99,25 @@ import Component from '@/plugins/nuxt-class-component';
             prefetch: false,
             update({ AssetTree }) {
                 return AssetTree;
-            }
-        }
-    }
+            },
+        },
+    },
 })
 export default class SettingAssetTree extends Vue {
     assets: Array<any> = [];
     assetTree: Array<any> = [];
     checkedTree: any = null;
+    treeExpandedKey = { pah_1: true };
+
+    assetAdd(target: any, dest: any) {
+        console.info(target);
+        console.info(dest);
+    }
+
+    assetMove(target: any, dest: any) {
+        console.info(target);
+        console.info(dest);
+    }
 }
 </script>
 
