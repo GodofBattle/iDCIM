@@ -4,7 +4,7 @@
             :value="assetTree"
             :filter="true"
             :movable="true"
-            :expandedKeys="treeExpandedKey"
+            :expanded-keys="treeExpandedKey"
             @move-tree="assetMove"
             @add-tree="assetAdd"
         >

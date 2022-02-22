@@ -29,9 +29,10 @@
             </div>
             <ul class="p-tree-container" role="tree">
                 <i-movable-tree-node
-                    v-for="node of valueToRender"
+                    v-for="(node, index) in valueToRender"
                     :key="node.key"
                     :node="node"
+                    :order="index + 1"
                     :templates="$scopedSlots"
                     :selection-mode="selectionMode"
                     :expanded-keys="d_expandedKeys"
@@ -139,6 +140,7 @@ export default class IMovableTree extends Vue {
 
     dest: HTMLElement | null = null;
     destNode: any | null = null;
+    dest_pNode: any | null = null;
 
     findFilteredNodes(node: any, paramsWithoutNode: any) {
         if (node) {
@@ -315,7 +317,7 @@ export default class IMovableTree extends Vue {
         element.draggable = true;
     }
 
-    onNodeDragStart({ originalEvent, node }: any, p_node: any) {
+    onNodeDragStart({ originalEvent, node, p_node }: any) {
         const event = originalEvent as DragEvent;
 
         this.nodeDragging = true;
@@ -346,7 +348,7 @@ export default class IMovableTree extends Vue {
         }
     }
 
-    onNodeDragOver({ originalEvent, node }: any) {
+    onNodeDragOver({ originalEvent, node, p_node }: any) {
         const event = originalEvent as DragEvent;
 
         if (this.nodeDragging) {
@@ -371,14 +373,21 @@ export default class IMovableTree extends Vue {
                     '.i-movable'
                 ) as HTMLElement;
                 this.destNode = node;
+                this.dest_pNode = p_node;
 
                 // by shkoh 20220216: 이동할 target이 존재할 경우
                 if (this.target && this.dest) {
                     this.removeDraggingNodeEffect();
 
-                    // by shkoh 20220216: 목적 Node의 위치와 크기를 게산
-                    const item_h = DomHandler.getOuterHeight(this.dest);
-                    const item_pos = DomHandler.getOffset(this.dest);
+                    // by shkoh 20220216: 목적 Node의 위치와 크기를 계산
+                    // by shkoh 20220222: this.dest의 위치와 크기를 계산할 때에는 this.dest의 i-movable-content 클래스의 크기로만 계산함
+                    // by shkoh 20220222: 그렇지 않으면 하위의 자식노드의 크기까지 계산하게 됨
+                    const dest_content_element = this.dest.querySelector(
+                        '.i-movable-content'
+                    ) as HTMLElement;
+                    const item_h =
+                        DomHandler.getOuterHeight(dest_content_element);
+                    const item_pos = DomHandler.getOffset(dest_content_element);
                     const delta = item_h / 4;
 
                     // by shkoh 20220216: Node를 4등분하여, 한 개의 Node를 기준으로 상단에 커서가 위치하는 경우, 하단에 위치하는 경우, 중앙에 위치하는 경우로 분리
@@ -404,6 +413,8 @@ export default class IMovableTree extends Vue {
                     } else {
                         this.draggedIconState = 'plus';
                     }
+
+                    // by shkoh 20220222: add가 가능한 여부인지 데이터를 통해서 판단이 필요함
 
                     // by shkoh 20220216: target node 위에 dragover하고 있는 경우에는 move를 할 수 없다
                     if (on_target) {
@@ -497,7 +508,7 @@ export default class IMovableTree extends Vue {
             this.draggedIconState === 'down'
         ) {
             // by shkoh 20220216: move
-            this.moveNode();
+            this.moveNode(this.draggedIconState === 'up' ? true : false);
         } else if (this.draggedIconState === 'plus') {
             // by shkoh 20220216: insert
             this.addNode();
@@ -506,8 +517,11 @@ export default class IMovableTree extends Vue {
         this.nodeDragging = false;
         this.targetNode = null;
         this.target = null;
+        this.target_pNode = null;
+
         this.dest = null;
         this.destNode = null;
+        this.dest_pNode = null;
 
         this.draggedIconState = 'bars';
 
@@ -556,12 +570,17 @@ export default class IMovableTree extends Vue {
         }
     }
 
-    findIndexNodes(key: any) {
-        // by shkoh 20220210: Rendering된 value에서 Index를 찾음
-        return this.valueToRender.findIndex((n: any) => n.key === key);
-    }
+    moveNode(is_up: boolean) {
+        this.deleteNode();
 
-    moveNode() {
+        if (this.dest_pNode) {
+            const dest_index = this.dest_pNode.children.findIndex(
+                (n: any) => n.key === this.destNode.key
+            );
+            const idx = dest_index + (is_up ? 0 : 1);
+            this.dest_pNode.children.splice(idx, 0, this.targetNode);
+        }
+
         this.$emit('move-tree', this.targetNode, this.destNode);
     }
 
@@ -569,6 +588,7 @@ export default class IMovableTree extends Vue {
         this.deleteNode();
 
         this.destNode.children.push(this.targetNode);
+        this.targetNode.order = this.destNode.children.length;
         if (!this.d_expandedKeys[this.destNode.key]) {
             this.onNodeToggle(this.destNode);
         }
@@ -577,14 +597,14 @@ export default class IMovableTree extends Vue {
     }
 
     deleteNode() {
-        const target_index = this.target_pNode.children.findIndex(
-            (n: any) => n.key === this.targetNode.key
-        );
+        if (this.target_pNode) {
+            const target_index = this.target_pNode.children.findIndex(
+                (n: any) => n.key === this.targetNode.key
+            );
 
-        console.info(target_index);
-
-        if (target_index !== -1) {
-            this.target_pNode.children.splice(target_index, 1);
+            if (target_index !== -1) {
+                this.target_pNode.children.splice(target_index, 1);
+            }
         }
     }
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 끝

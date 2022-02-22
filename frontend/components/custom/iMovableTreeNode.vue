@@ -59,7 +59,7 @@
             role="group"
         >
             <sub-treenode
-                v-for="childNode of node.children"
+                v-for="(childNode, index) in node.children"
                 :key="childNode.key"
                 :depth="depth + 1"
                 :node="childNode"
@@ -68,13 +68,14 @@
                 :selection-mode="selectionMode"
                 :selection-keys="selectionKeys"
                 :movable="movable"
+                :order="index + 1"
                 @node-toggle="onChildNodeToggle"
                 @node-click="onChildNodeClick"
                 @checkbox-change="propagateUp"
                 @node-mousedown="onNodeMouseDown($event)"
-                @node-dragstart="onNodeDragStart($event, childNode)"
+                @node-dragstart="onNodeDragStart($event, childNode, node)"
                 @node-drag="onNodeDrag($event)"
-                @node-dragover="onNodeDragOver($event, childNode)"
+                @node-dragover="onNodeDragOver($event, childNode, node)"
                 @node-dragend="onNodeDragEnd($event)"
                 @node-drop="onNodeDrop($event)"
             ></sub-treenode>
@@ -117,6 +118,15 @@ import DomHandler from '@/plugins/primevue.DomHandler';
         depth: {
             type: Number,
             default: 1,
+        },
+        order: {
+            type: Number,
+            default: 1,
+        },
+    },
+    watch: {
+        order(_new_order) {
+            this.$props.node.order = _new_order;
         },
     },
 })
@@ -263,26 +273,30 @@ export default class IMovableTreeNode extends Vue {
     }
 
     onDragStart(event: DragEvent, node: any) {
-        if (this.$props.movable)
+        if (this.$props.depth > 1 && this.$props.movable) {
             this.$emit('node-dragstart', { originalEvent: event, node }, node);
+        }
     }
 
     onDrag(event: DragEvent) {
-        if (this.$props.movable) this.$emit('node-drag', event);
+        if (this.$props.depth > 1 && this.$props.movable)
+            this.$emit('node-drag', event);
     }
 
     onDragOver(event: DragEvent, node: any) {
-        if (this.$props.movable) {
+        if (this.$props.depth > 1 && this.$props.movable) {
             this.$emit('node-dragover', { originalEvent: event, node });
         }
     }
 
     onDragEnd(event: DragEvent) {
-        if (this.$props.movable) this.$emit('node-dragend', event);
+        if (this.$props.depth > 1 && this.$props.movable)
+            this.$emit('node-dragend', event);
     }
 
     onDrop(event: DragEvent) {
-        if (this.$props.movable) this.$emit('node-drop', event);
+        if (this.$props.depth > 1 && this.$props.movable)
+            this.$emit('node-drop', event);
     }
 
     onNodeMouseDown(event: MouseEvent) {
@@ -291,10 +305,14 @@ export default class IMovableTreeNode extends Vue {
         }
     }
 
-    onNodeDragStart(event: any, p_node: any) {
+    onNodeDragStart(event: any, child_node: any, parent_node: any) {
         // by shkoh 20220221: event parameter는 originalEvent와 최초 이벤트 발생 노드의 정보를 가지고 있다
         if (this.$props.movable) {
-            this.$emit('node-dragstart', event, p_node);
+            // by shkoh 20220222: Drag가 시작하는 순간에 내 바로 위의 parent_node의 정보를 기록
+            if (event.node && event.node.key === child_node.key) {
+                event['p_node'] = parent_node;
+            }
+            this.$emit('node-dragstart', event, child_node);
         }
     }
 
@@ -304,8 +322,12 @@ export default class IMovableTreeNode extends Vue {
         }
     }
 
-    onNodeDragOver(event: any) {
+    onNodeDragOver(event: any, child_node: any, parent_node: any) {
         if (this.$props.movable) {
+            if (event.node && event.node.key === child_node.key) {
+                event['p_node'] = parent_node;
+            }
+
             this.$emit('node-dragover', event);
         }
     }
