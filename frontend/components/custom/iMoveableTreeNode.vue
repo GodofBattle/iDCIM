@@ -41,10 +41,10 @@
             </div>
             <span :class="icon"></span>
             <span class="p-treenode-label">
-                <i-movable-tree-node-template
+                <i-moveable-tree-node-template
                     :node="node"
                     :template="templates[node.type] || templates['default']"
-                ></i-movable-tree-node-template>
+                ></i-moveable-tree-node-template>
             </span>
         </div>
         <Skeleton
@@ -67,7 +67,7 @@
                 :expanded-keys="expandedKeys"
                 :selection-mode="selectionMode"
                 :selection-keys="selectionKeys"
-                :movable="movable"
+                :moveable="moveable"
                 :order="index + 1"
                 @node-toggle="onChildNodeToggle"
                 @node-click="onChildNodeClick"
@@ -88,7 +88,7 @@ import Vue from 'vue';
 import Component from '@/plugins/nuxt-class-component';
 import DomHandler from '@/plugins/primevue.DomHandler';
 
-@Component<IMovableTreeNode>({
+@Component<IMoveableTreeNode>({
     name: 'sub-treenode',
     props: {
         node: {
@@ -111,7 +111,7 @@ import DomHandler from '@/plugins/primevue.DomHandler';
             type: Object,
             default: null,
         },
-        movable: {
+        moveable: {
             type: Boolean,
             default: false,
         },
@@ -130,7 +130,7 @@ import DomHandler from '@/plugins/primevue.DomHandler';
         },
     },
 })
-export default class IMovableTreeNode extends Vue {
+export default class IMoveableTreeNode extends Vue {
     nodeTouched: boolean = false;
 
     findLastVisibleDescendant(element: Element | null): Element | null {
@@ -267,47 +267,47 @@ export default class IMovableTreeNode extends Vue {
 
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 시작
     onMouseDown(event: MouseEvent) {
-        if (this.$props.depth > 1 && this.$props.movable) {
+        if (this.$props.depth > 1 && this.$props.moveable) {
             this.$emit('node-mousedown', event);
         }
     }
 
     onDragStart(event: DragEvent, node: any) {
-        if (this.$props.depth > 1 && this.$props.movable) {
+        if (this.$props.depth > 1 && this.$props.moveable) {
             this.$emit('node-dragstart', { originalEvent: event, node }, node);
         }
     }
 
     onDrag(event: DragEvent) {
-        if (this.$props.depth > 1 && this.$props.movable)
+        if (this.$props.depth > 1 && this.$props.moveable)
             this.$emit('node-drag', event);
     }
 
     onDragOver(event: DragEvent, node: any) {
-        if (this.$props.depth > 1 && this.$props.movable) {
+        if (this.$props.depth > 1 && this.$props.moveable) {
             this.$emit('node-dragover', { originalEvent: event, node });
         }
     }
 
     onDragEnd(event: DragEvent) {
-        if (this.$props.depth > 1 && this.$props.movable)
+        if (this.$props.depth > 1 && this.$props.moveable)
             this.$emit('node-dragend', event);
     }
 
     onDrop(event: DragEvent) {
-        if (this.$props.depth > 1 && this.$props.movable)
+        if (this.$props.depth > 1 && this.$props.moveable)
             this.$emit('node-drop', event);
     }
 
     onNodeMouseDown(event: MouseEvent) {
-        if (this.$props.movable) {
+        if (this.$props.moveable) {
             this.$emit('node-mousedown', event);
         }
     }
 
     onNodeDragStart(event: any, child_node: any, parent_node: any) {
         // by shkoh 20220221: event parameter는 originalEvent와 최초 이벤트 발생 노드의 정보를 가지고 있다
-        if (this.$props.movable) {
+        if (this.$props.moveable) {
             // by shkoh 20220222: Drag가 시작하는 순간에 내 바로 위의 parent_node의 정보를 기록
             if (event.node && event.node.key === child_node.key) {
                 event['p_node'] = parent_node;
@@ -317,13 +317,13 @@ export default class IMovableTreeNode extends Vue {
     }
 
     onNodeDrag(event: DragEvent) {
-        if (this.$props.movable) {
+        if (this.$props.moveable) {
             this.$emit('node-drag', event);
         }
     }
 
     onNodeDragOver(event: any, child_node: any, parent_node: any) {
-        if (this.$props.movable) {
+        if (this.$props.moveable) {
             if (event.node && event.node.key === child_node.key) {
                 event['p_node'] = parent_node;
             }
@@ -333,13 +333,13 @@ export default class IMovableTreeNode extends Vue {
     }
 
     onNodeDragEnd(event: DragEvent) {
-        if (this.$props.movable) {
+        if (this.$props.moveable) {
             this.$emit('node-dragend', event);
         }
     }
 
     onNodeDrop(event: DragEvent) {
-        if (this.$props.movable) {
+        if (this.$props.moveable) {
             this.$emit('node-drop', event);
         }
     }
@@ -466,7 +466,7 @@ export default class IMovableTreeNode extends Vue {
             'p-treenode',
             {
                 'p-treenode-leaf': this.leaf,
-                'i-movable': this.$props.depth > 1 && this.$props.movable,
+                'i-moveable': this.$props.depth > 1 && this.$props.moveable,
             },
         ];
     }
@@ -479,8 +479,8 @@ export default class IMovableTreeNode extends Vue {
             {
                 'p-treenode-selectable': this.selectable,
                 'p-highlight': this.checkboxMode ? this.checked : this.selected,
-                'i-movable-content':
-                    this.$props.depth > 1 && this.$props.movable,
+                'i-moveable-content':
+                    this.$props.depth > 1 && this.$props.moveable,
             },
         ];
     }
@@ -540,7 +540,7 @@ export default class IMovableTreeNode extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.p-tree .p-tree-container .p-treenode .p-treenode-content.i-movable-content {
+.p-tree .p-tree-container .p-treenode .p-treenode-content.i-moveable-content {
     user-select: none;
 
     &:focus {
@@ -553,8 +553,10 @@ export default class IMovableTreeNode extends Vue {
 }
 
 .i-node-enter {
-    outline: 1px dotted var(--text-color-secondary);
-    opacity: 0.3;
-    background-color: var(--primary-color);
+    outline: 3px dotted var(--text-color-secondary);
+    opacity: 0.6;
+    background-color: var(--surface-hover);
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 </style>

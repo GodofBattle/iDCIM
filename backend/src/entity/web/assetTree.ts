@@ -1,11 +1,11 @@
-import { Field, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, Int, ObjectType } from "type-graphql";
 
 @ObjectType()
 export class AssetTree {
     @Field(() => String)
     key: string;
 
-    @Field(() => String, { nullable: null })
+    @Field(() => String, { nullable: true })
     parent_key: string | null;
 
     @Field(() => String)
@@ -16,6 +16,9 @@ export class AssetTree {
 
     @Field(() => Int, { nullable: true })
     order: number;
+
+    @Field(() => String, { nullable: true })
+    type: string;
 
     @Field(() => [AssetTree]!, { nullable: true })
     children: AssetTree[] | null;
@@ -32,4 +35,19 @@ export class AssetTree {
         this.parent_key = parent_key;
         this.children = children !== null ? children : new Array<AssetTree>();
     }
+}
+
+@ArgsType()
+export class AssetTreeArgs {
+    @Field(() => String, { nullable: true })
+    parent_key: string | null;
+
+    @Field(() => String, { nullable: true })
+    label: string;
+
+    @Field(() => String, { nullable: true })
+    alias: string;
+
+    @Field(() => Int, { nullable: true })
+    order: number;
 }

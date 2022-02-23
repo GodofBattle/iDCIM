@@ -1,5 +1,5 @@
 <template>
-    <div id="i-movable-tree">
+    <div id="i-moveable-tree">
         <div ref="iFakeDragImage" class="i-fake-dragimage">.</div>
 
         <div
@@ -28,7 +28,7 @@
                 <span class="p-tree-filter-icon pi pi-search"></span>
             </div>
             <ul class="p-tree-container" role="tree">
-                <i-movable-tree-node
+                <i-moveable-tree-node
                     v-for="(node, index) in valueToRender"
                     :key="node.key"
                     :node="node"
@@ -37,7 +37,7 @@
                     :selection-mode="selectionMode"
                     :expanded-keys="d_expandedKeys"
                     :selection-keys="selectionKeys"
-                    :movable="node_movable"
+                    :moveable="node_movable"
                     @node-toggle="onNodeToggle"
                     @node-click="onNodeClick"
                     @checkbox-change="onCheckboxChange"
@@ -47,7 +47,7 @@
                     @node-dragover="onNodeDragOver"
                     @node-dragend="onNodeDragEnd"
                     @node-drop="onNodeDrop"
-                ></i-movable-tree-node>
+                ></i-moveable-tree-node>
             </ul>
         </div>
     </div>
@@ -59,7 +59,7 @@ import ObjectUtils from '@/plugins/primevue.ObjectUtils';
 import Component from '@/plugins/nuxt-class-component';
 import DomHandler from '@/plugins/primevue.DomHandler';
 
-@Component<IMovableTree>({
+@Component<IMoveableTree>({
     props: {
         value: {
             type: Array,
@@ -109,7 +109,19 @@ import DomHandler from '@/plugins/primevue.DomHandler';
             type: String,
             default: 'lenient',
         },
-        movable: {
+        moveable: {
+            type: Boolean,
+            default: false,
+        },
+        addableType: {
+            type: Object,
+            default: null,
+        },
+        moveableType: {
+            type: Object,
+            default: null,
+        },
+        onlyMoveableSameType: {
             type: Boolean,
             default: false,
         },
@@ -120,7 +132,7 @@ import DomHandler from '@/plugins/primevue.DomHandler';
         },
     },
 })
-export default class IMovableTree extends Vue {
+export default class IMoveableTree extends Vue {
     $refs!: {
         iFakeDragImage: HTMLElement;
         iRealDragImage: HTMLElement;
@@ -324,7 +336,7 @@ export default class IMovableTree extends Vue {
         this.targetNode = node;
         this.target_pNode = p_node;
         this.target = (event.currentTarget as Element).closest(
-            '.i-movable'
+            '.i-moveable'
         ) as HTMLElement;
 
         if (event.dataTransfer) {
@@ -370,7 +382,7 @@ export default class IMovableTree extends Vue {
 
                 // by shkoh 20220216: 최종 목적 대상이 될 destination을 지정
                 this.dest = (event.currentTarget as Element).closest(
-                    '.i-movable'
+                    '.i-moveable'
                 ) as HTMLElement;
                 this.destNode = node;
                 this.dest_pNode = p_node;
@@ -380,10 +392,10 @@ export default class IMovableTree extends Vue {
                     this.removeDraggingNodeEffect();
 
                     // by shkoh 20220216: 목적 Node의 위치와 크기를 계산
-                    // by shkoh 20220222: this.dest의 위치와 크기를 계산할 때에는 this.dest의 i-movable-content 클래스의 크기로만 계산함
+                    // by shkoh 20220222: this.dest의 위치와 크기를 계산할 때에는 this.dest의 i-moveable-content 클래스의 크기로만 계산함
                     // by shkoh 20220222: 그렇지 않으면 하위의 자식노드의 크기까지 계산하게 됨
                     const dest_content_element = this.dest.querySelector(
-                        '.i-movable-content'
+                        '.i-moveable-content'
                     ) as HTMLElement;
                     const item_h =
                         DomHandler.getOuterHeight(dest_content_element);
@@ -391,9 +403,12 @@ export default class IMovableTree extends Vue {
                     const delta = item_h / 4;
 
                     // by shkoh 20220216: Node를 4등분하여, 한 개의 Node를 기준으로 상단에 커서가 위치하는 경우, 하단에 위치하는 경우, 중앙에 위치하는 경우로 분리
-                    const itemOnTop = event.pageY < item_pos.top + delta;
+                    const itemOnTop =
+                        event.pageY < item_pos.top + delta &&
+                        this.moveableDragging;
                     const itemOnBottom =
-                        item_pos.top + item_h - delta < event.pageY;
+                        item_pos.top + item_h - delta < event.pageY &&
+                        this.moveableDragging;
 
                     // by shkoh 20220216: dragover 시, target node 위에 존재하는지 여부 판단에 사용
                     let on_target = false;
@@ -411,7 +426,11 @@ export default class IMovableTree extends Vue {
                             this.dest.nextElementSibling
                         );
                     } else {
-                        this.draggedIconState = 'plus';
+                        const is_addable_node =
+                            this.$props.addableType[this.destNode.type];
+                        this.draggedIconState = is_addable_node
+                            ? 'plus'
+                            : 'ban';
                     }
 
                     // by shkoh 20220222: add가 가능한 여부인지 데이터를 통해서 판단이 필요함
@@ -451,7 +470,7 @@ export default class IMovableTree extends Vue {
                     this.treeContainer = container;
 
                     const hover_node = this.dest.querySelector(
-                        '.i-movable-content'
+                        '.i-moveable-content'
                     ) as HTMLElement;
                     const target_pos = DomHandler.getOffset(this.target);
 
@@ -488,6 +507,8 @@ export default class IMovableTree extends Vue {
                             bottom_line.style.display = 'block';
                             DomHandler.addClass(bottom_line, 'i-show');
                         }
+                    } else if (this.draggedIconState === 'ban') {
+                        this.removeDraggingNodeEffect();
                     }
                 } else {
                     // by shkoh 20220216: 마지막으로 선택된 노드에 대한 처리
@@ -511,7 +532,7 @@ export default class IMovableTree extends Vue {
             this.moveNode(this.draggedIconState === 'up' ? true : false);
         } else if (this.draggedIconState === 'plus') {
             // by shkoh 20220216: insert
-            this.addNode();
+            this.insertNode();
         }
 
         this.nodeDragging = false;
@@ -579,21 +600,25 @@ export default class IMovableTree extends Vue {
             );
             const idx = dest_index + (is_up ? 0 : 1);
             this.dest_pNode.children.splice(idx, 0, this.targetNode);
+
+            this.targetNode.parent_key = this.dest_pNode.key;
+            this.targetNode.order = idx + 1;
         }
 
         this.$emit('move-tree', this.targetNode, this.destNode);
     }
 
-    addNode() {
+    insertNode() {
         this.deleteNode();
 
         this.destNode.children.push(this.targetNode);
+        this.targetNode.parent_key = this.destNode.key;
         this.targetNode.order = this.destNode.children.length;
         if (!this.d_expandedKeys[this.destNode.key]) {
             this.onNodeToggle(this.destNode);
         }
 
-        this.$emit('add-tree', this.targetNode, this.destNode);
+        this.$emit('insert-tree', this.targetNode, this.destNode);
     }
 
     deleteNode() {
@@ -675,9 +700,22 @@ export default class IMovableTree extends Vue {
 
     get node_movable(): boolean {
         return (
-            this.$props.movable &&
+            this.$props.moveable &&
             !(this.filterValue && this.filterValue.trim().length > 0)
         );
+    }
+
+    get moveableDragging(): boolean {
+        const target_type = this.targetNode?.type;
+        const dest_type = this.destNode?.type;
+        const is_moveable_target =
+            this.$props.moveableType[this.targetNode?.type];
+
+        return is_moveable_target
+            ? true
+            : this.$props.onlyMoveableSameType
+            ? target_type === dest_type
+            : false;
     }
 
     get getDraggedNodeLabel(): string {
@@ -709,7 +747,7 @@ export default class IMovableTree extends Vue {
 </script>
 
 <style lang="scss" scoped>
-#i-movable-tree::v-deep {
+#i-moveable-tree::v-deep {
     .i-fake-dragimage {
         display: block;
         pointer-events: none;

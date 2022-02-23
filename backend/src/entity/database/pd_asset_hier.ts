@@ -23,4 +23,9 @@ export class pd_asset_hier {
     @Field(() => String)
     @Column({ type: 'varchar', length: 256, nullable: true, default: null, comment: '설명' })
     REMARK: string;
+
+    @Field(() => String)
+    get TYPE(): string {
+        return 'AssetHier';
+    };
 }
