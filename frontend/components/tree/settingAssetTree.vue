@@ -4,12 +4,16 @@
             :value="assetTree"
             :filter="true"
             :moveable="true"
-            :expanded-keys="treeExpandedKey"
+            selectionMode="single"
+            :selection-keys.sync="selectionKeys"
+            :expanded-keys.sync="treeExpandedKey"
             :addable-type="addableType"
             :moveable-type="moveableType"
             :only-moveable-same-type="true"
             @move-tree="moveAssetNode"
             @insert-tree="moveAssetNode"
+            @node-select="onNodeSelect"
+            @node-unselect="onNodeUnselect"
         >
             <template #default="slotProps">
                 <div class="p-d-flex">
@@ -29,8 +33,11 @@
                         style="font-size: 1.2rem; color: var(--primary-color)"
                     ></i>
                     <div class="p-p-1" style="color: var(--primary-color)">
-                        {{ slotProps.node.label }} |
-                        {{ slotProps.node.key.split('_')[1] }}
+                        {{
+                            isAlias
+                                ? slotProps.node.alias
+                                : slotProps.node.label
+                        }}
                     </div>
                 </div>
             </template>
@@ -44,12 +51,38 @@ import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 
 @Component<SettingAssetTree>({
+    props: {
+        isAlias: {
+            type: Boolean,
+            default: false,
+        },
+        selectedNodeKey: {
+            type: String,
+            default: null,
+        },
+        selectedNode: {
+            type: Object,
+            default: null,
+        },
+    },
+    watch: {
+        selectionKeys(_new_key) {
+            this.$emit('update:selectedNodeKey', null);
+
+            for (const [key, value] of Object.entries(_new_key)) {
+                if (value) {
+                    this.$emit('update:selectedNodeKey', key);
+                }
+            }
+        },
+    },
     apollo: {
         assetTree: {
             query: gql`
                 fragment assetTreeFields on AssetTree {
                     key
                     label
+                    name
                     alias
                     order
                     parent_key
@@ -86,60 +119,30 @@ import Component from '@/plugins/nuxt-class-component';
 })
 export default class SettingAssetTree extends Vue {
     assetTree: Array<any> = [];
-    checkedTree: any = null;
-    treeExpandedKey = { pah_1: true };
+
+    treeExpandedKey: any = { pah_1: true };
     addableType = { AssetHier: true };
     moveableType = { AssetHier: true, AssetCode: false };
 
-    // moveAssetNode(target: any, dest: any) {
-    //     console.info(
-    //         `${target.key} :: ${target.parent_key} || ${target.order}`
-    //     );
+    selectionKeys: null | object = null;
 
-    //     console.info(`${dest.key} :: ${dest.parent_key} || ${dest.order}`);
+    refresh(key: string | undefined) {
+        this.$apollo.queries.assetTree.refresh();
 
-    //     // this.$nuxt.$loading.start();
+        if (key) {
+            this.treeExpandedKey[key] = true;
+        }
+    }
 
-    //     // this.$apollo
-    //     //     .mutate({
-    //     //         mutation: gql`
-    //     //             mutation {
-    //     //                 InsertAssetTreeNode(
-    //     //                     key: "${target.key}"
-    //     //                     parent_key: "${target.parent_key}"
-    //     //                     order: ${target.order}
-    //     //                 )
-    //     //             }
-    //     //         `,
-    //     //     })
-    //     //     .then(() => {
-    //     //         this.$toast.add({
-    //     //             severity: 'info',
-    //     //             summary: '자산트리 이동 완료',
-    //     //             detail: `${dest.label} >> ${target.label}`,
-    //     //             life: 1800,
-    //     //         });
-    //     //     })
-    //     //     .catch((error) => {
-    //     //         console.error(error);
+    onNodeSelect(node: any) {
+        this.$emit('update:selectedNode', node);
+    }
 
-    //     //         this.$toast.add({
-    //     //             severity: 'error',
-    //     //             summary: '자산트리 이동 실패',
-    //     //             detail: error.message,
-    //     //             life: 2000,
-    //     //         });
-    //     //     })
-    //     //     .finally(() => {
-    //     //         this.$nuxt.$loading.finish();
-    //     //     });
-    // }
+    onNodeUnselect(node: any) {
+        this.$emit('update:selectedNode', null);
+    }
 
     moveAssetNode(target: any, dest: any) {
-        console.info(
-            `${target.key} :: ${target.parent_key} || ${target.order}`
-        );
-
         this.$nuxt.$loading.start();
 
         this.$apollo

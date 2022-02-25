@@ -9,6 +9,9 @@ export class AssetTree {
     parent_key: string | null;
 
     @Field(() => String)
+    name: string;
+
+    @Field(() => String)
     label: string;
 
     @Field(() => String)

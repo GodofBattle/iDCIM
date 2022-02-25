@@ -80,7 +80,7 @@ import { eventBus } from '@/plugins/vueEventBus';
                 }
             `,
             variables: {
-                AssetSelectable: false
+                AssetSelectable: false,
             },
             fetchResults: true,
             fetchPolicy: 'no-cache',
@@ -89,9 +89,9 @@ import { eventBus } from '@/plugins/vueEventBus';
             update({ PredefinedInterfaces }) {
                 this.insertAddButtons(PredefinedInterfaces);
                 return PredefinedInterfaces;
-            }
-        }
-    }
+            },
+        },
+    },
 })
 export default class InterfaceTree extends Vue {
     interfaces: Array<any> = [];
@@ -122,7 +122,7 @@ export default class InterfaceTree extends Vue {
             this.$emit('select', {
                 type: node.type,
                 id: Number(node.key),
-                name: node.label
+                name: node.label,
             });
         }
     }
@@ -141,7 +141,7 @@ export default class InterfaceTree extends Vue {
                         type: 'addInterface',
                         selectable: false,
                         pId: datum.key,
-                        pName: datum.label
+                        pName: datum.label,
                     });
                 }
             }

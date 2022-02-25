@@ -157,7 +157,7 @@ export default class IMoveableTreeNode extends Vue {
     }
 
     focusNode(element: Element) {
-        (element.firstElementChild as HTMLElement).focus();
+        (element.parentElement as HTMLElement).focus();
     }
 
     getParentNodeElement(htmlElement: HTMLElement | null) {
@@ -208,19 +208,27 @@ export default class IMoveableTreeNode extends Vue {
 
         switch (event.code) {
             case 'ArrowDown': {
-                const listElement = nodeElement?.children[1];
-                console.info(listElement);
+                const listElement = nodeElement?.children[3]?.querySelector(
+                    'ul .p-treenode-content'
+                );
                 if (listElement) {
-                    this.focusNode(listElement.children[0]);
+                    if (listElement.lastElementChild)
+                        this.focusNode(listElement.lastElementChild);
                 } else {
                     const nextNodeElement = nodeElement?.nextElementSibling;
                     if (nextNodeElement) {
-                        this.focusNode(nextNodeElement);
+                        const lastElement =
+                            this.findLastVisibleDescendant(nextNodeElement);
+                        if (lastElement) this.focusNode(lastElement);
                     } else {
                         const nextSiblingAncestor =
                             this.findNextSiblingOfAncestor(nodeElement);
                         if (nextSiblingAncestor) {
-                            this.focusNode(nextSiblingAncestor);
+                            const lastElement =
+                                this.findLastVisibleDescendant(
+                                    nextSiblingAncestor
+                                );
+                            if (lastElement) this.focusNode(lastElement);
                         }
                     }
                 }
@@ -231,16 +239,34 @@ export default class IMoveableTreeNode extends Vue {
             case 'ArrowUp': {
                 const previousElement = nodeElement?.previousElementSibling;
                 if (previousElement) {
-                    const lastElement =
-                        this.findLastVisibleDescendant(previousElement);
-                    if (lastElement) {
-                        this.focusNode(lastElement);
+                    const list_elements =
+                        previousElement?.children[3]?.querySelectorAll(
+                            'ul .p-treenode-content .p-treenode-label'
+                        );
+                    if (list_elements) {
+                        const last_element =
+                            list_elements[list_elements.length - 1];
+                        if (last_element) {
+                            this.focusNode(last_element);
+                        }
+                    } else {
+                        const lastElement =
+                            this.findLastVisibleDescendant(previousElement);
+
+                        if (lastElement) {
+                            this.focusNode(lastElement);
+                        }
                     }
                 } else {
                     const parentNodeElement =
                         this.getParentNodeElement(nodeElement);
                     if (parentNodeElement) {
-                        this.focusNode(parentNodeElement);
+                        const lastElement = parentNodeElement.querySelector(
+                            '.p-treenode-content .p-treenode-label'
+                        );
+                        if (lastElement) {
+                            this.focusNode(lastElement);
+                        }
                     }
                 }
 

@@ -752,6 +752,7 @@ export default class IMoveableTree extends Vue {
         display: block;
         pointer-events: none;
         opacity: 0;
+        position: fixed;
     }
 }
 

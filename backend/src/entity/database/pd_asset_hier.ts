@@ -1,4 +1,4 @@
-import { Field, ID, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, ID, Int, ObjectType } from "type-graphql";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, OneToMany, Tree, TreeParent, TreeChildren } from "typeorm";
 
 @ObjectType()
@@ -28,4 +28,16 @@ export class pd_asset_hier {
     get TYPE(): string {
         return 'AssetHier';
     };
+}
+
+@ArgsType()
+export class pd_asset_hier_args {
+    @Field(() => String!)
+    NAME: string;
+
+    @Field(() => Int)
+    P_ID: number;
+
+    @Field(() => Int)
+    ORDER: number;
 }

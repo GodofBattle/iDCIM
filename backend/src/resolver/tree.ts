@@ -25,6 +25,7 @@ export class TreeResolver {
                 return {
                     key: `pah_${asset.ID}`,
                     label: asset.P_ID === 0 ? site_name : asset.NAME,
+                    name: asset.P_ID === 0 ? site_name : asset.NAME,
                     alias: asset.P_ID === 0 ? site_name : asset.NAME,
                     order: asset.ORDER,
                     parent_key: asset.P_ID === 0 ? null : `pah_${asset.P_ID}`,
@@ -38,12 +39,28 @@ export class TreeResolver {
             })).forEach((asset: pd_asset_code) => {
                 asset_list.push({
                     key: `pac_${asset.CODE}`,
-                    label: asset.NAME,
+                    label: `${asset.NAME} | ${asset.CODE}`,
+                    name: asset.NAME,
                     alias: asset.ALIAS === null ? '' : asset.ALIAS,
                     order: asset.ORDER,
                     parent_key: `pah_${asset.PD_ASSET_HIER_ID}`,
                     type: asset.TYPE
                 })
+            });
+
+            // by shkoh 20220224: parent id와 order를 기준으로 하여 오름차순으로 정리
+            asset_list.sort((a: AssetTree, b: AssetTree) => {
+                if (a.parent_key > b.parent_key) {
+                    return 1;
+                } else if (a.parent_key < b.parent_key) {
+                    return -1;
+                } else {
+                    if (a.order > b.order) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                }
             });
 
             const asset_tree: Array<AssetTree> = arrayToTree(asset_list, { id: 'key', p_id: 'parent_key' }) as Array<AssetTree>;

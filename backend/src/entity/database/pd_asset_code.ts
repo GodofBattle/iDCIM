@@ -1,4 +1,4 @@
-import { Field, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, Int, ObjectType } from "type-graphql";
 import { TypeormLoader } from "type-graphql-dataloader";
 import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
 
@@ -12,11 +12,11 @@ export class pd_asset_code {
     CODE: string;
 
     @Field(() => String, { nullable: true })
-    @Column({ type: 'varchar', length: 32 , nullable: true, default: null, comment: '이름'})
+    @Column({ type: 'varchar', length: 32, nullable: true, default: null, comment: '이름' })
     NAME: string;
 
     @Field(() => String, { nullable: true })
-    @Column({ type: 'varchar', length: 32 , nullable: true, default: null, comment: '별칭(다른이름으로 사용시)'})
+    @Column({ type: 'varchar', length: 32, nullable: true, default: null, comment: '별칭(다른이름으로 사용시)' })
     ALIAS: string;
 
     @Field(() => Int!, { nullable: true })
@@ -28,7 +28,7 @@ export class pd_asset_code {
     ORDER: number;
 
     @Field(() => String, { nullable: true })
-    @Column({ type: 'varchar', length: 256 , nullable: true, default: null, comment: '설명'})
+    @Column({ type: 'varchar', length: 256, nullable: true, default: null, comment: '설명' })
     REMARK: string;
 
     @Field(() => String)
@@ -40,4 +40,22 @@ export class pd_asset_code {
     @OneToMany(() => pd_interface, (intf: pd_interface) => intf.ASSET_CODE, { primary: false, cascade: true, createForeignKeyConstraints: false })
     @TypeormLoader(() => pd_interface, (intf: pd_interface) => intf.ASSET_CD, { selfKey: true })
     PREDEFINED_INTERFACES?: pd_interface[];
+}
+
+@ArgsType()
+export class pd_asset_code_args {
+    @Field(() => String!)
+    CODE: string;
+
+    @Field(() => String)
+    NAME: string;
+
+    @Field(() => String, { nullable: true })
+    ALIAS: string;
+
+    @Field(() => Int!)
+    PD_ASSET_HIER_ID: number;
+
+    @Field(() => Int)
+    ORDER: number;
 }
