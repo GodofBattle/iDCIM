@@ -59,8 +59,8 @@
         <setting-asset-tree-edit-panel
             :visible.sync="showSettingAssetTreeEditPanel"
             :node-key="selectedKey"
-            :node-name="selectedName"
             :is-asset-code="isAssetCode"
+            @asset-edit="editAssetTree"
         >
         </setting-asset-tree-edit-panel>
     </div>
@@ -136,6 +136,14 @@ export default class SettingTreePanel extends Vue {
 
     addAssetTree(key: string) {
         this.$refs.settingAssetTreeRef.refresh(key);
+    }
+
+    editAssetTree(key: string) {
+        this.$refs.settingAssetTreeRef.refresh();
+
+        if (key !== this.selectionAssetTreeKey) {
+            this.$refs.settingAssetTreeRef.changeKey(key);
+        }
     }
 
     get isDisabledAddButton(): boolean {

@@ -134,6 +134,12 @@ export default class SettingAssetTree extends Vue {
         }
     }
 
+    changeKey(key: string) {
+        if (this.selectionKeys) {
+            this.selectionKeys = {};
+        }
+    }
+
     onNodeSelect(node: any) {
         this.$emit('update:selectedNode', node);
     }

@@ -85,6 +85,7 @@
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
+import { eventBus } from '@/plugins/vueEventBus';
 
 type Interface = {
     [index: string]: string;
@@ -95,7 +96,7 @@ type Interface = {
 @Component<InterfacePanel>({
     props: {
         interfaceId: Number,
-        interfaceName: String
+        interfaceName: String,
     },
     apollo: {
         interfaceData: {
@@ -110,12 +111,12 @@ type Interface = {
             prefetch: false,
             variables(): any {
                 return {
-                    ID: this.interfaceId ? this.interfaceId : -1
+                    ID: this.interfaceId ? this.interfaceId : -1,
                 };
             },
-            update: ({ PredefineInterface }) => PredefineInterface
-        }
-    }
+            update: ({ PredefineInterface }) => PredefineInterface,
+        },
+    },
 })
 export default class InterfacePanel extends Vue {
     $refs!: {
@@ -127,7 +128,7 @@ export default class InterfacePanel extends Vue {
     // by shkoh 20211007: 인터페이스 기본 정보
     interfaceData: Interface = {
         NAME: '',
-        INTF_CD: ''
+        INTF_CD: '',
     };
 
     // by shkoh 20211006: TabView Component Ref
@@ -167,25 +168,59 @@ export default class InterfacePanel extends Vue {
     deleteInterface() {
         this.$confirmDialog.require({
             group: 'deleteConfirmDialog',
-            message: `[${this.interfaceData.NAME}] 인터페이스를 삭제하시겠습니까?\n관련된 모든 항목들이 삭제됩니다.\n사이트에서 해당 제품이 등록되어 있다면 삭제가 불가합니다.(미구현)`,
+            message: `[${this.interfaceData.NAME}] 인터페이스를 삭제하시겠습니까?\n관련된 모든 항목들이 삭제됩니다.\n사이트에서 해당 제품이 등록되어 있다면 삭제가 불가합니다.(일부 미구현)`,
             header: `인터페이스 ${this.interfaceData.NAME} 삭제`,
             position: 'top',
             icon: 'pi pi-exclamation-triangle',
             acceptClass: 'p-button-danger',
             blockScroll: false,
             accept: () => {
-                this.$toast.add({
-                    severity: 'error',
-                    summary: '인터페이스 삭제 처리',
-                    detail: `미구현되었습니다. 삭제처리를 추후 논의 후 삭제할 것입니다`,
-                    life: 2000
-                });
-            }
+                this.delete();
+            },
         });
     }
 
     completeInterfaceUpdate() {
         this.$apollo.queries.interfaceData.refresh();
+    }
+
+    delete() {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation {
+                        DeleteInterface(ID: ${this.$props.interfaceId})
+                    }
+                `,
+            })
+            .then(({ data: { DeleteInterface } }) => {
+                if (DeleteInterface) {
+                    this.$toast.add({
+                        severity: 'success',
+                        summary: '인터페이스 삭제',
+                        detail: `[${this.interfaceData.NAME}] 통신 인터페이스가 정상적으로 삭제되었습니다`,
+                        life: 2000,
+                    });
+
+                    eventBus.$emit('refreshInterfaceTree');
+                    this.$emit('reset');
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '인터페이스 삭제 실패',
+                    detail: error.graphQLErrors[0].message,
+                    life: 2000,
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
     }
 }
 </script>

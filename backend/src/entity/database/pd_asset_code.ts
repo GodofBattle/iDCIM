@@ -44,18 +44,18 @@ export class pd_asset_code {
 
 @ArgsType()
 export class pd_asset_code_args {
-    @Field(() => String!)
+    @Field(() => String, { nullable: true })
     CODE: string;
 
-    @Field(() => String)
+    @Field(() => String, { nullable: true })
     NAME: string;
 
     @Field(() => String, { nullable: true })
     ALIAS: string;
 
-    @Field(() => Int!)
+    @Field(() => Int!, { nullable: true })
     PD_ASSET_HIER_ID: number;
 
-    @Field(() => Int)
+    @Field(() => Int, { nullable: true })
     ORDER: number;
 }

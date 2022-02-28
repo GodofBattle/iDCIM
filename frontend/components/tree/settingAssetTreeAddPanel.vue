@@ -250,7 +250,7 @@ export default class SettingAssetTreeAddPanel extends Vue {
             .mutate({
                 mutation: gql`
                     mutation {
-                        AddPredefineAssetCodeHier (
+                        AddPredefinedAssetHier (
                             NAME: "${this.treeName}"
                             P_ID: ${this.$props.parentKey}
                             ORDER: ${this.$props.newOrder}
@@ -293,7 +293,7 @@ export default class SettingAssetTreeAddPanel extends Vue {
             .mutate({
                 mutation: gql`
                     mutation {
-                        AddPredefineAssetCode (
+                        AddPredefinedAssetCode (
                             CODE: "${this.assetCode}"
                             NAME: "${this.codeName}"
                             ALIAS: "${this.codeAlias}"

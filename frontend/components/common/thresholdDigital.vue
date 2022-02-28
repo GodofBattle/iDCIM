@@ -17,7 +17,7 @@
                         'p-px-2',
                         'p-my-1',
                         'p-ai-center',
-                        'i-digit-row'
+                        'i-digit-row',
                     ]"
                 >
                     <div class="p-mr-2">
@@ -143,20 +143,16 @@ import Component from '@/plugins/nuxt-class-component';
 
 @Component<ThresholdDigital>({
     props: {
-        initDi: {
-            type: Array,
-            default: []
-        },
         di: {
             type: Array,
-            default: []
+            default: [],
         },
         levelCodes: Array,
         isEditable: {
             type: Boolean,
-            default: false
-        }
-    }
+            default: false,
+        },
+    },
 })
 export default class ThresholdDigital extends Vue {
     // by shkoh 20220116: 임계치 수정 시에, 값의 변화를 확인하기 위한 초기값
@@ -174,8 +170,8 @@ export default class ThresholdDigital extends Vue {
                 'i-normal': level === 0,
                 'i-warning': level === 1,
                 'i-major': level === 2,
-                'i-critical': level === 3
-            }
+                'i-critical': level === 3,
+            },
         ];
     }
 
@@ -188,8 +184,8 @@ export default class ThresholdDigital extends Vue {
                 'i-normal': level === 0,
                 'i-warning': level === 1,
                 'i-major': level === 2,
-                'i-critical': level === 3
-            }
+                'i-critical': level === 3,
+            },
         ];
     }
 
@@ -216,7 +212,7 @@ export default class ThresholdDigital extends Vue {
                 severity: 'warn',
                 summary: 'DI 값 중복',
                 detail: `임계치의 값은 중복될 수 없습니다`,
-                life: 1200
+                life: 1200,
             });
         }
     }
@@ -252,21 +248,25 @@ export default class ThresholdDigital extends Vue {
 .i-normal {
     background: var(--normal);
     color: var(--text-alert-color);
+    text-shadow: 1px 1px 1px #333333;
 }
 
 .i-warning {
     background: var(--warning);
     color: var(--text-alert-warning-color);
+    text-shadow: 1px 1px 1px #333333;
 }
 
 .i-major {
     background: var(--major);
     color: var(--text-alert-color);
+    text-shadow: 1px 1px 1px #333333;
 }
 
 .i-critical {
     background: var(--critical);
     color: var(--text-alert-color);
+    text-shadow: 1px 1px 1px #333333;
 }
 
 .i-digit-row {

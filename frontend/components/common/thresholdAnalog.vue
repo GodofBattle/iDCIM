@@ -343,52 +343,52 @@ type EditControl = {
     props: {
         n3: {
             type: Number,
-            default: 20
+            default: 20,
         },
         n2: {
             type: Number,
-            default: 30
+            default: 30,
         },
         n1: {
             type: Number,
-            default: 40
+            default: 40,
         },
         p1: {
             type: Number,
-            default: 60
+            default: 60,
         },
         p2: {
             type: Number,
-            default: 70
+            default: 70,
         },
         p3: {
             type: Number,
-            default: 80
+            default: 80,
         },
         min: {
             type: Number,
-            default: undefined
+            default: undefined,
         },
         max: {
             type: Number,
-            default: undefined
+            default: undefined,
         },
         step: {
             type: Number,
-            default: null
+            default: null,
         },
         disabled: {
             type: Boolean,
-            default: false
+            default: false,
         },
         showMinMax: {
             type: Boolean,
-            default: false
+            default: false,
         },
         ariaLabelledBy: {
             type: String,
-            default: null
-        }
+            default: null,
+        },
     },
     watch: {
         showMinMax(_is_show) {
@@ -412,8 +412,8 @@ type EditControl = {
                     this.$emit('update:min', this.$props.n3);
                 }
             }
-        }
-    }
+        },
+    },
 })
 export default class ThresholdAnalog extends Vue {
     $refs!: {
@@ -439,7 +439,7 @@ export default class ThresholdAnalog extends Vue {
         n1: false,
         p1: false,
         p2: false,
-        p3: false
+        p3: false,
     };
 
     beforeDestroy() {
@@ -451,16 +451,16 @@ export default class ThresholdAnalog extends Vue {
             'p-slider p-component',
             'p-slider-horizontal',
             {
-                'p-disabled': this.$props.disabled
-            }
+                'p-disabled': this.$props.disabled,
+            },
         ];
     }
 
     get editorClass(): Array<string | object> {
         return [
             {
-                'p-disabled': this.$props.disabled
-            }
+                'p-disabled': this.$props.disabled,
+            },
         ];
     }
 
@@ -548,7 +548,7 @@ export default class ThresholdAnalog extends Vue {
         return {
             left: '0%',
             width: this.rangeN2Position + '%',
-            background: 'var(--major)'
+            background: 'var(--major)',
         };
     }
 
@@ -557,7 +557,7 @@ export default class ThresholdAnalog extends Vue {
         return {
             left: this.rangeN2Position + '%',
             width: this.rangeN1Position - this.rangeN2Position + '%',
-            background: 'var(--warning)'
+            background: 'var(--warning)',
         };
     }
 
@@ -566,7 +566,7 @@ export default class ThresholdAnalog extends Vue {
         return {
             left: this.rangeN1Position + '%',
             width: this.rangeP1Position - this.rangeN1Position + '%',
-            background: 'var(--normal)'
+            background: 'var(--normal)',
         };
     }
 
@@ -575,7 +575,7 @@ export default class ThresholdAnalog extends Vue {
         return {
             left: this.rangeP1Position + '%',
             width: this.rangeP2Position - this.rangeP1Position + '%',
-            background: 'var(--warning)'
+            background: 'var(--warning)',
         };
     }
 
@@ -584,7 +584,7 @@ export default class ThresholdAnalog extends Vue {
         return {
             left: this.rangeP2Position + '%',
             width: 100 - this.rangeP2Position + '%',
-            background: 'var(--major)'
+            background: 'var(--major)',
         };
     }
 
@@ -884,11 +884,13 @@ export default class ThresholdAnalog extends Vue {
 .i-major {
     background: var(--major);
     color: var(--text-alert-color);
+    text-shadow: 1px 1px 1px #333333;
 }
 
 .i-critical {
     background: var(--critical);
     color: var(--text-alert-color);
+    text-shadow: 1px 1px 1px #333333;
 }
 
 .i-input-minmax {

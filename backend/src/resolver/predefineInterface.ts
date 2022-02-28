@@ -1,12 +1,14 @@
 import { AuthenticationError, SchemaError, UserInputError } from 'apollo-server-express';
 import { FileUpload, GraphQLUpload } from 'graphql-upload';
 import { Ctx, Mutation, Query, Resolver, PubSub, Publisher, Args, ID, Arg, Int } from "type-graphql";
-import { getRepository, MoreThan } from 'typeorm';
+import { DeleteResult, getRepository, getTreeRepository, MoreThan } from 'typeorm';
 
 import { pd_asset_code } from '../entity/database/pd_asset_code';
 import { pd_file } from '../entity/database/pd_file';
 import { pd_interface, pd_interface_args } from '../entity/database/pd_interface';
 import { pd_modbus_cmd, pd_modbus_cmd_arg, pd_modbus_cmd_input } from '../entity/database/pd_modbus_cmd';
+import { pd_prod_intf } from '../entity/database/pd_prod_intf';
+import { pd_sensor } from '../entity/database/pd_sensor';
 
 import streamToBuffer from '../utils/streamToBuffer';
 
@@ -110,22 +112,34 @@ export class PredefinedInterfaceResolver {
 
             if (!ID) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
 
-            // by shkoh 20211007: 미구현. 추후에 Interface의 존재여부를 파악하여 삭제를 막음
-            // by shkoh 20211007: 예시
-            // const hasChild = await getRepository(pd_product).count({ where: { MANUFACTURER_ID: ID } });
+            let has_child = await getRepository(pd_prod_intf).count({ PD_INTF_ID: ID });
+            if (has_child > 0) {
+                throw new SchemaError('제품과 연계된 인터페이스가 존재합니다');
+            }
 
-            // if (hasChild > 0) {
-            //     throw new SchemaError('제품이 존재합니다');
-            // }
+            has_child = await getRepository(pd_modbus_cmd).count({ PD_INTF_ID: ID });
+            if (has_child > 0) {
+                throw new SchemaError('지정 인터페이스 안에 등록된 통신방법이 존재합니다');
+            }
 
-            const predefine_interface_data = await getRepository(pd_interface).findOne(ID);
-            if (predefine_interface_data.PROTOCOL_FILE_ID) await getRepository(pd_file).delete({ ID: predefine_interface_data.PROTOCOL_FILE_ID });
+            has_child = await getRepository(pd_sensor).count({ PD_INTF_ID: ID });
+            if (has_child > 0) {
+                throw new SchemaError('지정 인터페이스 안에 등록된 임계치 정보가 존재합니다');
+            }
 
-            // by shkoh 20211007: 추후에 인터페이스와 연관된 모든 정보(통신방법, 수집항목, 제어항목 등등)를 삭제해야함
-            await getRepository(pd_modbus_cmd).delete({ PD_INTF_ID: ID });
+            // by shkoh 20220225: 미구현. 추후에 Interface와 연계된 제어 컨트롤도 체크함
+            let result: DeleteResult;
+            if (has_child === 0) {
+                const predefine_interface_data = await getRepository(pd_interface).findOne(ID);
+                if (predefine_interface_data.PROTOCOL_FILE_ID) await getRepository(pd_file).delete({ ID: predefine_interface_data.PROTOCOL_FILE_ID });
 
-            const result = await getRepository(pd_interface).delete(ID);
-            return result.affected > 0 ? true : false;
+                // by shkoh 20211007: 추후에 인터페이스와 연관된 모든 정보(통신방법, 수집항목, 제어항목 등등)를 삭제해야함
+                await getRepository(pd_modbus_cmd).delete({ PD_INTF_ID: ID });
+
+                result = await getRepository(pd_interface).delete(ID);
+            }
+
+            return has_child > 0 ? false : result.affected > 0 ? true : false;
         } catch (err) {
             throw new SchemaError(err.message);
         }
@@ -316,7 +330,7 @@ export class PredefinedInterfaceResolver {
         try {
             await publish();
 
-            if(input.length === 0) throw new UserInputError('전달한 인자의 데이터가 존재하지 않습니다');
+            if (input.length === 0) throw new UserInputError('전달한 인자의 데이터가 존재하지 않습니다');
 
             let is_result: number = 0;
             input.forEach(async (comm: pd_modbus_cmd_input) => {
