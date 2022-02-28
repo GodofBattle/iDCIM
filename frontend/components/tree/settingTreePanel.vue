@@ -43,7 +43,9 @@
                 ></setting-asset-tree>
             </div>
             <div v-else-if="mode === 1">
-                <h1>POSITION</h1>
+                <setting-position-tree
+                    ref="settingPositionTreeRef"
+                ></setting-position-tree>
             </div>
             <div v-else-if="mode === 2">
                 <h1>CUSTOM</h1>

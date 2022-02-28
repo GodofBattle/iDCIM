@@ -4,7 +4,9 @@ import { $apolloHelper } from '../plugins/apolloHelper';
 
 export const state = () => ({
     ui: {
-        is_sidebar: true
+        is_sidebar: true,
+        is_pos_tree: false,
+        is_cus_tree: false
     },
     auth: {
         authenticated: false,
@@ -58,6 +60,12 @@ export const mutations = {
     REFRESHTOKEN: (state, { access_token, refresh_token }) => {
         state.auth.access_token = access_token;
         state.auth.refresh_token = refresh_token;
+    },
+    ISPOSTREE: (state, is_enable) => {
+        state.ui.is_pos_tree = is_enable === 1;
+    },
+    ISCUSTREE: (state, is_enable) => {
+        state.ui.is_cus_tree = is_enable === 1;
     }
 };
 
@@ -140,5 +148,27 @@ export const actions = {
             .catch((error) => {
                 console.error(error.message);
             });
+    },
+    TREE: ({ commit }) => {
+        return new Promise((resolve, reject) => {
+            const treeQuery = gql`
+                query {
+                    Site {
+                        IS_ENABLE_CUST_HIER_P
+                        IS_ENABLE_CUST_HIER_C
+                    }
+                }
+            `
+            $apolloClient
+                .query({ query: treeQuery })
+                .then(({ data: { Site } }) => {
+                    if (Site) {
+                        commit('ISPOSTREE', Site.IS_ENABLE_CUST_HIER_P);
+                        commit('ISCUSTREE', Site.IS_ENABLE_CUST_HIER_C);
+                    }
+                }).catch(async (error) => {
+                    console.error(error);
+                });
+        });
     }
 };
