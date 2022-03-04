@@ -5,7 +5,8 @@
             <Divider></Divider>
         </div>
         <div class="p-mt-2 p-mb-2">
-            <TieredMenu :model="items" style="width: 100%"></TieredMenu>
+            <!-- <TieredMenu :model="items" style="width: 100%"></TieredMenu> -->
+            <i-tiered-menu :model="items" style="width: 100%"></i-tiered-menu>
         </div>
         <div class="p-mt-auto">
             <Tag :value="nowTime" style="width: 100%"></Tag>
@@ -22,8 +23,8 @@ let timerId: NodeJS.Timeout;
 
 @Component<HeadLeft>({
     props: {
-        items: Array
-    }
+        items: Array,
+    },
 })
 export default class HeadLeft extends Vue {
     nowTime = new String('0000/00/00 00:00:00');

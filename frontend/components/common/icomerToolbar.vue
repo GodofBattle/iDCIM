@@ -1,17 +1,15 @@
 <template>
     <div id="i-toolbar">
         <Toolbar>
-            <template #left>
+            <template #start>
                 <Button
                     icon="pi pi-bars"
-                    class="
-                        p-mr-2 p-button-raised p-button-text p-button-secondary
-                    "
+                    class="p-mr-2 p-button-raised p-button-text p-button-secondary"
                     @click="toggleSidebar"
                 ></Button>
                 <div class="i-title p-text-bold">{{ title }}</div>
             </template>
-            <template #right>
+            <template #end>
                 <Button
                     :label="userName"
                     class="p-button-link"
@@ -46,18 +44,18 @@ import Vue from 'vue';
 
 export default Vue.extend({
     props: {
-        title: String
+        title: String,
     },
     data() {
         return {
-            showUserDialog: false
+            showUserDialog: false,
         };
     },
     computed: {
         userName() {
             const _user_name = this.$store.state.sessionStorage.auth.user.name;
             return `${_user_name} 님`;
-        }
+        },
     },
     methods: {
         toggleSidebar() {
@@ -74,8 +72,8 @@ export default Vue.extend({
             this.$store.dispatch('sessionStorage/SIGNOUT').then(() => {
                 this.$router.push({ name: 'login' });
             });
-        }
-    }
+        },
+    },
 });
 </script>
 
