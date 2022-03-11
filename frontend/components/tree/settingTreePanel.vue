@@ -1,15 +1,22 @@
 <template>
-    <div id="settingTreeCard">
+    <div id="settingTreeCard" v-show="loaded">
         <div class="p-d-flex p-px-2 p-mb-2">
             <div class="p-as-center p-pl-2 p-d-flex i-header-title">
-                <div v-if="viewCheck.is" class="p-field-checkbox p-mb-0 p-mr-2">
-                    <Checkbox id="view-check-is" :binary="true" />
+                <div
+                    v-if="is_viewing_checkbox"
+                    class="p-field-checkbox p-mb-0 p-mr-2"
+                >
+                    <Checkbox
+                        id="view-check-is"
+                        :binary="true"
+                        v-model="is_enable_tree"
+                    />
                 </div>
-                {{ treeTitle }}
+                <span>{{ treeTitle }}</span>
             </div>
             <div class="p-ml-auto p-d-flex">
                 <div
-                    v-if="viewCheck.isAlias"
+                    v-if="is_viewing_alias"
                     class="p-field-checkbox p-mb-0 p-mr-3"
                 >
                     <Checkbox
@@ -45,6 +52,7 @@
             <div v-else-if="mode === 1">
                 <setting-position-tree
                     ref="settingPositionTreeRef"
+                    :disabled="!is_enable_tree"
                 ></setting-position-tree>
             </div>
             <div v-else-if="mode === 2">
@@ -89,16 +97,27 @@ type AssetTree = {
         treeTitle: String,
         mode: Number,
     },
+    watch: {
+        is_enable_tree(val) {
+            switch (this.$props.mode) {
+                case 1: {
+                    this.$store.dispatch('sessionStorage/SETPOSITIONTREE', val);
+                    break;
+                }
+                case 2: {
+                    this.$store.dispatch('sessionStorage/SETCUSTOMTREE', val);
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        },
+    },
 })
 export default class SettingTreePanel extends Vue {
     $refs!: {
         settingAssetTreeRef: any;
-    };
-    // by shkoh 20220120: viewCheck는 3종류의 트리를 mode 형식에 따라서 구분짓기 위하여 구현된 기능
-    // by shkoh 20220120: 향후에 기능 분리가 필요한 경우에는 사용할 필요가 없다
-    viewCheck = {
-        is: this.$props.mode !== 0,
-        isAlias: this.$props.mode === 0,
     };
 
     isAlias: boolean = false;
@@ -107,6 +126,12 @@ export default class SettingTreePanel extends Vue {
 
     showSettingAssetTreeAddPanel: boolean = false;
     showSettingAssetTreeEditPanel: boolean = false;
+
+    is_enable_tree: boolean = false;
+
+    mounted() {
+        this.is_enable_tree = this.getCustomTreeState();
+    }
 
     addAssetNode() {
         switch (this.$props.mode) {
@@ -146,6 +171,37 @@ export default class SettingTreePanel extends Vue {
         if (key !== this.selectionAssetTreeKey) {
             this.$refs.settingAssetTreeRef.changeKey(key);
         }
+    }
+
+    getCustomTreeState() {
+        let is = false;
+
+        if (this.loaded) {
+            switch (this.$props.mode) {
+                case 1: {
+                    is = this.$store.state.sessionStorage.ui.is_pos_tree;
+                    break;
+                }
+                case 2: {
+                    is = this.$store.state.sessionStorage.ui.is_cus_tree;
+                    break;
+                }
+            }
+        }
+
+        return is;
+    }
+
+    get loaded() {
+        return this.$store.state.sessionStorage.status;
+    }
+
+    get is_viewing_checkbox() {
+        return this.$props.mode === 1 || this.$props.mode === 2;
+    }
+
+    get is_viewing_alias() {
+        return this.$props.mode === 0;
     }
 
     get isDisabledAddButton(): boolean {

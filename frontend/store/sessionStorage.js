@@ -170,5 +170,39 @@ export const actions = {
                     console.error(error);
                 });
         });
+    },
+    SETPOSITIONTREE: ({ commit }, is_enable) => {
+        const setMuate = gql`
+            mutation {
+                SetTreeConfig(IS_ENABLE_P: ${is_enable ? 1 : 0})
+            }
+        `
+
+        $apolloClient
+            .mutate({ mutation: setMuate })
+            .then(({ data: { SetTreeConfig } }) => {
+                if (SetTreeConfig) {
+                    commit('ISPOSTREE', is_enable ? 1 : 0)
+                }
+            }).catch(async (error) => {
+                console.info(error);
+            });
+    },
+    SETCUSTOMTREE: ({ commit }, is_enable) => {
+        const setMuate = gql`
+            mutation {
+                SetTreeConfig(IS_ENABLE_C: ${is_enable ? 1 : 0})
+            }
+        `
+
+        $apolloClient
+            .mutate({ mutation: setMuate })
+            .then(({ data: { SetTreeConfig } }) => {
+                if (SetTreeConfig) {
+                    commit('ISCUSTREE', is_enable ? 1 : 0)
+                }
+            }).catch(async (error) => {
+                console.info(error);
+            });
     }
 };

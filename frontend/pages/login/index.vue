@@ -82,8 +82,8 @@ export default class Login extends Vue {
         return {
             link: [
                 { rel: 'icon', type: 'image/x-icon', href: 'favicon.ico' },
-                { rel: 'stylesheet', href: `themes/${theme}/theme.css` }
-            ]
+                { rel: 'stylesheet', href: `themes/${theme}/theme.css` },
+            ],
         };
     }
 
@@ -95,7 +95,7 @@ export default class Login extends Vue {
                 severity: 'error',
                 summary: '세션만료',
                 detail: '세션이 만료되어 로그인 페이지로 이동합니다',
-                life: 3000
+                life: 3000,
             });
         }
     }
@@ -121,7 +121,7 @@ export default class Login extends Vue {
                     }
                 }
             `,
-                errorPolicy: 'ignore'
+                errorPolicy: 'ignore',
             })
             .then(
                 async ({
@@ -129,9 +129,9 @@ export default class Login extends Vue {
                         Login: {
                             ROLE,
                             TOKEN: { ACCESS_TOKEN, REFRESH_TOKEN },
-                            USER: { USER_ID, USER_GROUP_ID, NAME }
-                        }
-                    }
+                            USER: { USER_ID, USER_GROUP_ID, NAME },
+                        },
+                    },
                 }) => {
                     await this.$store.dispatch('sessionStorage/SIGNIN', {
                         role: ROLE,
@@ -139,19 +139,23 @@ export default class Login extends Vue {
                         refresh_token: REFRESH_TOKEN,
                         user_id: USER_ID,
                         user_group_id: USER_GROUP_ID,
-                        user_name: NAME
+                        user_name: NAME,
                     });
                 }
             )
             .then(() => {
                 this.$router.push('/icomer/code');
             })
+            .then(async () => {
+                // by shkoh 20220304: 로그인과 동시에 설정에 필요한 값을 지정
+                await this.$store.dispatch('sessionStorage/TREE');
+            })
             .catch(() => {
                 this.$toast.add({
                     severity: 'info',
                     summary: '로그인 실패',
                     detail: 'ID 혹은 패스워드를 확인하세요',
-                    life: 1500
+                    life: 1500,
                 });
             });
     }

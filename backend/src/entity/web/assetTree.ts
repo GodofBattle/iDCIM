@@ -26,15 +26,11 @@ export class AssetTree {
     @Field(() => [AssetTree]!, { nullable: true })
     children: AssetTree[] | null;
 
-    @Field(() => AssetTree, { nullable: true })
-    parent: AssetTree | null;
-
     constructor({ key, label, alias, order, parent = null, children = null, parent_key = null }) {
         this.key = key;
         this.label = label;
         this.alias = alias;
         this.order = order;
-        this.parent = parent;
         this.parent_key = parent_key;
         this.children = children !== null ? children : new Array<AssetTree>();
     }

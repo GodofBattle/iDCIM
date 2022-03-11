@@ -18,6 +18,7 @@
             </template>
             <div v-if="filter" class="p-tree-filter-container">
                 <input
+                    :disabled="disabled"
                     v-model="filterValue"
                     type="text"
                     autocomplete="off"
@@ -122,6 +123,10 @@ import DomHandler from '@/plugins/primevue.DomHandler';
             default: null,
         },
         onlyMoveableSameType: {
+            type: Boolean,
+            default: false,
+        },
+        disabled: {
             type: Boolean,
             default: false,
         },
@@ -454,10 +459,14 @@ export default class IMoveableTree extends Vue {
                             is_ban = dest_ancestor.isEqualNode(this.target);
                         }
 
-                        // by shkoh 20220217: target node의 바로 위 부모를 검색하여 dest node인 경우에는 아무 일도 일어나지 않음
+                        // by shkoh 20220311: plus 상태, 즉 부모에게 추가가 가능한 상태에서, target node의 바로 위 부모를 검색하여 dest node인 경우에는 아무 일도 일어나지 않음
                         const target_parent =
                             this.target.parentElement?.closest(`[data-depth]`);
-                        if (!is_ban && target_parent) {
+                        if (
+                            !is_ban &&
+                            target_parent &&
+                            this.draggedIconState === 'plus'
+                        ) {
                             is_ban = target_parent.isEqualNode(this.dest);
                         }
 

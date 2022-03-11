@@ -3,6 +3,7 @@ import { Arg, Args, Ctx, Mutation, PubSub, Publisher, Query, Resolver } from "ty
 import { Between, getRepository, MoreThan, MoreThanOrEqual } from "typeorm";
 
 import { ac_config } from "../entity/database/ac_config";
+import { ac_cust_hier } from "../entity/database/ac_cust_hier";
 import { pd_asset_code } from "../entity/database/pd_asset_code";
 import { pd_asset_hier } from "../entity/database/pd_asset_hier";
 import { AssetTree, AssetTreeArgs } from "../entity/web/assetTree";
@@ -21,6 +22,7 @@ export class TreeResolver {
             const root = await getRepository(ac_config).findOne({ where: { ID: 1 } });
             const site_name = root.SITE_NAME ? root.SITE_NAME : 'DCIM';
 
+            // by shkoh 20220311: 최상위 루트 정보
             const asset_list = (await getRepository(pd_asset_hier).find({ order: { ORDER: 'ASC' } })).map((asset: pd_asset_hier) => {
                 return {
                     key: `pah_${asset.ID}`,
@@ -69,6 +71,7 @@ export class TreeResolver {
             throw new SchemaError(err.message);
         }
     }
+
     @Mutation(() => Boolean)
     async MoveAssetTreeNode(
         @Arg('key', () => String) id: string,
@@ -140,5 +143,40 @@ export class TreeResolver {
         is_result += new_order_code.affected;
 
         return is_result;
+    }
+
+    @Query(() => [AssetTree])
+    async PositionTree(@Ctx() ctx: any): Promise<AssetTree[]> {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            const root = await getRepository(ac_config).findOne({ where: { ID: 1 } });
+            const site_name = root.SITE_NAME ? root.SITE_NAME : 'DCIM';
+
+            const trees = new Array({
+                key: `prh_0`,
+                label: site_name,
+                order: 1,
+                parent_key: null,
+                type: 'SITE'
+            });
+
+            (await getRepository(ac_cust_hier).find({ where: { TYPE: 'P' }, order: { P_TID: 'ASC', ORDER: 'ASC' } })).forEach((node: ac_cust_hier) => {
+                trees.push({
+                    key: `ach_${node.TID}`,
+                    label: node.NAME,
+                    order: node.ORDER,
+                    parent_key: node.P_TID === 0 ? `prh_0` : `ach_${node.P_TID}`,
+                    type: 'POSITION'
+                })
+            });
+
+            const position_tree: Array<AssetTree> = arrayToTree(trees, { id: 'key', p_id: 'parent_key' }) as Array<AssetTree>;
+            return position_tree;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
     }
 }
