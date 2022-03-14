@@ -9,7 +9,23 @@
             :expanded-keys.sync="treeExpandedKey"
             :addable-type="addableType"
             :moveable-type="moveableType"
-        ></i-moveable-tree>
+            @move-tree="movePositionTree"
+            @insert-tree="movePositionTree"
+            @node-select="onNodeSelect"
+            @node-unselect="onNodeUnselect"
+        >
+            <template #default="slotProps">
+                <div class="p-d-flex">
+                    <i
+                        class="pi pi-folder-open p-p-1 p-mr-1"
+                        style="font-size: 1.2rem"
+                    ></i>
+                    <div class="p-p-1">
+                        {{ slotProps.node.label }}
+                    </div>
+                </div>
+            </template>
+        </i-moveable-tree>
     </div>
 </template>
 
@@ -85,6 +101,52 @@ export default class SettingPositionTree extends Vue {
     treeExpandedKey: any = { prh_0: true };
     addableType = { SITE: true, POSITION: true };
     moveableType = { POSITION: true };
+
+    onNodeSelect(node: any) {
+        this.$emit('update:selectedNode', node);
+    }
+
+    onNodeUnselect(node: any) {
+        this.$emit('update:selectedNode', null);
+    }
+
+    movePositionTree(target: any, dest: any) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation {
+                        MovePositionTreeNode(
+                            key: "${target.key}"
+                            parent_key: "${target.parent_key}"
+                            order: ${target.order}
+                        )
+                    }
+                `,
+            })
+            .then(() => {
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '위치트리 위치 변경 완료',
+                    detail: `${dest.label} >> ${target.label}`,
+                    life: 1800,
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '위치트리 위치 변경 실패',
+                    detail: error.message,
+                    life: 2000,
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
 }
 </script>
 

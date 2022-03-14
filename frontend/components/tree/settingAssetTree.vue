@@ -166,7 +166,7 @@ export default class SettingAssetTree extends Vue {
             .then(() => {
                 this.$toast.add({
                     severity: 'info',
-                    summary: '자산트리 안으로 이동 완료',
+                    summary: '자산트리 위치 변경 완료',
                     detail: `${dest.label} >> ${target.label}`,
                     life: 1800,
                 });
@@ -176,7 +176,7 @@ export default class SettingAssetTree extends Vue {
 
                 this.$toast.add({
                     severity: 'error',
-                    summary: '자산트리 안으롤 이동 실패',
+                    summary: '자산트리 위치 변경 실패',
                     detail: error.message,
                     life: 2000,
                 });

@@ -664,6 +664,7 @@ export default class IMoveableTree extends Vue {
             {
                 'p-tree-selectable': this.$props.selectionMode !== null,
                 'p-tree-loading': this.$props.loading,
+                'p-disabled': this.$props.disabled,
             },
         ];
     }
