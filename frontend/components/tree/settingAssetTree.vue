@@ -131,6 +131,15 @@ export default class SettingAssetTree extends Vue {
 
         if (key) {
             this.treeExpandedKey[key] = true;
+
+            Object.defineProperty(this.selectionKeys, key, {
+                value: true,
+                configurable: true,
+                enumerable: true,
+                writable: true,
+            });
+        } else {
+            this.selectionKeys = {};
         }
     }
 

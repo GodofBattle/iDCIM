@@ -6,6 +6,7 @@
             :moveable="true"
             :disabled="disabled"
             selectionMode="single"
+            :selection-keys.sync="selectionKeys"
             :expanded-keys.sync="treeExpandedKey"
             :addable-type="addableType"
             :moveable-type="moveableType"
@@ -33,12 +34,32 @@
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
+import { isStringObject } from 'util/types';
 
 @Component<SettingPositionTree>({
     props: {
         disabled: {
             type: Boolean,
             default: false,
+        },
+        selectedNodeKey: {
+            type: String,
+            default: null,
+        },
+        selectedNode: {
+            type: Object,
+            default: null,
+        },
+    },
+    watch: {
+        selectionKeys(_new_key) {
+            this.$emit('update:selectedNodeKey', null);
+
+            for (const [key, value] of Object.entries(_new_key)) {
+                if (value) {
+                    this.$emit('update:selectedNodeKey', key);
+                }
+            }
         },
     },
     apollo: {
@@ -101,6 +122,31 @@ export default class SettingPositionTree extends Vue {
     treeExpandedKey: any = { prh_0: true };
     addableType = { SITE: true, POSITION: true };
     moveableType = { POSITION: true };
+
+    selectionKeys: null | object = null;
+
+    refresh(key: string | undefined) {
+        this.$apollo.queries.positionTree.refresh();
+
+        if (key) {
+            this.treeExpandedKey[key] = true;
+
+            Object.defineProperty(this.selectionKeys, key, {
+                value: true,
+                configurable: true,
+                enumerable: true,
+                writable: true,
+            });
+        } else {
+            this.selectionKeys = {};
+        }
+    }
+
+    changeKey(key: string) {
+        if (this.selectionKeys) {
+            this.selectionKeys = {};
+        }
+    }
 
     onNodeSelect(node: any) {
         this.$emit('update:selectedNode', node);

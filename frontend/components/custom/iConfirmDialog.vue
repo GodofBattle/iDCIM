@@ -40,14 +40,14 @@ import { eventBus } from '@/plugins/vueEventBus';
 export default {
     components: {
         ConfirmDialog: Dialog,
-        ConfirmButton: Button
+        ConfirmButton: Button,
     },
     props: {
-        group: String
+        group: String,
     },
     data: () => ({
         visible: false,
-        confirmation: null
+        confirmation: null,
     }),
     computed: {
         header() {
@@ -62,7 +62,7 @@ export default {
         iconClass() {
             return [
                 'p-confirm-dialog-icon',
-                this.confirmation ? this.confirmation.icon : null
+                this.confirmation ? this.confirmation.icon : null,
             ];
         },
         message() {
@@ -84,7 +84,7 @@ export default {
                 'p-confirm-dialog-reject',
                 this.confirmation
                     ? this.confirmation.rejectClass || 'p-button-text'
-                    : null
+                    : null,
             ];
         },
         acceptLabel() {
@@ -99,9 +99,9 @@ export default {
         acceptClass() {
             return [
                 'p-confirm-dialog-accept',
-                this.confirmation ? this.confirmation.acceptClass : null
+                this.confirmation ? this.confirmation.acceptClass : null,
             ];
-        }
+        },
     },
     mounted() {
         eventBus.$on('confirmDialog', (options) => {
@@ -132,7 +132,6 @@ export default {
             }
         },
         reject() {
-            console.info('reject');
             if (this.confirmation?.reject) {
                 this.confirmation.reject();
             }
@@ -142,7 +141,7 @@ export default {
             if (this.confirmation?.accept) this.confirmation.accept();
 
             this.visible = false;
-        }
-    }
+        },
+    },
 };
 </script>

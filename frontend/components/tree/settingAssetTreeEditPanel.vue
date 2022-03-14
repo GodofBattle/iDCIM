@@ -442,7 +442,7 @@ export default class SettingAssetTreeEditPanel extends Vue {
     onClickDeleteButton() {
         const message = this.$props.isAssetCode
             ? `[${this.dbPredefineAssetCode.NAME}] 자산분류코드를 삭제하시겠습니까?\n해당 자산분류코드를 사용 중에 있다면 삭제가 불가합니다`
-            : `[${this.dbPredefineTreeHier.NAME}] 자산트리를 삭제하시겠습니까?\n하위 트리노드가 존재하는 경우에는 삭제가 불가합니다`;
+            : `[${this.dbPredefineTreeHier.NAME}] 자산트리를 삭제하시겠습니까?\n하위 항목이 존재하는 경우에는 삭제가 불가합니다`;
         const header = this.$props.isAssetCode
             ? `자산분류코드 [${this.dbPredefineAssetCode.NAME}] 삭제`
             : `자산트리 ${this.dbPredefineTreeHier.NAME} 삭제`;
@@ -483,7 +483,7 @@ export default class SettingAssetTreeEditPanel extends Vue {
                     this.$toast.add({
                         severity: 'warn',
                         summary: '자산트리 삭제 불가',
-                        detail: `${this.predefineTreeHier.NAME}의 하위노드가 존재하여 삭제할 수 없습니다`,
+                        detail: `${this.predefineTreeHier.NAME}의 하위 항목이 존재하여 삭제할 수 없습니다`,
                         life: 2500,
                     });
                 } else {

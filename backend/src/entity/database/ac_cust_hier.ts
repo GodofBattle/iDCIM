@@ -1,4 +1,4 @@
-import { Field, ObjectType, ID, Int } from "type-graphql";
+import { Field, ObjectType, ID, Int, ArgsType } from "type-graphql";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
 
@@ -40,4 +40,22 @@ export class ac_cust_hier {
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256, nullable: true, default: null, comment: '설명' })
     REMARK: string | null;
+}
+
+@ArgsType()
+export class ac_cust_hier_args {
+    @Field(() => String!)
+    TYPE: string;
+
+    @Field(() => Int, { nullable: true })
+    TID: number;
+
+    @Field(() => String, { nullable: true })
+    NAME: string | null;
+
+    @Field(() => Int, { nullable: true })
+    P_TID: number | null;
+
+    @Field(() => Int, { nullable: true })
+    ORDER: number | null;
 }

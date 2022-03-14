@@ -21,6 +21,7 @@ import { PredefineSensorResolver } from "./resolver/predefineSensor";
 import { PredefineThresholdResolver } from "./resolver/predefineThreshold";
 import { FileResolver } from './resolver/file';
 import { TreeResolver } from './resolver/tree';
+import { AccountCustomResolver } from './resolver/accountCustom';
 
 import Auth from './utils/auth';
 
@@ -38,7 +39,8 @@ const schemas = buildSchemaSync({
         PredefineSensorResolver,
         PredefineThresholdResolver,
         FileResolver,
-        TreeResolver
+        TreeResolver,
+        AccountCustomResolver
     ],
 });
 

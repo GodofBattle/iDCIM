@@ -36,7 +36,7 @@
                     class="p-button-rounded p-button-text p-button-primary"
                     icon="pi pi-plus"
                     :disabled="isDisabledAddButton"
-                    @click="addAssetNode"
+                    @click="addNode"
                 ></Button>
             </div>
         </div>
@@ -53,6 +53,8 @@
                 <setting-position-tree
                     ref="settingPositionTreeRef"
                     :disabled="!is_enable_tree"
+                    :selected-node-key.sync="selectionPositionTreeKey"
+                    :selected-node.sync="selectionPositionInfo"
                 ></setting-position-tree>
             </div>
             <div v-else-if="mode === 2">
@@ -73,6 +75,20 @@
             @asset-edit="editAssetTree"
         >
         </setting-asset-tree-edit-panel>
+        <setting-position-tree-add-panel
+            :visible.sync="showSettingPositionTreeAddPanel"
+            :parent-key="selectedKey"
+            :parent-name="selectedName"
+            :new-order="childrenCountOfSelectedNode + 1"
+            @tree-add="addPositionTree"
+        >
+        </setting-position-tree-add-panel>
+        <setting-position-tree-edit-panel
+            :visible.sync="showSettingPositionTreeEditPanel"
+            :node-key="selectedKey"
+            @tree-edit="editPositionTree"
+        >
+        </setting-position-tree-edit-panel>
     </div>
 </template>
 
@@ -102,6 +118,9 @@ type AssetTree = {
             switch (this.$props.mode) {
                 case 1: {
                     this.$store.dispatch('sessionStorage/SETPOSITIONTREE', val);
+                    if (val === false) {
+                        this.$refs.settingPositionTreeRef.changeKey();
+                    }
                     break;
                 }
                 case 2: {
@@ -118,14 +137,20 @@ type AssetTree = {
 export default class SettingTreePanel extends Vue {
     $refs!: {
         settingAssetTreeRef: any;
+        settingPositionTreeRef: any;
     };
 
     isAlias: boolean = false;
     selectionAssetTreeKey: null | string = null;
     selectionAssetInfo: null | AssetTree = null;
 
+    selectionPositionTreeKey: null | string = null;
+    selectionPositionInfo: null | AssetTree = null;
+
     showSettingAssetTreeAddPanel: boolean = false;
     showSettingAssetTreeEditPanel: boolean = false;
+    showSettingPositionTreeAddPanel: boolean = false;
+    showSettingPositionTreeEditPanel: boolean = false;
 
     is_enable_tree: boolean = false;
 
@@ -133,7 +158,7 @@ export default class SettingTreePanel extends Vue {
         this.is_enable_tree = this.getCustomTreeState();
     }
 
-    addAssetNode() {
+    addNode() {
         switch (this.$props.mode) {
             case 0: {
                 if (this.isAssetCode) {
@@ -149,6 +174,10 @@ export default class SettingTreePanel extends Vue {
                 this.showSettingAssetTreeAddPanel = true;
                 break;
             }
+            case 1: {
+                this.showSettingPositionTreeAddPanel = true;
+                break;
+            }
         }
     }
 
@@ -158,11 +187,19 @@ export default class SettingTreePanel extends Vue {
                 this.showSettingAssetTreeEditPanel = true;
                 break;
             }
+            case 1: {
+                this.showSettingPositionTreeEditPanel = true;
+                break;
+            }
         }
     }
 
     addAssetTree(key: string) {
         this.$refs.settingAssetTreeRef.refresh(key);
+    }
+
+    addPositionTree(key: string) {
+        this.$refs.settingPositionTreeRef.refresh(key);
     }
 
     editAssetTree(key: string) {
@@ -171,6 +208,10 @@ export default class SettingTreePanel extends Vue {
         if (key !== this.selectionAssetTreeKey) {
             this.$refs.settingAssetTreeRef.changeKey(key);
         }
+    }
+
+    editPositionTree(key: string) {
+        this.$refs.settingPositionTreeRef.refresh(key);
     }
 
     getCustomTreeState() {
@@ -207,6 +248,8 @@ export default class SettingTreePanel extends Vue {
     get isDisabledAddButton(): boolean {
         if (this.$props.mode === 0) {
             return this.selectionAssetTreeKey === null || this.isAssetCode;
+        } else if (this.$props.mode === 1) {
+            return this.selectionPositionTreeKey === null;
         } else {
             return true;
         }
@@ -214,28 +257,87 @@ export default class SettingTreePanel extends Vue {
 
     get isDisabledEditButton(): boolean {
         if (this.$props.mode === 0) {
-            return this.selectionAssetTreeKey === null;
+            return (
+                this.selectionAssetInfo?.parent_key === null ||
+                this.selectionAssetTreeKey === null
+            );
+        } else if (this.$props.mode === 1) {
+            return (
+                this.selectionPositionInfo?.type === 'SITE' ||
+                this.selectionPositionTreeKey === null
+            );
         } else {
             return true;
         }
     }
 
     get selectedName(): string {
-        return this.selectionAssetInfo === null
-            ? ''
-            : this.selectionAssetInfo.name;
+        let _selected_name = '';
+
+        switch (this.$props.mode) {
+            case 0: {
+                _selected_name =
+                    this.selectionAssetInfo === null
+                        ? ''
+                        : this.selectionAssetInfo.name;
+                break;
+            }
+            case 1: {
+                _selected_name =
+                    this.selectionPositionInfo === null
+                        ? ''
+                        : this.selectionPositionInfo.label;
+                break;
+            }
+        }
+
+        return _selected_name;
     }
 
     get selectedKey(): number | string {
-        if (this.selectionAssetTreeKey === null) return 0;
+        let _selected_key: number | string = 0;
 
-        const [type, id] = this.selectionAssetTreeKey.split('_');
-        return id;
+        switch (this.$props.mode) {
+            case 0: {
+                if (this.selectionAssetTreeKey) {
+                    const [type, id] = this.selectionAssetTreeKey.split('_');
+                    _selected_key = id;
+                }
+                break;
+            }
+            case 1: {
+                if (this.selectionPositionTreeKey) {
+                    const [type, id] = this.selectionPositionTreeKey.split('_');
+                    _selected_key = Number(id);
+                }
+                break;
+            }
+        }
+
+        return _selected_key;
     }
 
     get childrenCountOfSelectedNode(): number {
-        if (this.selectionAssetInfo === null) return -1;
-        return this.selectionAssetInfo.children.length;
+        let _count_childerens = -1;
+
+        switch (this.$props.mode) {
+            case 0: {
+                if (this.selectionAssetInfo) {
+                    _count_childerens =
+                        this.selectionAssetInfo.children?.length;
+                }
+                break;
+            }
+            case 1: {
+                if (this.selectionPositionInfo) {
+                    _count_childerens =
+                        this.selectionPositionInfo.children?.length;
+                }
+                break;
+            }
+        }
+
+        return _count_childerens;
     }
 
     get isAssetCode(): boolean {
