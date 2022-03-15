@@ -13,19 +13,19 @@
                 <small> {{ subTitle }} </small>
             </div>
             <div class="p-field">
-                <label for="positionTreeName">위치트리명</label>
+                <label for="customTreeName">사용자트리명</label>
                 <InputText
                     v-model="treeName"
-                    id="positionTreeName"
+                    id="customTreeName"
                     type="text"
                     autocomplete="off"
-                    aria-describedby="positionTreeName-help"
+                    aria-describedby="customTreeName-help"
                     :class="{
                         'p-invalid': invalidInput.treeName,
                     }"
                     @input="validateTreeName"
                 ></InputText>
-                <small id="positionTreeName-help" class="p-error">
+                <small id="customTreeName-help" class="p-error">
                     {{ invalidInput.treeName }}
                 </small>
             </div>
@@ -50,7 +50,7 @@ import Vue from 'vue';
 import Component from '@/plugins/nuxt-class-component';
 import gql from 'graphql-tag';
 
-@Component<SettingPositionTreeAddPanel>({
+@Component<SettingCustomTreeAddPanel>({
     props: {
         visible: Boolean,
         parentKey: [Number, String],
@@ -58,7 +58,7 @@ import gql from 'graphql-tag';
         newOrder: Number,
     },
 })
-export default class SettingPositionTreeAddPanel extends Vue {
+export default class SettingCustomTreeAddPanel extends Vue {
     treeName: string = '';
     invalidInput = {
         treeName: undefined as String | undefined,
@@ -72,7 +72,7 @@ export default class SettingPositionTreeAddPanel extends Vue {
     validateTreeName(input: InputEvent) {
         const _input = input.toString();
         if (_input.length > 32) {
-            this.invalidInput.treeName = '위치트리명은 32자 이하입니다';
+            this.invalidInput.treeName = '사용자트리명은 32자 이하입니다';
         } else {
             this.invalidInput.treeName = undefined;
         }
@@ -82,8 +82,8 @@ export default class SettingPositionTreeAddPanel extends Vue {
         if (!this.validationCheck) {
             this.$toast.add({
                 severity: 'warn',
-                summary: '위치트리 항목 유효성 실패',
-                detail: '위치트리 입력항목들을 확인하세요',
+                summary: '사용자트리 항목 유효성 실패',
+                detail: '사용자트리 입력항목들을 확인하세요',
                 life: 2000,
             });
             return;
@@ -100,7 +100,7 @@ export default class SettingPositionTreeAddPanel extends Vue {
                 mutation: gql`
                     mutation {
                         AddCustomHier (
-                            TYPE: "P"
+                            TYPE: "C"
                             NAME: "${this.treeName}"
                             P_TID: ${this.$props.parentKey}
                             ORDER: ${this.$props.newOrder}
@@ -111,7 +111,7 @@ export default class SettingPositionTreeAddPanel extends Vue {
             .then(() => {
                 this.$toast.add({
                     severity: 'success',
-                    summary: '위치트리 추가',
+                    summary: '사용자트리 추가',
                     detail: `${this.treeName} 추가 완료`,
                     life: 1500,
                 });
@@ -125,7 +125,7 @@ export default class SettingPositionTreeAddPanel extends Vue {
 
                 this.$toast.add({
                     severity: 'error',
-                    summary: '위치트리 추가 실패',
+                    summary: '사용자트리 추가 실패',
                     detail: error.message,
                     life: 2000,
                 });
@@ -136,7 +136,7 @@ export default class SettingPositionTreeAddPanel extends Vue {
     }
 
     get title(): string {
-        return '위치트리 추가';
+        return '사용자트리 추가';
     }
 
     get subTitle(): string {

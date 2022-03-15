@@ -14,19 +14,19 @@
                 <small> {{ subTitle }} </small>
             </div>
             <div class="p-field">
-                <label for="positionTreeName">위치트리명</label>
+                <label for="customTreeName">사용자트리명</label>
                 <InputText
                     v-model="treeHier.NAME"
-                    id="positionTreeName"
+                    id="customTreeName"
                     type="text"
                     autocomplete="off"
-                    aria-describedby="positionTreeName-help"
+                    aria-describedby="customTreeName-help"
                     :class="{
                         'p-invalid': invalidInput.NAME,
                     }"
                     @input="validateTreeName"
                 ></InputText>
-                <small id="positionTreeName-help" class="p-error">
+                <small id="customTreeName-help" class="p-error">
                     {{ invalidInput.NAME }}
                 </small>
             </div>
@@ -63,7 +63,7 @@ type TreeHier = {
     NAME: string;
 };
 
-@Component<SettingPositionTreeEditPanel>({
+@Component<SettingCustomTreeEditPanel>({
     props: {
         visible: Boolean,
         nodeKey: [Number, String],
@@ -72,7 +72,7 @@ type TreeHier = {
         dbTreeHier: {
             query: gql`
                 query AccountCustomHier($TID: Int) {
-                    AccountCustomHier(TYPE: "P", TID: $TID) {
+                    AccountCustomHier(TYPE: "C", TID: $TID) {
                         NAME
                     }
                 }
@@ -96,7 +96,7 @@ type TreeHier = {
         },
     },
 })
-export default class SettingPositionTreeEditPanel extends Vue {
+export default class SettingCustomTreeEditPanel extends Vue {
     dbTreeHier: TreeHier = {
         NAME: '',
     };
@@ -126,15 +126,15 @@ export default class SettingPositionTreeEditPanel extends Vue {
     validateTreeName(input: InputEvent) {
         const _input = input.toString();
         if (_input.length > 32) {
-            this.invalidInput.NAME = '위치트리명은 32자 이하입니다';
+            this.invalidInput.NAME = '사용자트리명은 32자 이하입니다';
         } else {
             this.invalidInput.NAME = undefined;
         }
     }
 
     onClickDeleteButton() {
-        const header = `위치트리 항목 [${this.dbTreeHier.NAME}] 삭제`;
-        const message = `[${this.dbTreeHier.NAME}] 위치트리 항목을 삭제하시겠습니까?\n하위 항목이 존재하는 경우에는 삭제가 불가합니다`;
+        const header = `사용자트리 항목 [${this.dbTreeHier.NAME}] 삭제`;
+        const message = `[${this.dbTreeHier.NAME}] 사용자트리 항목을 삭제하시겠습니까?\n하위 항목이 존재하는 경우에는 삭제가 불가합니다`;
 
         this.$confirmDialog.require({
             group: 'deleteConfirmDialog',
@@ -154,8 +154,8 @@ export default class SettingPositionTreeEditPanel extends Vue {
         if (!this.validationCheck) {
             this.$toast.add({
                 severity: 'warn',
-                summary: '위치트리 항목 유효성 실패',
-                detail: '위치트리 입력항목들을 확인하세요',
+                summary: '사용자트리 항목 유효성 실패',
+                detail: '사용자트리 입력항목들을 확인하세요',
                 life: 2000,
             });
             return;
@@ -172,7 +172,7 @@ export default class SettingPositionTreeEditPanel extends Vue {
                 mutation: gql`
                     mutation {
                         UpdateCustomHier (
-                            TYPE: "P"
+                            TYPE: "C"
                             TID: ${this.$props.nodeKey}
                             NAME: "${this.treeHier.NAME}"
                         )
@@ -182,7 +182,7 @@ export default class SettingPositionTreeEditPanel extends Vue {
             .then(() => {
                 this.$toast.add({
                     severity: 'success',
-                    summary: '위치트리항목 변경완료',
+                    summary: '사용자트리 항목 변경완료',
                     detail: `${this.dbTreeHier.NAME}의 정보가 변경되었습니다`,
                     life: 1500,
                 });
@@ -196,7 +196,7 @@ export default class SettingPositionTreeEditPanel extends Vue {
 
                 this.$toast.add({
                     severity: 'error',
-                    summary: '위치트리 변경 실패',
+                    summary: '사용자트리 변경 실패',
                     detail: error.message,
                     life: 2000,
                 });
@@ -214,7 +214,7 @@ export default class SettingPositionTreeEditPanel extends Vue {
                 mutation: gql`
                     mutation {
                         DeleteCustomHier (
-                            TYPE: "P"
+                            TYPE: "C"
                             TID: ${this.$props.nodeKey}
                         )
                     }
@@ -224,14 +224,14 @@ export default class SettingPositionTreeEditPanel extends Vue {
                 if (DeleteCustomHier === -1) {
                     this.$toast.add({
                         severity: 'warn',
-                        summary: '위치트리 삭제 불가',
+                        summary: '사용자트리 삭제 불가',
                         detail: `${this.dbTreeHier.NAME}의 하위 항목이 존재하여 삭제할 수 없습니다`,
                         life: 2500,
                     });
                 } else {
                     this.$toast.add({
                         severity: 'success',
-                        summary: '위치트리 삭제완료',
+                        summary: '사용자트리 삭제완료',
                         detail: `${this.dbTreeHier.NAME}가 삭제되었습니다`,
                         life: 2000,
                     });
@@ -246,7 +246,7 @@ export default class SettingPositionTreeEditPanel extends Vue {
 
                 this.$toast.add({
                     severity: 'error',
-                    summary: '위치트리 삭제 실패',
+                    summary: '사용자트리 삭제 실패',
                     detail: error.message,
                     life: 2000,
                 });
@@ -257,7 +257,7 @@ export default class SettingPositionTreeEditPanel extends Vue {
     }
 
     get title(): string {
-        return '위치트리 수정';
+        return '사용자트리 수정';
     }
 
     get subTitle(): string {

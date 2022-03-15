@@ -1,6 +1,6 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
 import { Args, Ctx, Mutation, PubSub, Resolver, Publisher, Query, Int } from "type-graphql";
-import { DeleteResult, getRepository } from "typeorm";
+import { DeleteResult, getRepository, MoreThan } from "typeorm";
 
 import { ac_cust_hier, ac_cust_hier_args } from "../entity/database/ac_cust_hier";
 import { ac_user } from "../entity/database/ac_user";
@@ -90,6 +90,11 @@ export class AccountCustomResolver {
 
             let result: DeleteResult;
             if (has_children_hier === 0) {
+                const deleted_item = await getRepository(ac_cust_hier).findOne({ TYPE, TID });
+                if (deleted_item) {
+                    await getRepository(ac_cust_hier).update({ TYPE, P_TID: deleted_item.P_TID, ORDER: MoreThan(deleted_item.ORDER) }, { ORDER: () => '`ORDER` - 1' });
+                }
+
                 result = await getRepository(ac_cust_hier).delete({ TYPE, TID });
             }
 

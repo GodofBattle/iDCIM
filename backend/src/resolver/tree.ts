@@ -202,13 +202,6 @@ export class TreeResolver {
 
             let is_result: number = 0;
             if (node_type === 'ach') {
-                // // by shkoh 20220223: pd_asset_hier에서 처리
-                // const asset_hier = await getRepository(pd_asset_hier).findOne({ ID: Number(node_id) });
-                // is_result += await this.reorderAssetTreeNode({ p_id: asset_hier.P_ID, order: asset_hier.ORDER }, { p_id: Number(p_node_id), order: order });
-
-                // const update_result = await getRepository(pd_asset_hier).update({ ID: Number(node_id) }, { P_ID: Number(p_node_id), ORDER: order });
-                // is_result += update_result.affected;
-
                 // by shkoh 20220314: DB에 저장된 정보를 불러옴
                 const user = await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } });
                 const hier = await getRepository(ac_cust_hier).findOne({ where: { TYPE: 'P', TID: Number(node_id) } });
@@ -249,5 +242,76 @@ export class TreeResolver {
         is_result += new_order_hier.affected;
 
         return is_result;
+    }
+
+    @Query(() => [AssetTree])
+    async CustomTree(@Ctx() ctx: any): Promise<AssetTree[]> {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            const root = await getRepository(ac_config).findOne({ where: { ID: 1 } });
+            const site_name = root.SITE_NAME ? root.SITE_NAME : 'DCIM';
+
+            const trees = new Array({
+                key: `prh_0`,
+                label: site_name,
+                order: 1,
+                parent_key: null,
+                type: 'SITE'
+            });
+
+            (await getRepository(ac_cust_hier).find({ where: { TYPE: 'C' }, order: { P_TID: 'ASC', ORDER: 'ASC' } })).forEach((node: ac_cust_hier) => {
+                trees.push({
+                    key: `ach_${node.TID}`,
+                    label: node.NAME,
+                    order: node.ORDER,
+                    parent_key: node.P_TID === 0 ? `prh_0` : `ach_${node.P_TID}`,
+                    type: 'CUSTOM'
+                })
+            });
+
+            const position_tree: Array<AssetTree> = arrayToTree(trees, { id: 'key', p_id: 'parent_key' }) as Array<AssetTree>;
+            return position_tree;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async MoveCustomTreeNode(
+        @Arg('key', () => String) id: string,
+        @Args() { parent_key, order }: AssetTreeArgs,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if (!id || id.length === 0) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+
+            const [node_type, node_id] = id.split('_');
+            const [p_node_type, p_node_id] = parent_key.split('_');
+
+            let is_result: number = 0;
+            if (node_type === 'ach') {
+                // by shkoh 20220314: DB에 저장된 정보를 불러옴
+                const user = await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } });
+                const hier = await getRepository(ac_cust_hier).findOne({ where: { TYPE: 'C', TID: Number(node_id) } });
+                is_result += await this.reorderTreeNode('C', user.ID, { p_id: hier.P_TID, order: hier.ORDER }, { p_id: Number(p_node_id), order: order });
+
+                const reorder = await getRepository(ac_cust_hier).update({ TYPE: 'C', TID: Number(node_id) }, { P_TID: Number(p_node_id), ORDER: order, UPDATE_USER_ID: user.ID, UPDATE_USER_DT: new Date() });
+                is_result += reorder.affected;
+            }
+
+            return is_result > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
     }
 }

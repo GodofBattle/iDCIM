@@ -1,7 +1,7 @@
 <template>
-    <div id="setting-position-tree" :disabled="disabled">
+    <div id="setting-custom-tree" :disabled="disabled">
         <i-moveable-tree
-            :value="positionTree"
+            :value="customTree"
             :filter="true"
             :moveable="true"
             :disabled="disabled"
@@ -10,8 +10,8 @@
             :expanded-keys.sync="treeExpandedKey"
             :addable-type="addableType"
             :moveable-type="moveableType"
-            @move-tree="movePositionTree"
-            @insert-tree="movePositionTree"
+            @move-tree="moveCustomTree"
+            @insert-tree="moveCustomTree"
             @node-select="onNodeSelect"
             @node-unselect="onNodeUnselect"
         >
@@ -35,7 +35,7 @@ import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 
-@Component<SettingPositionTree>({
+@Component<SettingCustomTree>({
     props: {
         disabled: {
             type: Boolean,
@@ -62,9 +62,9 @@ import Component from '@/plugins/nuxt-class-component';
         },
     },
     apollo: {
-        positionTree: {
+        customTree: {
             query: gql`
-                fragment positionTreeFields on AssetTree {
+                fragment customTreeFields on AssetTree {
                     key
                     label
                     order
@@ -73,26 +73,26 @@ import Component from '@/plugins/nuxt-class-component';
                 }
 
                 query {
-                    PositionTree {
-                        ...positionTreeFields
+                    CustomTree {
+                        ...customTreeFields
                         children {
-                            ...positionTreeFields
+                            ...customTreeFields
                             children {
-                                ...positionTreeFields
+                                ...customTreeFields
                                 children {
-                                    ...positionTreeFields
+                                    ...customTreeFields
                                     children {
-                                        ...positionTreeFields
+                                        ...customTreeFields
                                         children {
-                                            ...positionTreeFields
+                                            ...customTreeFields
                                             children {
-                                                ...positionTreeFields
+                                                ...customTreeFields
                                                 children {
-                                                    ...positionTreeFields
+                                                    ...customTreeFields
                                                     children {
-                                                        ...positionTreeFields
+                                                        ...customTreeFields
                                                         children {
-                                                            ...positionTreeFields
+                                                            ...customTreeFields
                                                         }
                                                     }
                                                 }
@@ -109,23 +109,23 @@ import Component from '@/plugins/nuxt-class-component';
             fetchPolicy: 'no-cache',
             manual: false,
             prefetch: false,
-            update({ PositionTree }) {
-                return PositionTree;
+            update({ CustomTree }) {
+                return CustomTree;
             },
         },
     },
 })
-export default class SettingPositionTree extends Vue {
-    positionTree: Array<any> = [];
+export default class SettingCustomTree extends Vue {
+    customTree: Array<any> = [];
 
     treeExpandedKey: any = { prh_0: true };
-    addableType = { SITE: true, POSITION: true };
-    moveableType = { POSITION: true };
+    addableType = { SITE: true, CUSTOM: true };
+    moveableType = { CUSTOM: true };
 
     selectionKeys: null | object = null;
 
     refresh(key: string | undefined) {
-        this.$apollo.queries.positionTree.refresh();
+        this.$apollo.queries.customTree.refresh();
 
         if (key) {
             this.treeExpandedKey[key] = true;
@@ -155,14 +155,14 @@ export default class SettingPositionTree extends Vue {
         this.$emit('update:selectedNode', null);
     }
 
-    movePositionTree(target: any, dest: any) {
+    moveCustomTree(target: any, dest: any) {
         this.$nuxt.$loading.start();
 
         this.$apollo
             .mutate({
                 mutation: gql`
                     mutation {
-                        MovePositionTreeNode(
+                        MoveCustomTreeNode(
                             key: "${target.key}"
                             parent_key: "${target.parent_key}"
                             order: ${target.order}
@@ -173,7 +173,7 @@ export default class SettingPositionTree extends Vue {
             .then(() => {
                 this.$toast.add({
                     severity: 'info',
-                    summary: '위치트리 위치 변경 완료',
+                    summary: '사용자트리 위치 변경 완료',
                     detail: `${dest.label} >> ${target.label}`,
                     life: 1800,
                 });
@@ -183,7 +183,7 @@ export default class SettingPositionTree extends Vue {
 
                 this.$toast.add({
                     severity: 'error',
-                    summary: '위치트리 위치 변경 실패',
+                    summary: '사용자트리 위치 변경 실패',
                     detail: error.message,
                     life: 2000,
                 });
@@ -196,7 +196,7 @@ export default class SettingPositionTree extends Vue {
 </script>
 
 <style lang="scss" scoped>
-#setting-position-tree::v-deep {
+#setting-custom-tree::v-deep {
     .p-tree {
         border: none;
     }
