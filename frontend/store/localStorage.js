@@ -1,5 +1,5 @@
 export const state = () => ({
-    theme: '',
+    theme: 'vela-blue',
     version: 3
 });
 
