@@ -4,8 +4,8 @@
             :value="commList"
             data-key="MC_ID"
             :scrollable="true"
-            scroll-height="calc(100vh - 20px - var(--header-height) - 30px - 42px - 12px - 55px - 12px"
-            :style="{ height: '100%' }"
+            scroll-height="flex"
+            :style="{ width: '100%', height: '100%' }"
             :row-hover="true"
         >
             <template #header>
@@ -72,18 +72,18 @@ enum MODE {
     'ADD',
     'DELETE',
     'SAVE',
-    'COPY'
+    'COPY',
 }
 
 @Component<InterfacePanelComm>({
     props: {
         id: Number,
-        applyButtonDisabled: Boolean
+        applyButtonDisabled: Boolean,
     },
     watch: {
         id() {
             this.reset();
-        }
+        },
     },
     apollo: {
         dbCommList: {
@@ -100,7 +100,7 @@ enum MODE {
             `,
             variables(): any {
                 return {
-                    ID: this.id ? this.id : -1
+                    ID: this.id ? this.id : -1,
                 };
             },
             update: ({ PredefineModbusCommands }) => PredefineModbusCommands,
@@ -114,9 +114,9 @@ enum MODE {
                 }
             },
             fetchPolicy: 'cache-and-network',
-            deep: true
-        }
-    }
+            deep: true,
+        },
+    },
 })
 export default class InterfacePanelComm extends Vue {
     dbCommList: Array<ModbusCmd> = [];
@@ -144,7 +144,7 @@ export default class InterfacePanelComm extends Vue {
                 START_ADDR: datum.START_ADDR,
                 POINT_CNT: datum.POINT_CNT,
                 DTYPE_CD: datum.DTYPE_CD,
-                is_editable: false
+                is_editable: false,
             });
 
             this.commList.push(db_comm_data);
@@ -157,7 +157,7 @@ export default class InterfacePanelComm extends Vue {
                 severity: 'warn',
                 summary: '통신방법 추가 불가',
                 detail: `인터페이스당 통신방법은 최대 127개까지 가능합니다`,
-                life: 2000
+                life: 2000,
             });
 
             return;
@@ -178,7 +178,7 @@ export default class InterfacePanelComm extends Vue {
                             DTYPE_CD: "DT_F4"
                         )
                     }
-                `
+                `,
             })
             .then(() => {
                 this.refreshCommList();
@@ -187,7 +187,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'info',
                     summary: '통신방법 추가 완료',
                     detail: `MC ID: ${this.commList.length + 1} 추가`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -197,7 +197,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'error',
                     summary: '통신방법 추가 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -217,7 +217,7 @@ export default class InterfacePanelComm extends Vue {
                             MC_ID: ${index + 1}
                         )
                     }
-                `
+                `,
             })
             .then(() => {
                 this.refreshCommList();
@@ -226,7 +226,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'info',
                     summary: '통신방법 삭제 완료',
                     detail: `MC ID: ${index + 1} 삭제 완료`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -236,7 +236,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'error',
                     summary: '통신방법 삭제 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -248,7 +248,7 @@ export default class InterfacePanelComm extends Vue {
         const variables = {
             PD_INTF_ID: this.$props.id,
             MC_ID: index + 1,
-            ...modbusCmd
+            ...modbusCmd,
         };
 
         this.$nuxt.$loading.start();
@@ -281,7 +281,7 @@ export default class InterfacePanelComm extends Vue {
                         }
                     }
                 `,
-                variables
+                variables,
             })
             .then(() => {
                 this.refreshCommList();
@@ -290,7 +290,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'info',
                     summary: '통신방법 적용 완료',
                     detail: `MC ID: ${index + 1} 적용 완료`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -300,7 +300,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'error',
                     summary: '통신방법 적용 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -314,7 +314,7 @@ export default class InterfacePanelComm extends Vue {
                 severity: 'warn',
                 summary: '통신방법 복사 불가',
                 detail: `인터페이스당 통신방법은 최대 127개까지 가능합니다`,
-                life: 2000
+                life: 2000,
             });
 
             return;
@@ -343,7 +343,7 @@ export default class InterfacePanelComm extends Vue {
                         )
                     }
                 `,
-                variables: modbusCmd
+                variables: modbusCmd,
             })
             .then(() => {
                 this.refreshCommList();
@@ -352,7 +352,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'info',
                     summary: '통신방법 복사 완료',
                     detail: `MC ID: ${modbusCmd.MC_ID} 복사`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -362,7 +362,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'error',
                     summary: '통신방법 복사 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -390,7 +390,7 @@ export default class InterfacePanelComm extends Vue {
                     START_ADDR: comm.START_ADDR,
                     POINT_CNT: comm.POINT_CNT,
                     DTYPE_CD: comm.DTYPE_CD,
-                    REMARK: ''
+                    REMARK: '',
                 };
             });
 
@@ -408,8 +408,8 @@ export default class InterfacePanelComm extends Vue {
                     }
                 `,
                 variables: {
-                    Input: editableCommList
-                }
+                    Input: editableCommList,
+                },
             })
             .then(() => {
                 this.refreshCommList();
@@ -418,7 +418,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'info',
                     summary: '통신방법 적용 완료',
                     detail: `${editableCommList.length}개의 통신방법이 갱신되었습니다`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -428,7 +428,7 @@ export default class InterfacePanelComm extends Vue {
                     severity: 'error',
                     summary: '통신방법 적용 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -440,6 +440,8 @@ export default class InterfacePanelComm extends Vue {
 
 <style lang="scss" scoped>
 #interfacePanelComm::v-deep {
+    height: 100%;
+
     .i-table-header {
         display: flex;
         align-items: center;

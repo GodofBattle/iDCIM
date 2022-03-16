@@ -274,7 +274,7 @@ type DigitalThreshold = {
         dispPower: Number,
         pdThresholdId: Number,
         isNoti: Number,
-        isMkStats: Number
+        isMkStats: Number,
     },
     apollo: {
         pdThresholdAIList: {
@@ -291,10 +291,10 @@ type DigitalThreshold = {
             prefetch: false,
             variables(): any {
                 return {
-                    SENSOR_CD: this.sensorCode?.CODE ?? ''
+                    SENSOR_CD: this.sensorCode?.CODE ?? '',
                 };
             },
-            update: ({ PredefineThresholdsByAI }) => PredefineThresholdsByAI
+            update: ({ PredefineThresholdsByAI }) => PredefineThresholdsByAI,
         },
         pdThresholdDIList: {
             query: gql`
@@ -310,10 +310,10 @@ type DigitalThreshold = {
             prefetch: false,
             variables(): any {
                 return {
-                    SENSOR_CD: this.sensorCode?.CODE ?? ''
+                    SENSOR_CD: this.sensorCode?.CODE ?? '',
                 };
             },
-            update: ({ PredefineThresholdsByDI }) => PredefineThresholdsByDI
+            update: ({ PredefineThresholdsByDI }) => PredefineThresholdsByDI,
         },
         aiThresholdData: {
             query: gql`
@@ -340,10 +340,10 @@ type DigitalThreshold = {
                         this.sensorCode?.TYPE === 'A' &&
                         this.data.PD_THRESHOLD_ID > 0
                             ? this.data.PD_THRESHOLD_ID
-                            : 0
+                            : 0,
                 };
             },
-            update: ({ PredefineThresholdByAI }) => PredefineThresholdByAI
+            update: ({ PredefineThresholdByAI }) => PredefineThresholdByAI,
         },
         diThresholdData: {
             query: gql`
@@ -366,12 +366,12 @@ type DigitalThreshold = {
                         this.sensorCode?.TYPE === 'D' &&
                         this.data.PD_THRESHOLD_ID > 0
                             ? this.data.PD_THRESHOLD_ID
-                            : 0
+                            : 0,
                 };
             },
-            update: ({ PredefineThresholdByDI }) => PredefineThresholdByDI
-        }
-    }
+            update: ({ PredefineThresholdByDI }) => PredefineThresholdByDI,
+        },
+    },
 })
 export default class PredefineSensorCard extends Vue {
     data: PredefineSensor = {
@@ -383,7 +383,7 @@ export default class PredefineSensorCard extends Vue {
         DISP_POWER: this.$props.dispPower,
         PD_THRESHOLD_ID: this.$props.pdThresholdId,
         IS_NOTI: this.$props.isNoti,
-        IS_MKSTATS: this.$props.isMkStats
+        IS_MKSTATS: this.$props.isMkStats,
     };
 
     pdThresholdAIList: Array<any> = [];
@@ -403,7 +403,7 @@ export default class PredefineSensorCard extends Vue {
 
         this.$emit('change', {
             id: this.$props.sensorId,
-            isEdit: !is_disabled
+            isEdit: !is_disabled,
         });
         return is_disabled;
     }
@@ -523,13 +523,13 @@ export default class PredefineSensorCard extends Vue {
             DISP_POWER: this.data.DISP_POWER,
             PD_THRESHOLD_ID: this.data.PD_THRESHOLD_ID,
             IS_NOTI: this.data.IS_NOTI,
-            IS_MKSTATS: this.data.IS_MKSTATS
+            IS_MKSTATS: this.data.IS_MKSTATS,
         });
     }
 
     saveSensorCard() {
         const save_data = {
-            ID: this.$props.sensorId
+            ID: this.$props.sensorId,
         };
 
         for (const key of Object.keys(this.data)) {
@@ -538,7 +538,7 @@ export default class PredefineSensorCard extends Vue {
                     value: this.data[key],
                     configurable: true,
                     enumerable: true,
-                    writable: true
+                    writable: true,
                 });
             }
         }
@@ -557,7 +557,7 @@ export default class PredefineSensorCard extends Vue {
             blockScroll: false,
             accept: () => {
                 this.$emit('delete');
-            }
+            },
         });
     }
 }
@@ -565,6 +565,7 @@ export default class PredefineSensorCard extends Vue {
 
 <style lang="scss" scoped>
 #predefineSensorCard::v-deep {
+    width: 100%;
     border: 1px solid var(--surface-d);
 
     .i-header-title {

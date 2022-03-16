@@ -6,67 +6,62 @@
             </div>
         </div>
         <Divider />
-        <ScrollPanel class="i-threshold-scrollpanel">
-            <div class="p-grid p-px-2">
-                <DataTable
-                    :value="thresholdList"
-                    :scrollable="true"
-                    scroll-height="calc(100vh - 20px - var(--header-height) - 30px - 12px - 55px - 12px"
-                    :row-hover="true"
-                    data-key="ID"
+
+        <div class="i-threshold-scrollpanel p-grid p-px-2">
+            <DataTable
+                :value="thresholdList"
+                :scrollable="true"
+                scroll-height="flex"
+                :row-hover="true"
+                :table-style="{ width: '100%', height: '100%' }"
+                data-key="ID"
+            >
+                <template #header>
+                    <div class="i-table-header p-d-flex">
+                        <div class="p-ml-auto">
+                            <Button
+                                icon="pi pi-save"
+                                label="SAVE ALL"
+                                class="p-field p-button-outlined p-button-secondary"
+                                :disabled="applySaveAllButtonDisabled"
+                                @click="saveAll"
+                            ></Button>
+                            <Button
+                                icon="pi pi-plus"
+                                label="ADD"
+                                class="p-field p-button-outlined p-button-secondary"
+                                @click="addThreshold"
+                            ></Button>
+                        </div>
+                    </div>
+                </template>
+                <template #empty>
+                    <div class="i-table-empty">
+                        {{ sensorCodeName }}의 임계치를 추가하세요
+                    </div>
+                </template>
+                <Column
+                    key="ID"
+                    :styles="{ 'flex-grow': 1, 'flex-basis': '100%' }"
                 >
-                    <template #header>
-                        <div class="i-table-header p-d-flex">
-                            <div class="p-ml-auto">
-                                <Button
-                                    icon="pi pi-save"
-                                    label="SAVE ALL"
-                                    class="
-                                        p-field
-                                        p-button-outlined
-                                        p-button-secondary
-                                    "
-                                    :disabled="applySaveAllButtonDisabled"
-                                    @click="saveAll"
-                                ></Button>
-                                <Button
-                                    icon="pi pi-plus"
-                                    label="ADD"
-                                    class="
-                                        p-field
-                                        p-button-outlined
-                                        p-button-secondary
-                                    "
-                                    @click="addThreshold"
-                                ></Button>
-                            </div>
-                        </div>
+                    <template #body="slotProps">
+                        <predefine-threshold-card
+                            :id="slotProps.data.ID"
+                            :ref="'threshold_' + slotProps.data.ID"
+                            :type="type"
+                            :unit="sensorUnit"
+                            :name="slotProps.data.NAME"
+                            :hold-time="slotProps.data.HOLD_TIME"
+                            :level-codes="dbLevelCodes"
+                            @change="changPredefineThreshold"
+                            @copy="copyPredefineThreshold"
+                            @save="savePredefineThreshold"
+                            @delete="deletePredefineThreshold"
+                        ></predefine-threshold-card>
                     </template>
-                    <template #empty>
-                        <div class="i-table-empty">
-                            {{ sensorCodeName }}의 임계치를 추가하세요
-                        </div>
-                    </template>
-                    <Column key="ID">
-                        <template #body="slotProps">
-                            <predefine-threshold-card
-                                :id="slotProps.data.ID"
-                                :ref="'threshold_' + slotProps.data.ID"
-                                :type="type"
-                                :unit="sensorUnit"
-                                :name="slotProps.data.NAME"
-                                :hold-time="slotProps.data.HOLD_TIME"
-                                :level-codes="dbLevelCodes"
-                                @change="changPredefineThreshold"
-                                @copy="copyPredefineThreshold"
-                                @save="savePredefineThreshold"
-                                @delete="deletePredefineThreshold"
-                            ></predefine-threshold-card>
-                        </template>
-                    </Column>
-                </DataTable>
-            </div>
-        </ScrollPanel>
+                </Column>
+            </DataTable>
+        </div>
     </div>
 </template>
 
@@ -88,7 +83,7 @@ type ThresholdInfo = {
         sensorCode: String,
         sensorCodeName: String,
         sensorType: String,
-        sensorUnit: String
+        sensorUnit: String,
     },
     apollo: {
         dbThresholdList: {
@@ -110,7 +105,7 @@ type ThresholdInfo = {
             `,
             variables() {
                 return {
-                    SENSOR_CD: this.sensorCode ? this.sensorCode : ''
+                    SENSOR_CD: this.sensorCode ? this.sensorCode : '',
                 };
             },
             prefetch: false,
@@ -130,7 +125,7 @@ type ThresholdInfo = {
                         );
                     }
                 }
-            }
+            },
         },
         dbLevelCodes: {
             query: gql`
@@ -142,9 +137,9 @@ type ThresholdInfo = {
                     }
                 }
             `,
-            update: ({ Codes }) => Codes
-        }
-    }
+            update: ({ Codes }) => Codes,
+        },
+    },
 })
 export default class PredefineThresholdPanel extends Vue {
     dbThresholdList: Array<ThresholdInfo> = [];
@@ -167,7 +162,7 @@ export default class PredefineThresholdPanel extends Vue {
                     ID: datum.ID,
                     SENSOR_CD: datum.SENSOR_CD,
                     NAME: datum.NAME,
-                    HOLD_TIME: datum.HOLD_TIME
+                    HOLD_TIME: datum.HOLD_TIME,
                 });
 
                 this.thresholdList.push(threshold_info);
@@ -210,8 +205,8 @@ export default class PredefineThresholdPanel extends Vue {
                     }
                 `,
                 variables: {
-                    Input: threshold_list
-                }
+                    Input: threshold_list,
+                },
             })
             .then(() => {
                 this.refreshPredefineThreshold();
@@ -220,7 +215,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'info',
                     summary: '임계치 적용 완료',
                     detail: `${threshold_list.length}개의 ${this.$props.sensorCodeName} 임계치가 갱신되었습니다`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -230,7 +225,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'error',
                     summary: '임계치 적용 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -249,8 +244,8 @@ export default class PredefineThresholdPanel extends Vue {
                     }
                 `,
                 variables: {
-                    Input: threshold_list
-                }
+                    Input: threshold_list,
+                },
             })
             .then(() => {
                 this.refreshPredefineThreshold();
@@ -259,7 +254,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'info',
                     summary: '임계치 적용 완료',
                     detail: `${threshold_list.length}개의 ${this.$props.sensorCodeName} 임계치가 갱신되었습니다`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -269,7 +264,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'error',
                     summary: '임계치 적용 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -306,7 +301,7 @@ export default class PredefineThresholdPanel extends Vue {
                         )
                     }
                     
-                `
+                `,
             })
             .then(() => {
                 this.refreshPredefineThreshold();
@@ -315,7 +310,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'info',
                     summary: 'AI 임계치 추가 완료',
                     detail: `${this.$props.sensorCodeName} 추가`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -325,7 +320,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'error',
                     summary: 'AI 임계치 추가 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -347,7 +342,7 @@ export default class PredefineThresholdPanel extends Vue {
                         )
                     }
                     
-                `
+                `,
             })
             .then(() => {
                 this.refreshPredefineThreshold();
@@ -356,7 +351,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'info',
                     summary: 'DI 임계치 추가 완료',
                     detail: `${this.$props.sensorCodeName} 추가`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -366,7 +361,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'error',
                     summary: 'DI 임계치 추가 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -425,7 +420,7 @@ export default class PredefineThresholdPanel extends Vue {
                     )
                 }
             `,
-                variables: ai_threshold
+                variables: ai_threshold,
             })
             .then(() => {
                 this.refreshPredefineThreshold();
@@ -434,7 +429,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'info',
                     summary: 'AI 임계치 복사 완료',
                     detail: `Analog ID: ${id} - ${ai_threshold.NAME} 복사 완료`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -444,7 +439,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'error',
                     summary: 'AI 임계치 복사 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -471,7 +466,7 @@ export default class PredefineThresholdPanel extends Vue {
                     )
                 }
             `,
-                variables: di_threshold
+                variables: di_threshold,
             })
             .then(() => {
                 this.refreshPredefineThreshold();
@@ -480,7 +475,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'info',
                     summary: 'DI 임계치 복사 완료',
                     detail: `Digital ID: ${id} - ${di_threshold.NAME} 복사 완료`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -490,7 +485,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'error',
                     summary: 'DI 임계치 복사 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -546,7 +541,7 @@ export default class PredefineThresholdPanel extends Vue {
                         )
                     }
                 `,
-                variables: ai_threshold
+                variables: ai_threshold,
             })
             .then(() => {
                 this.refreshPredefineThreshold();
@@ -555,7 +550,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'info',
                     summary: 'AI 임계치 적용 완료',
                     detail: `Analog ID: ${ai_threshold.ID} - ${name} 적용 완료`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -565,7 +560,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'error',
                     summary: 'AI 임계치 적용 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -593,7 +588,7 @@ export default class PredefineThresholdPanel extends Vue {
                         )
                     }
                 `,
-                variables: di_threshold
+                variables: di_threshold,
             })
             .then(() => {
                 this.refreshPredefineThreshold();
@@ -602,7 +597,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'info',
                     summary: 'DI 임계치 적용 완료',
                     detail: `Digital ID: ${di_threshold.ID} - ${name} 적용 완료`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -612,7 +607,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'error',
                     summary: 'DI 임계치 적용 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -627,7 +622,7 @@ export default class PredefineThresholdPanel extends Vue {
             .mutate({
                 mutation: is_analog
                     ? gql`mutation { DeletePredefineThresholdByAI(ID: ${id}) }`
-                    : gql`mutation { DeletePredefineThresholdByDI(ID: ${id}) }`
+                    : gql`mutation { DeletePredefineThresholdByDI(ID: ${id}) }`,
             })
             .then(() => {
                 this.refreshPredefineThreshold();
@@ -636,7 +631,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'info',
                     summary: 'AI 임계치 삭제 완료',
                     detail: `Analog ID: ${id} - ${name} 삭제 완료`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -646,7 +641,7 @@ export default class PredefineThresholdPanel extends Vue {
                     severity: 'error',
                     summary: 'AI 임계치 삭제 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {

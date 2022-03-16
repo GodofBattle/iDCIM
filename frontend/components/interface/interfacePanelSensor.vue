@@ -3,8 +3,9 @@
         <DataTable
             :value="sensorList"
             :scrollable="true"
-            scroll-height="calc(100vh - 20px - var(--header-height) - 30px - 42px - 12px - 55px - 12px"
+            scroll-height="flex"
             :row-hover="true"
+            :table-style="{ width: '100%', height: '100%' }"
             data-key="ID"
             @row-reorder="onRowReorder"
         >
@@ -30,8 +31,11 @@
             <template #empty>
                 <div class="i-table-empty">수집항목을 추가하세요</div>
             </template>
-            <Column :row-reorder="true" header-style="width: 3rem;"></Column>
-            <Column key="ID">
+            <Column
+                :row-reorder="true"
+                :styles="{ 'flex-grow': 1, 'flex-basis': 0 }"
+            ></Column>
+            <Column key="ID" :styles="{ 'flex-grow': 1, 'flex-basis': '100%' }">
                 <template #body="slotProps">
                     <predefine-sensor-card
                         :interface-id="id"
@@ -91,13 +95,13 @@ type Sensor = {
 @Component<InterfacePanelSensor>({
     props: {
         id: Number,
-        hasComm: Boolean
+        hasComm: Boolean,
     },
     watch: {
         id() {
             this.applyAllButtonDisabled = true;
             this.reset();
-        }
+        },
     },
     apollo: {
         dbSensorList: {
@@ -120,7 +124,7 @@ type Sensor = {
             `,
             variables() {
                 return {
-                    PD_INTF_ID: this.id ? this.id : -1
+                    PD_INTF_ID: this.id ? this.id : -1,
                 };
             },
             prefetch: false,
@@ -134,7 +138,7 @@ type Sensor = {
                         this.apolloFetch(PredefineSensors);
                     }
                 }
-            }
+            },
         },
         modbusCommandList: {
             query: gql`
@@ -152,10 +156,10 @@ type Sensor = {
             `,
             variables(): any {
                 return {
-                    PD_INTF_ID: this.id ? this.id : -1
+                    PD_INTF_ID: this.id ? this.id : -1,
                 };
             },
-            update: ({ PredefineModbusCommands }) => PredefineModbusCommands
+            update: ({ PredefineModbusCommands }) => PredefineModbusCommands,
         },
         sensorCodeList: {
             query: gql`
@@ -170,7 +174,7 @@ type Sensor = {
                     }
                 }
             `,
-            update: ({ SensorCodes }) => SensorCodes
+            update: ({ SensorCodes }) => SensorCodes,
         },
         displayPowerList: {
             query: gql`
@@ -182,9 +186,9 @@ type Sensor = {
                     }
                 }
             `,
-            update: ({ Codes }) => Codes
-        }
-    }
+            update: ({ Codes }) => Codes,
+        },
+    },
 })
 export default class InterfacePanelSensor extends Vue {
     editedSensorList: Array<any> = [];
@@ -226,7 +230,7 @@ export default class InterfacePanelSensor extends Vue {
                     MC_ID: datum.MC_ID,
                     DISP_POWER: datum.DISP_POWER,
                     IS_NOTI: datum.IS_NOTI,
-                    IS_MKSTATS: datum.IS_MKSTATS
+                    IS_MKSTATS: datum.IS_MKSTATS,
                 });
 
                 this.sensorList.push(db_sensor_data);
@@ -255,7 +259,7 @@ export default class InterfacePanelSensor extends Vue {
             pd_intf_id: drop_sensor.PD_INTF_ID,
             name: drop_sensor.NAME,
             start_idx: event.dragIndex + 1,
-            end_idx: event.dropIndex + 1
+            end_idx: event.dropIndex + 1,
         });
     }
 
@@ -271,7 +275,7 @@ export default class InterfacePanelSensor extends Vue {
                             NODE_ID: ${this.sensorList.length + 1}
                         )
                     }
-                `
+                `,
             })
             .then(() => {
                 this.refreshPredefineSensorList();
@@ -280,7 +284,7 @@ export default class InterfacePanelSensor extends Vue {
                     severity: 'info',
                     summary: '수집항목 추가 완료',
                     detail: `수집항목: ${this.sensorList.length + 1}개 추가`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -290,7 +294,7 @@ export default class InterfacePanelSensor extends Vue {
                     severity: 'error',
                     summary: '수집항목 추가 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -316,7 +320,7 @@ export default class InterfacePanelSensor extends Vue {
                     DISP_POWER: s_data?.DISP_POWER,
                     PD_THRESHOLD_ID: s_data?.PD_THRESHOLD_ID,
                     IS_NOTI: s_data?.IS_NOTI,
-                    IS_MKSTATS: s_data?.IS_MKSTATS
+                    IS_MKSTATS: s_data?.IS_MKSTATS,
                 };
             });
 
@@ -334,8 +338,8 @@ export default class InterfacePanelSensor extends Vue {
                     }
                 `,
                 variables: {
-                    Input: editableSensorList
-                }
+                    Input: editableSensorList,
+                },
             })
             .then(() => {
                 this.refreshPredefineSensorList();
@@ -344,7 +348,7 @@ export default class InterfacePanelSensor extends Vue {
                     severity: 'info',
                     summary: '수집항목 적용 완료',
                     detail: `${editableSensorList.length}개의 수집항목이 갱신되었습니다`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -354,7 +358,7 @@ export default class InterfacePanelSensor extends Vue {
                     severity: 'error',
                     summary: '수집항목 적용 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -396,7 +400,7 @@ export default class InterfacePanelSensor extends Vue {
                         )
                     }
                 `,
-                variables: copy_data
+                variables: copy_data,
             })
             .then(() => {
                 this.refreshPredefineSensorList();
@@ -405,7 +409,7 @@ export default class InterfacePanelSensor extends Vue {
                     severity: 'info',
                     summary: '수집항목 복사 완료',
                     detail: `수집항목: ${copy_data.NAME} 복사`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -415,7 +419,7 @@ export default class InterfacePanelSensor extends Vue {
                     severity: 'error',
                     summary: '수집항목 복사 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -455,7 +459,7 @@ export default class InterfacePanelSensor extends Vue {
                         )
                     }
                 `,
-                variables: save_data
+                variables: save_data,
             })
             .then(() => {
                 this.refreshPredefineSensorList();
@@ -464,7 +468,7 @@ export default class InterfacePanelSensor extends Vue {
                     severity: 'info',
                     summary: '수집항목 변경 완료',
                     detail: `${sensor_name} 수집항목의 내용이 변경되었습니다`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -474,7 +478,7 @@ export default class InterfacePanelSensor extends Vue {
                     severity: 'error',
                     summary: '수집항목 변경 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -491,7 +495,7 @@ export default class InterfacePanelSensor extends Vue {
                 mutation {
                     DeletePredefineSensor(ID: ${id})
                 }
-            `
+            `,
             })
             .then(() => {
                 this.refreshPredefineSensorList();
@@ -500,7 +504,7 @@ export default class InterfacePanelSensor extends Vue {
                     severity: 'info',
                     summary: '수집항목 삭제 완료',
                     detail: `수집항목 - ${name} 삭제 완료`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -510,7 +514,7 @@ export default class InterfacePanelSensor extends Vue {
                     severity: 'error',
                     summary: '수집항목 삭제 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -523,7 +527,7 @@ export default class InterfacePanelSensor extends Vue {
         pd_intf_id,
         name,
         start_idx,
-        end_idx
+        end_idx,
     }: any) {
         this.$nuxt.$loading.start();
 
@@ -548,8 +552,8 @@ export default class InterfacePanelSensor extends Vue {
                     ID: id,
                     PD_INTF_ID: pd_intf_id,
                     START: start_idx,
-                    END: end_idx
-                }
+                    END: end_idx,
+                },
             })
             .then(() => {
                 this.refreshPredefineSensorList();
@@ -558,7 +562,7 @@ export default class InterfacePanelSensor extends Vue {
                     severity: 'info',
                     summary: '수집항목 이동 완료',
                     detail: `수집항목 ${name}가 NODE ID: ${end_idx}로 이동했습니다`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -577,6 +581,8 @@ export default class InterfacePanelSensor extends Vue {
 
 <style lang="scss" scoped>
 #interfacePanelSensor::v-deep {
+    height: 100%;
+
     .i-table-header {
         display: flex;
         align-items: center;

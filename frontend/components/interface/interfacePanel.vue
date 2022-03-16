@@ -22,7 +22,7 @@
             </div>
         </div>
 
-        <TabView class="p-px-2 p-mt-1" :active-index.sync="interfaceTabIndex">
+        <TabView :active-index.sync="interfaceTabIndex">
             <TabPanel>
                 <template #header>
                     <i class="pi pi-home p-mr-2"></i>
@@ -43,7 +43,7 @@
                     <i class="pi pi-wifi p-mr-2"></i>
                     <span>통신방법</span>
                 </template>
-                <ScrollPanel class="i-interface-scrollpanel">
+                <div class="i-interface-scrollpanel">
                     <interface-panel-comm
                         v-if="interfaceTabIndex === 1"
                         :id="interfaceId"
@@ -51,14 +51,14 @@
                         :apply-button-disabled.sync="applyButtonDisabled"
                     >
                     </interface-panel-comm>
-                </ScrollPanel>
+                </div>
             </TabPanel>
             <TabPanel>
                 <template #header>
                     <i class="pi pi-list p-mr-2"></i>
                     <span>수집항목</span>
                 </template>
-                <ScrollPanel class="i-interface-scrollpanel">
+                <div class="i-interface-scrollpanel">
                     <interface-panel-sensor
                         v-if="interfaceTabIndex === 2"
                         :id="interfaceId"
@@ -66,7 +66,7 @@
                         :has-comm="!isDisabledComm"
                     >
                     </interface-panel-sensor>
-                </ScrollPanel>
+                </div>
             </TabPanel>
             <TabPanel>
                 <template #header>
@@ -234,7 +234,11 @@ export default class InterfacePanel extends Vue {
     }
 
     .p-tabview-panels {
-        padding: 1rem 0;
+        padding: 1rem 0.5rem;
+    }
+
+    .p-tabview-nav-content {
+        padding: 0.25rem 0.25rem 0 0.25rem;
     }
 
     .i-interface-scrollpanel {
