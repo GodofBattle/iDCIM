@@ -141,10 +141,26 @@ export default class Login extends Vue {
                         user_group_id: USER_GROUP_ID,
                         user_name: NAME,
                     });
+
+                    return { ROLE };
                 }
             )
-            .then(() => {
-                this.$router.push('/icomer/code');
+            .then(({ ROLE }) => {
+                let link = '';
+                switch (ROLE) {
+                    case 'PERM01': {
+                        link = '/icomer/code';
+                        break;
+                    }
+                    case 'PERM02': {
+                        link = '/admin/home';
+                        break;
+                    }
+                }
+
+                if (link !== '') {
+                    this.$router.push(link);
+                }
             })
             .then(async () => {
                 // by shkoh 20220304: 로그인과 동시에 설정에 필요한 값을 지정

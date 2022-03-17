@@ -14,7 +14,7 @@
                 role="none"
                 @mouseenter="onItemMouseEnter($event, item)"
             >
-                <router-link
+                <nuxt-link
                     v-if="item.to && !disabled(item)"
                     :to="item.to"
                     custom
@@ -31,7 +31,7 @@
                         <span :class="['p-menuitem-icon', item.icon]"></span>
                         <span class="p-menuitem-text">{{ label(item) }}</span>
                     </a>
-                </router-link>
+                </nuxt-link>
                 <a
                     v-else
                     :href="item.url"

@@ -1,5 +1,3 @@
-import path from 'path';
-
 require('dotenv').config({ path: __dirname + '/../.env' });
 
 export default {
@@ -83,7 +81,7 @@ export default {
         // https://go.nuxtjs.dev/axios
         '@nuxtjs/axios',
         '@nuxtjs/apollo',
-        ['nuxt-vuex-localstorage', { mode: 'debug' }],
+        ['nuxt-vuex-localstorage'],
         '@nuxtjs/style-resources',
 
         // by shkoh 20220120: primevue/nuxt를 생성하는 모듈에서 theme에 따라 css style을 변경하기 위해서는 기본적으로 제공하는 모듈을 사용할 수 없어서 따로 모듈 만들어서 필요한 부분만 수행함
@@ -187,7 +185,7 @@ export default {
                         name: 'code',
                         component: 'pages/icomer/code.vue',
                         meta: {
-                            title: '코드'
+                            title: '코드',
                         }
                     },
                     {
@@ -236,6 +234,20 @@ export default {
                         component: 'pages/icomer/tree.vue',
                         meta: {
                             title: '트리'
+                        }
+                    }
+                ]
+            },
+            {
+                name: 'admin',
+                path: '/admin',
+                children: [
+                    {
+                        path: '/home',
+                        name: 'home',
+                        component: 'pages/admin/home.vue',
+                        meta: {
+                            title: '관리자 HOME'
                         }
                     }
                 ]

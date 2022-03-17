@@ -30,8 +30,8 @@ import Component from '@/plugins/nuxt-class-component';
                 `,
                 result({
                     data: {
-                        RefreshToken: { ACCESS_TOKEN = '', REFRESH_TOKEN = '' }
-                    }
+                        RefreshToken: { ACCESS_TOKEN = '', REFRESH_TOKEN = '' },
+                    },
                 }) {
                     // by shkoh 20210729: 토큰이 갱신될 경우에 apollo client와 store에 토큰을 갱신시킴
                     // by shkoh 20210729: 토큰의 갱신방법은 api server에서 갱신 토큰을 구독하는 방법으로 함
@@ -40,7 +40,7 @@ import Component from '@/plugins/nuxt-class-component';
                         .then(() => {
                             this.$store.commit('sessionStorage/REFRESHTOKEN', {
                                 access_token: ACCESS_TOKEN,
-                                refresh_token: REFRESH_TOKEN
+                                refresh_token: REFRESH_TOKEN,
                             });
                         })
                         .then(() => {
@@ -49,14 +49,12 @@ import Component from '@/plugins/nuxt-class-component';
                 },
                 error(err: any) {
                     console.error(err);
-                }
-            }
-        }
-    }
+                },
+            },
+        },
+    },
 })
 export default class Icomer extends Vue {
-    is_sidebar = true;
-
     menuItems = [
         { label: 'HOME' },
         { separator: true },
@@ -72,7 +70,7 @@ export default class Icomer extends Vue {
         { label: '운영페이지' },
         { label: '계정' },
         { separator: true },
-        { label: '에디터' }
+        { label: '에디터' },
     ];
 
     head() {
@@ -80,8 +78,8 @@ export default class Icomer extends Vue {
         return {
             link: [
                 { rel: 'icon', type: 'image/x-icon', href: 'favicon.ico' },
-                { rel: 'stylesheet', href: `themes/${theme}/theme.css` }
-            ]
+                { rel: 'stylesheet', href: `themes/${theme}/theme.css` },
+            ],
         };
     }
 
