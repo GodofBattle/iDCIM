@@ -1,3 +1,5 @@
+import routeRedirect from './hooks/route-redirect';
+
 require('dotenv').config({ path: __dirname + '/../.env' });
 
 export default {
@@ -170,7 +172,7 @@ export default {
     // by shkoh 20210709: DCIM route
     router: {
         base: '/dcim',
-        middleware: ['authenticated'],
+        middleware: 'base_path',
         routes: [
             {
                 name: 'login',
@@ -253,6 +255,14 @@ export default {
                 ]
             }
         ]
+    },
+
+    hooks: {
+        render: {
+            setupMiddleware(app) {
+                app.use('/', routeRedirect('/dcim'));
+            }
+        }
     },
 
     // by shkoh 20210712: apollo client settings

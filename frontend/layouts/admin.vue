@@ -15,7 +15,9 @@
 import Vue from 'vue';
 import Component from '@/plugins/nuxt-class-component';
 
-@Component<Admin>({})
+@Component<Admin>({
+    middleware: 'authenticated_admin',
+})
 export default class Admin extends Vue {
     menuItems = [{ label: 'HOME' }];
 

@@ -80,6 +80,7 @@ export default class Login extends Vue {
         const theme = this.theme;
 
         return {
+            title: `iDCIM - 로그인`,
             link: [
                 { rel: 'icon', type: 'image/x-icon', href: 'favicon.ico' },
                 { rel: 'stylesheet', href: `themes/${theme}/theme.css` },

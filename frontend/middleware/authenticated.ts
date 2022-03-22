@@ -8,11 +8,8 @@ const authenticated: Middleware = async ({
     from,
     error,
 }: Context) => {
-    console.info(from);
     if (route.name === 'login') {
-        console.info('login');
         const apollo_token = $apolloHelpers.getToken();
-        console.info(from);
         if (apollo_token && from) {
             redirect({ name: from.name ?? '/' });
         }
@@ -22,7 +19,6 @@ const authenticated: Middleware = async ({
     const apollo_token = $apolloHelpers.getToken();
     // by shkoh 20220317: 서버로부터 받은 토큰이 존재하지 않은 경우에는 login 페이지로 이동
     if (!apollo_token && route.name !== 'login') {
-        console.info('session out');
         redirect({ name: 'login' });
         return;
     }

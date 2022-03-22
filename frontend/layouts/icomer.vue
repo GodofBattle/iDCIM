@@ -17,6 +17,7 @@ import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 
 @Component<Icomer>({
+    middleware: 'authenticated_icomer',
     apollo: {
         $subscribe: {
             refreshToken: {
