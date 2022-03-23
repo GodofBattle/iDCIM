@@ -1,5 +1,6 @@
 import { Field, ID, Int, ObjectType } from "type-graphql";
 import { Column, Entity, PrimaryColumn } from "typeorm";
+
 import { nullableDate } from "../../scalar/nullableDate";
 
 @ObjectType()
