@@ -2,10 +2,10 @@
     <div id="icomer-threshold">
         <icomer-toolbar class="p-px-2" :title="title"></icomer-toolbar>
         <div class="p-d-flex i-threshold-content">
-            <div class="p-col-2">
+            <div class="p-col-fixed" style="width: var(--tree-width)">
                 <threshold-tree @select="onSelectTreeNode"></threshold-tree>
             </div>
-            <div class="p-col-10">
+            <div class="p-col">
                 <div v-if="code">
                     <predefine-threshold-panel
                         :sensor-code="code"
@@ -29,9 +29,9 @@ import Component from '@/plugins/nuxt-class-component';
     props: {
         title: {
             type: String,
-            default: '임계치 사전설정'
-        }
-    }
+            default: '임계치 사전설정',
+        },
+    },
 })
 export default class IcomerThreshold extends Vue {
     code: string | null = null;
@@ -41,7 +41,7 @@ export default class IcomerThreshold extends Vue {
 
     head() {
         return {
-            title: `[iDCIM] 구축계정 - ${this.$props.title}`
+            title: `[iDCIM] 구축계정 - ${this.$props.title}`,
         };
     }
 

@@ -1,11 +1,11 @@
 <template>
-    <div>
+    <div id="icomer-product">
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
         <div class="p-d-flex i-product-content">
-            <div class="p-col-2">
+            <div class="p-col-fixed" style="width: var(--tree-width)">
                 <product-tree @select="onSelectTreeNode" />
             </div>
-            <div class="p-col-10">
+            <div class="p-col p-pr-2">
                 <div v-if="viewType === 'Manufacturer'">
                     <manufacturer-panel :manufacturer-id="id" @reset="reset" />
                 </div>
@@ -25,12 +25,12 @@ export default Vue.extend({
     props: {
         title: {
             type: String,
-            default: '제품'
-        }
+            default: '제품',
+        },
     },
     data: () => ({
         id: -1,
-        viewType: ''
+        viewType: '',
     }),
     head() {
         return { title: `[iDCIM] 구축계정 - ${this.title}` };
@@ -43,14 +43,16 @@ export default Vue.extend({
         reset() {
             this.id = -1;
             this.viewType = '';
-        }
-    }
+        },
+    },
 });
 </script>
 
-<style lang="scss">
-.i-product-content {
-    height: calc(100vh - var(--header-height));
-    padding-top: 20px;
+<style lang="scss" scoped>
+#icomer-product::v-deep {
+    .i-product-content {
+        height: calc(100vh - var(--header-height));
+        padding-top: 20px;
+    }
 }
 </style>

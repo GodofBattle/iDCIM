@@ -251,6 +251,14 @@ export default {
                         meta: {
                             title: '관리자 HOME'
                         }
+                    },
+                    {
+                        path: '/manager',
+                        name: 'manager',
+                        component: 'pages/admin/manager.vue',
+                        meta: {
+                            title: '자산담당자'
+                        }
                     }
                 ]
             }

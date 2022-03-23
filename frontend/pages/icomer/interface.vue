@@ -2,10 +2,10 @@
     <div id="icomer-interface">
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
         <div class="p-d-flex i-interface-content">
-            <div class="p-col-2">
+            <div class="p-col-fixed" style="width: var(--tree-width)">
                 <interface-tree @select="onSelectTreeNode"></interface-tree>
             </div>
-            <div class="p-col-10">
+            <div class="p-col">
                 <div v-if="viewType === 'PredefineInterface'">
                     <interface-panel
                         :interface-id="id"
@@ -27,9 +27,9 @@ import Component from '@/plugins/nuxt-class-component';
     props: {
         title: {
             type: String,
-            default: '인터페이스'
-        }
-    }
+            default: '인터페이스',
+        },
+    },
 })
 export default class IcomerInterface extends Vue {
     id = -1;

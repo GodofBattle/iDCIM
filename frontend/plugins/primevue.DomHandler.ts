@@ -78,6 +78,15 @@ const DomHandler = {
     getWindowScrollTop: () => {
         const doc = document.documentElement;
         return (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+    },
+
+    getWidth: (element: HTMLElement) => {
+        const style = getComputedStyle(element);
+
+        let width = element.offsetWidth;
+        width -= parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth);
+
+        return width;
     }
 };
 

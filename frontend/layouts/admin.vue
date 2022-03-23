@@ -14,12 +14,55 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from '@/plugins/nuxt-class-component';
+import gql from 'graphql-tag';
 
 @Component<Admin>({
     middleware: 'authenticated_admin',
+    apollo: {
+        $subscribe: {
+            refreshToken: {
+                query: gql`
+                    subscription {
+                        RefreshToken {
+                            ACCESS_TOKEN
+                            REFRESH_TOKEN
+                        }
+                    }
+                `,
+                result({
+                    data: {
+                        RefreshToken: { ACCESS_TOKEN = '', REFRESH_TOKEN = '' },
+                    },
+                }) {
+                    // by shkoh 20210729: 토큰이 갱신될 경우에 apollo client와 store에 토큰을 갱신시킴
+                    // by shkoh 20210729: 토큰의 갱신방법은 api server에서 갱신 토큰을 구독하는 방법으로 함
+                    this.$apolloHelpers
+                        .onLogin(ACCESS_TOKEN, undefined, undefined, true)
+                        .then(() => {
+                            this.$store.commit('sessionStorage/REFRESHTOKEN', {
+                                access_token: ACCESS_TOKEN,
+                                refresh_token: REFRESH_TOKEN,
+                            });
+                        })
+                        .then(() => {
+                            this.$apollo.subscriptions.refreshToken.refresh();
+                        });
+                },
+                error(err: any) {
+                    console.error(err);
+                },
+            },
+        },
+    },
 })
 export default class Admin extends Vue {
-    menuItems = [{ label: 'HOME' }];
+    menuItems = [
+        { label: 'HOME' },
+        { separator: true },
+        { label: '자산담당자', to: '/admin/manager' },
+        { label: '자산' },
+        { label: '운영그룹' },
+    ];
 
     head() {
         const theme = this.$store.state.localStorage.theme;

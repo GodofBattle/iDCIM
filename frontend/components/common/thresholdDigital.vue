@@ -103,9 +103,7 @@
                                         >
                                         </InputText>
                                         <Button
-                                            class="
-                                                p-button-secondary p-button-sm
-                                            "
+                                            class="p-button-secondary p-button-sm"
                                             icon="pi pi-check"
                                             @click="
                                                 onCloseEditorMode(
@@ -125,9 +123,7 @@
                     <div class="p-mr-2">
                         <Button
                             icon="pi pi-times"
-                            class="
-                                p-button-rounded p-button-danger p-button-text
-                            "
+                            class="p-button-rounded p-button-danger p-button-text"
                             @click="deleteDigitalValue(index)"
                         ></Button>
                     </div>
@@ -254,7 +250,7 @@ export default class ThresholdDigital extends Vue {
 .i-warning {
     background: var(--warning);
     color: var(--text-alert-warning-color);
-    text-shadow: 1px 1px 1px #333333;
+    font-weight: bold;
 }
 
 .i-major {
