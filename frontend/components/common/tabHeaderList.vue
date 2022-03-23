@@ -16,7 +16,11 @@
                 <span class="pi pi-chevron-left"></span>
             </button>
             <div ref="content" class="p-tabview-nav-content" @scroll="onScroll">
-                <ul ref="nav" class="p-tabview-nav" role="tablist">
+                <ul
+                    ref="nav"
+                    :class="['p-tabview-nav', { 'i-border-top': isBottom }]"
+                    role="tablist"
+                >
                     <li
                         role="presentation"
                         v-for="(tab, i) of tabs"
@@ -85,6 +89,10 @@ type TabItem = {
         activeIndex: {
             type: Number,
             default: 0,
+        },
+        alignment: {
+            type: String,
+            default: 'top',
         },
     },
     watch: {
@@ -174,7 +182,6 @@ export default class TabHeaderList extends Vue {
 
     updateScrollBar(index: number) {
         let tabHeader = this.$refs.nav.children[index];
-        console.info(tabHeader);
         tabHeader.scrollIntoView({ block: 'nearest', inline: 'center' });
     }
 
@@ -229,5 +236,36 @@ export default class TabHeaderList extends Vue {
             { 'p-disabled': this.forwardIsDisabled },
         ];
     }
+
+    get isBottom(): boolean {
+        return this.$props.alignment === 'bottom';
+    }
 }
 </script>
+
+<style lang="scss" scoped>
+#tab-header-list::v-deep {
+    .p-tabview-nav.i-border-top {
+        border-width: 2px 0 0 0;
+
+        .p-tabview-nav-link {
+            border-color: var(--surface-border) transparent transparent
+                transparent;
+            border-width: 2px 0 0 0;
+            border-bottom-left-radius: 3px;
+            border-bottom-right-radius: 3px;
+            border-top-left-radius: 0px;
+            border-top-right-radius: 0px;
+            margin: -2px 0 0 0;
+        }
+
+        .p-highlight .p-tabview-nav-link {
+            border-color: var(--primary-color);
+        }
+
+        li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
+            border-color: var(--primary-color);
+        }
+    }
+}
+</style>
