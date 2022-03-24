@@ -1,6 +1,8 @@
 import { Field, ID, Int, ObjectType } from "type-graphql";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
+
+import { ac_company } from "./ac_company";
 
 @ObjectType()
 @Entity({ synchronize: false })
@@ -11,6 +13,7 @@ export class ac_asset_operator {
 
     @Field(() => Int, { nullable: true })
     @Column({ type: 'int', nullable: false, comment: '업체아이디(AC_COMPANY.id)' })
+    @RelationId((operator: ac_asset_operator) => operator.COMPANY)
     COMPANY_ID: number;
 
     @Field(() => String, { nullable: true })
@@ -23,7 +26,7 @@ export class ac_asset_operator {
 
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 8, nullable: true, default: null, comment: '내선번호' })
-    EXP_NO: string;
+    EXT_NO: string;
 
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 16, nullable: true, default: null, comment: '휴대폰번호(SMS발송)' })
@@ -84,4 +87,18 @@ export class ac_asset_operator {
     @Field(() => String, { nullable: true })
     @Column({ length: 256, type: 'varchar', nullable: true, default: null, comment: '설명' })
     REMARK?: string;
+
+    @ManyToOne(() => ac_company, (company: ac_company) => company.OPERATORS, { createForeignKeyConstraints: false })
+    @JoinColumn({ name: 'COMPANY_ID', referencedColumnName: 'ID' })
+    COMPANY: ac_company;
+
+    @Field(() => String)
+    get TYPE(): string {
+        return 'Operator';
+    }
+
+    @Field(() => String)
+    get KEY(): string {
+        return `aao_${this.ID}`;
+    }
 }

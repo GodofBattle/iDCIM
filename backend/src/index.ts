@@ -22,6 +22,7 @@ import { PredefineThresholdResolver } from "./resolver/predefineThreshold";
 import { FileResolver } from './resolver/file';
 import { TreeResolver } from './resolver/tree';
 import { AccountCustomResolver } from './resolver/accountCustom';
+import { ManagerResolver } from "./resolver/manager";
 
 import Auth from './utils/auth';
 
@@ -40,7 +41,8 @@ const schemas = buildSchemaSync({
         PredefineThresholdResolver,
         FileResolver,
         TreeResolver,
-        AccountCustomResolver
+        AccountCustomResolver,
+        ManagerResolver
     ],
 });
 

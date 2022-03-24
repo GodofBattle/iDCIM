@@ -431,8 +431,9 @@ export default class IMoveableTree extends Vue {
                             this.dest.nextElementSibling
                         );
                     } else {
-                        const is_addable_node =
-                            this.$props.addableType[this.destNode.type];
+                        const is_addable_node = this.$props.addableType
+                            ? this.$props.addableType[this.destNode.type]
+                            : false;
                         this.draggedIconState = is_addable_node
                             ? 'plus'
                             : 'ban';
@@ -718,8 +719,9 @@ export default class IMoveableTree extends Vue {
     get moveableDragging(): boolean {
         const target_type = this.targetNode?.type;
         const dest_type = this.destNode?.type;
-        const is_moveable_target =
-            this.$props.moveableType[this.targetNode?.type];
+        const is_moveable_target = this.$props.moveableType
+            ? this.$props.moveableType[this.targetNode?.type]
+            : null;
 
         return is_moveable_target
             ? true

@@ -1,7 +1,10 @@
 import { Field, ID, Int, ObjectType } from "type-graphql";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { TypeormLoader } from "type-graphql-dataloader";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 import { nullableDate } from "../../scalar/nullableDate";
+
+import { ac_asset_operator } from "./ac_asset_operator";
 
 @ObjectType()
 @Entity({ synchronize: false })
@@ -49,4 +52,14 @@ export class ac_company {
     @Field(() => String, { nullable: true })
     @Column({ length: 256, type: 'varchar', nullable: true, default: null, comment: '설명' })
     REMARK?: string;
+
+    @Field(() => [ac_asset_operator], { nullable: true })
+    @OneToMany(() => ac_asset_operator, (operator: ac_asset_operator) => operator.COMPANY, { primary: false, cascade: true, createForeignKeyConstraints: false })
+    @TypeormLoader((operator: ac_asset_operator) => operator.COMPANY_ID, { selfKey: true })
+    OPERATORS?: ac_asset_operator[];
+
+    @Field(() => String)
+    get KEY(): string {
+        return `ac_${this.ID}`;
+    }
 }
