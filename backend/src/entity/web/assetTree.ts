@@ -23,6 +23,9 @@ export class AssetTree {
     @Field(() => String, { nullable: true })
     type: string;
 
+    @Field(() => Boolean, { nullable: true })
+    manipulable: boolean;
+
     @Field(() => [AssetTree]!, { nullable: true })
     children: AssetTree[] | null;
 

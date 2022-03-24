@@ -2,10 +2,12 @@
     <div id="manager-tree">
         <div class="i-tree-content">
             <i-moveable-tree
-                :value="managers"
+                :value="companies"
                 :moveable="true"
                 :filter="true"
                 selectionMode="single"
+                :addable-type="addableType"
+                :moveable-type="moveableType"
             >
                 <template #C="slotProps">
                     <div class="p-d-flex">
@@ -24,6 +26,20 @@
                         ></i>
                         <div class="p-p-1">{{ slotProps.node.label }}</div>
                     </div>
+                </template>
+                <template #addCompany>
+                    <Button
+                        class="p-button-secondary p-button-sm"
+                        :label="addCompanyLabel"
+                        icon="pi pi-plus"
+                    ></Button>
+                </template>
+                <template #addOperator>
+                    <Button
+                        class="p-button-info p-button-sm p-py-1"
+                        label="[담당자] 추가"
+                        icon="pi pi-plus"
+                    ></Button>
                 </template>
             </i-moveable-tree>
         </div>
@@ -52,10 +68,10 @@ type TabItem = {
 
 @Component<ManagerTree>({
     apollo: {
-        managers: {
+        companies: {
             query: gql`
-                query Managers($TYPE: String!) {
-                    Managers(TYPE: $TYPE) {
+                query Companies($TYPE: String!) {
+                    Companies(TYPE: $TYPE) {
                         key: KEY
                         label: NAME
                         type: TYPE
@@ -75,7 +91,10 @@ type TabItem = {
             manual: false,
             prefetch: false,
             fetchPolicy: 'no-cache',
-            update: ({ Managers }) => Managers,
+            update({ Companies }) {
+                this.apolloFetch(Companies);
+                return Companies;
+            },
         },
     },
 })
@@ -87,12 +106,61 @@ export default class ManagerTree extends Vue {
     ];
 
     selectedTabIndex: number = 0;
+    addableType: any = { C: true, P: true, O: true, Operator: false };
+    moveableType: any = { C: false, P: false, O: false, Operator: false };
 
-    managers: Array<any> = [];
+    companies: Array<any> = [];
+
+    treeRefresh() {
+        this.$apollo.queries.companies.refresh();
+    }
 
     onChangeTabHeader() {
-        console.info(this.selectedTabIndex);
-        this.$apollo.queries.managers.refresh();
+        this.treeRefresh();
+    }
+
+    apolloFetch(companies: Array<any>) {
+        companies.forEach((company) => {
+            switch (company.type) {
+                case 'C':
+                case 'P':
+                case 'O': {
+                    Object.defineProperty(company, 'manipulable', {
+                        value: false,
+                        configurable: true,
+                        enumerable: true,
+                        writable: true,
+                    });
+
+                    if (
+                        !company.children.some(
+                            (c: any) => c.type === 'addOperator'
+                        )
+                    ) {
+                        company.children.push({
+                            type: 'addOperator',
+                            selectable: false,
+                            manipulable: false,
+                            pId: company.key,
+                            pName: company.label,
+                        });
+                    }
+                    break;
+                }
+            }
+        });
+
+        if (!companies.some((company: any) => company.type === 'addCompany')) {
+            companies.push({
+                type: 'addCompany',
+                manipulable: false,
+                selecatable: false,
+            });
+        }
+    }
+
+    get addCompanyLabel(): string {
+        return `[${this.tabList[this.selectedTabIndex].header}] 추가`;
     }
 }
 </script>

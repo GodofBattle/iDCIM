@@ -119,6 +119,10 @@ import DomHandler from '@/plugins/primevue.DomHandler';
             type: Number,
             default: 1,
         },
+        acceptableDepth: {
+            type: Number,
+            default: 0,
+        },
         order: {
             type: Number,
             default: 1,
@@ -293,36 +297,33 @@ export default class IMoveableTreeNode extends Vue {
 
     // by shkoh 20220209: Tree에서 Node Item의 Drag & Drop에 관한 이벤트 처리 시작
     onMouseDown(event: MouseEvent) {
-        if (this.$props.depth > 1 && this.$props.moveable) {
+        if (this.isMoveableNode) {
             this.$emit('node-mousedown', event);
         }
     }
 
     onDragStart(event: DragEvent, node: any) {
-        if (this.$props.depth > 1 && this.$props.moveable) {
+        if (this.isMoveableNode) {
             this.$emit('node-dragstart', { originalEvent: event, node }, node);
         }
     }
 
     onDrag(event: DragEvent) {
-        if (this.$props.depth > 1 && this.$props.moveable)
-            this.$emit('node-drag', event);
+        if (this.isMoveableNode) this.$emit('node-drag', event);
     }
 
     onDragOver(event: DragEvent, node: any) {
-        if (this.$props.depth > 1 && this.$props.moveable) {
+        if (this.$props.moveable) {
             this.$emit('node-dragover', { originalEvent: event, node });
         }
     }
 
     onDragEnd(event: DragEvent) {
-        if (this.$props.depth > 1 && this.$props.moveable)
-            this.$emit('node-dragend', event);
+        if (this.isMoveableNode) this.$emit('node-dragend', event);
     }
 
     onDrop(event: DragEvent) {
-        if (this.$props.depth > 1 && this.$props.moveable)
-            this.$emit('node-drop', event);
+        if (this.isMoveableNode) this.$emit('node-drop', event);
     }
 
     onNodeMouseDown(event: MouseEvent) {
@@ -492,7 +493,7 @@ export default class IMoveableTreeNode extends Vue {
             'p-treenode',
             {
                 'p-treenode-leaf': this.leaf,
-                'i-moveable': this.$props.depth > 1 && this.$props.moveable,
+                'i-moveable': this.$props.moveable,
             },
         ];
     }
@@ -505,8 +506,7 @@ export default class IMoveableTreeNode extends Vue {
             {
                 'p-treenode-selectable': this.selectable,
                 'p-highlight': this.checkboxMode ? this.checked : this.selected,
-                'i-moveable-content':
-                    this.$props.depth > 1 && this.$props.moveable,
+                'i-moveable-content': this.$props.moveable,
             },
         ];
     }
@@ -561,6 +561,14 @@ export default class IMoveableTreeNode extends Vue {
                 'pi-chevron-right': !this.expanded,
             },
         ];
+    }
+
+    get isManipulableNode(): boolean {
+        return this.$props.node.manipulable !== false;
+    }
+
+    get isMoveableNode(): boolean {
+        return this.$props.moveable && this.$props.node.manipulable !== false;
     }
 }
 </script>

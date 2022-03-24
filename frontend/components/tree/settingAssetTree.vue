@@ -87,6 +87,7 @@ import Component from '@/plugins/nuxt-class-component';
                     order
                     parent_key
                     type
+                    manipulable
                 }
 
                 query {
@@ -121,8 +122,8 @@ export default class SettingAssetTree extends Vue {
     assetTree: Array<any> = [];
 
     treeExpandedKey: any = { pah_1: true };
-    addableType = { AssetHier: true };
-    moveableType = { AssetHier: true, AssetCode: false };
+    addableType = { ROOT: false, AssetHier: true };
+    moveableType = { ROOT: false, AssetHier: true, AssetCode: false };
 
     selectionKeys: null | object = null;
 

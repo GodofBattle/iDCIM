@@ -32,7 +32,8 @@ export class TreeResolver {
                     alias: asset.P_ID === 0 ? site_name : asset.NAME,
                     order: asset.ORDER,
                     parent_key: asset.P_ID === 0 ? null : `pah_${asset.P_ID}`,
-                    type: asset.TYPE
+                    type: asset.P_ID === 0 ? 'ROOT' : asset.TYPE,
+                    manipulable: asset.P_ID === 0 ? false : true
                 }
             });
 
@@ -47,7 +48,8 @@ export class TreeResolver {
                     alias: asset.ALIAS === null ? '' : asset.ALIAS,
                     order: asset.ORDER,
                     parent_key: `pah_${asset.PD_ASSET_HIER_ID}`,
-                    type: asset.TYPE
+                    type: asset.TYPE,
+                    manipulable: true
                 })
             });
 
@@ -161,7 +163,8 @@ export class TreeResolver {
                 label: site_name,
                 order: 1,
                 parent_key: null,
-                type: 'SITE'
+                type: 'SITE',
+                manipulable: false
             });
 
             (await getRepository(ac_cust_hier).find({ where: { TYPE: 'P' }, order: { P_TID: 'ASC', ORDER: 'ASC' } })).forEach((node: ac_cust_hier) => {
@@ -170,7 +173,8 @@ export class TreeResolver {
                     label: node.NAME,
                     order: node.ORDER,
                     parent_key: node.P_TID === 0 ? `prh_0` : `ach_${node.P_TID}`,
-                    type: 'POSITION'
+                    type: 'POSITION',
+                    manipulable: true
                 })
             });
 
@@ -259,7 +263,8 @@ export class TreeResolver {
                 label: site_name,
                 order: 1,
                 parent_key: null,
-                type: 'SITE'
+                type: 'SITE',
+                manipulable: false
             });
 
             (await getRepository(ac_cust_hier).find({ where: { TYPE: 'C' }, order: { P_TID: 'ASC', ORDER: 'ASC' } })).forEach((node: ac_cust_hier) => {
@@ -268,7 +273,8 @@ export class TreeResolver {
                     label: node.NAME,
                     order: node.ORDER,
                     parent_key: node.P_TID === 0 ? `prh_0` : `ach_${node.P_TID}`,
-                    type: 'CUSTOM'
+                    type: 'CUSTOM',
+                    manipulable: true
                 })
             });
 

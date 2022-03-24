@@ -70,6 +70,7 @@ import Component from '@/plugins/nuxt-class-component';
                     order
                     parent_key
                     type
+                    manipulable
                 }
 
                 query {

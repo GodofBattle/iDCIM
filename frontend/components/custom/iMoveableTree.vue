@@ -722,8 +722,11 @@ export default class IMoveableTree extends Vue {
         const is_moveable_target = this.$props.moveableType
             ? this.$props.moveableType[this.targetNode?.type]
             : null;
+        const is_moveable_dest = this.$props.moveableType
+            ? this.$props.moveableType[this.destNode?.type]
+            : null;
 
-        return is_moveable_target
+        return is_moveable_target && is_moveable_dest
             ? true
             : this.$props.onlyMoveableSameType
             ? target_type === dest_type

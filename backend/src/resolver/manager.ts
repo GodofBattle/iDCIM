@@ -8,7 +8,7 @@ import { ac_company } from "../entity/database/ac_company";
 @Resolver()
 export class ManagerResolver {
     @Query(() => [ac_company])
-    async Managers(
+    async Companies(
         @Arg('TYPE', () => String!) type: string,
         @Ctx() ctx: any
     ) {
