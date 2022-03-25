@@ -57,14 +57,15 @@ export default {
             '@/components/common',
             '@/components/company',
             '@/components/custom',
-            '@/components/user',
-            '@/components/sensor',
-            '@/components/tree',
-            '@/components/manufacturer',
-            '@/components/product',
             '@/components/interface',
+            '@/components/manufacturer',
+            '@/components/operator',
+            '@/components/product',
+            '@/components/sensor',
+            '@/components/site',
             '@/components/threshold',
-            '@/components/site'
+            '@/components/tree',
+            '@/components/user',
         ]
     },
 

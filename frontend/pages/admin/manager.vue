@@ -12,6 +12,12 @@
                         @reset="reset"
                     ></company-panel>
                 </div>
+                <div v-else-if="viewType === 'Operator'">
+                    <operator-panel
+                        :operator-id="id"
+                        :operator-name="name"
+                    ></operator-panel>
+                </div>
             </div>
         </div>
     </div>
@@ -32,21 +38,23 @@ import Component from '@/plugins/nuxt-class-component';
 })
 export default class AdminManager extends Vue {
     id: number = -1;
+    name: string = '';
     viewType: string = '';
 
     head() {
         return { title: `iDCIM - ${this.$props.title}` };
     }
 
-    onSelectTreeNode({ type = '', id = -1 }) {
-        console.info(type, id);
+    onSelectTreeNode({ type = '', id = -1, name = '' }) {
         this.viewType = type;
         this.id = id;
+        this.name = name;
     }
 
     reset() {
         this.viewType = '';
         this.id = -1;
+        this.name = '';
     }
 }
 </script>

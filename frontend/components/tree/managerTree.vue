@@ -146,20 +146,21 @@ export default class ManagerTree extends Vue {
     }
 
     unselectNode() {
-        this.$emit('select', { type: '', id: -1 });
+        this.$emit('select', { type: '', id: -1, name: '' });
     }
 
     onChangeTabHeader() {
         this.treeRefresh();
-        this.$emit('select', { type: '', id: -1 });
+        this.$emit('select', { type: '', id: -1, name: '' });
     }
 
-    onNodeSelect({ key = '' as string }: any) {
+    onNodeSelect({ key = '' as string, label = '' }: any) {
         const [type, id] = key.split('_');
 
         this.$emit('select', {
             type: type === 'ac' ? 'Company' : type === 'aao' ? 'Operator' : '',
             id: Number(id),
+            name: label,
         });
     }
 

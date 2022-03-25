@@ -88,6 +88,7 @@ export class ac_asset_operator {
     @Column({ length: 256, type: 'varchar', nullable: true, default: null, comment: '설명' })
     REMARK?: string;
 
+    @Field(() => ac_company, { nullable: true })
     @ManyToOne(() => ac_company, (company: ac_company) => company.OPERATORS, { createForeignKeyConstraints: false })
     @JoinColumn({ name: 'COMPANY_ID', referencedColumnName: 'ID' })
     COMPANY: ac_company;
