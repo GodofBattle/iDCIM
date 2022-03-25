@@ -55,6 +55,7 @@ export default {
         dirs: [
             '@/components',
             '@/components/common',
+            '@/components/company',
             '@/components/custom',
             '@/components/user',
             '@/components/sensor',

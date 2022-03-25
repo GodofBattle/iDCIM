@@ -3,9 +3,16 @@
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
         <div class="p-d-flex i-manager-content">
             <div class="p-col-fixed" style="width: var(--tree-width)">
-                <manager-tree></manager-tree>
+                <manager-tree @select="onSelectTreeNode"></manager-tree>
             </div>
-            <div class="p-col"></div>
+            <div class="p-col">
+                <div v-if="viewType === 'Company'">
+                    <company-panel
+                        :company-id="id"
+                        @reset="reset"
+                    ></company-panel>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -24,8 +31,22 @@ import Component from '@/plugins/nuxt-class-component';
     },
 })
 export default class AdminManager extends Vue {
+    id: number = -1;
+    viewType: string = '';
+
     head() {
         return { title: `iDCIM - ${this.$props.title}` };
+    }
+
+    onSelectTreeNode({ type = '', id = -1 }) {
+        console.info(type, id);
+        this.viewType = type;
+        this.id = id;
+    }
+
+    reset() {
+        this.viewType = '';
+        this.id = -1;
     }
 }
 </script>

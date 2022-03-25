@@ -1,4 +1,4 @@
-import { Field, ID, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, ID, Int, ObjectType } from "type-graphql";
 import { TypeormLoader } from "type-graphql-dataloader";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
@@ -62,4 +62,31 @@ export class ac_company {
     get KEY(): string {
         return `ac_${this.ID}`;
     }
+}
+
+@ArgsType()
+export class ac_company_args {
+    @Field(() => String, { nullable: true })
+    TYPE: string;
+
+    @Field(() => String, { nullable: true })
+    NAME: string;
+
+    @Field(() => String, { nullable: true })
+    ADDR: string;
+
+    @Field(() => String, { nullable: true })
+    PHONE: string;
+
+    @Field(() => String, { nullable: true })
+    FAX: string;
+
+    @Field(() => String, { nullable: true })
+    EMAIL: string;
+
+    @Field(() => String, { nullable: true })
+    URL: string;
+
+    @Field(() => String, { nullable: true })
+    REMARK: string;
 }

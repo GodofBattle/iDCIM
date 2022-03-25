@@ -8,6 +8,7 @@
                 selectionMode="single"
                 :addable-type="addableType"
                 :moveable-type="moveableType"
+                @node-select="onNodeSelect"
             >
                 <template #C="slotProps">
                     <div class="p-d-flex">
@@ -27,17 +28,27 @@
                         <div class="p-p-1">{{ slotProps.node.label }}</div>
                     </div>
                 </template>
+                <template #Operator="slotProps">
+                    <div class="p-d-flex">
+                        <i
+                            class="pi pi-user p-p-1 p-mr-1"
+                            style="font-size: 1.2rem"
+                        ></i>
+                        <div class="p-p-1">{{ slotProps.node.label }}</div>
+                    </div>
+                </template>
                 <template #addCompany>
                     <Button
                         class="p-button-secondary p-button-sm"
                         :label="addCompanyLabel"
                         icon="pi pi-plus"
+                        @click="addCompany"
                     ></Button>
                 </template>
                 <template #addOperator>
                     <Button
                         class="p-button-info p-button-sm p-py-1"
-                        label="[담당자] 추가"
+                        label="[담당자] 등록"
                         icon="pi pi-plus"
                     ></Button>
                 </template>
@@ -51,6 +62,11 @@
                 @tab-change="onChangeTabHeader"
             ></tab-header-list>
         </div>
+        <company-add-dialog
+            :visible.sync="showCompanyAddDialog"
+            :tab-type="selectionInfo"
+            @refresh="treeRefresh"
+        ></company-add-dialog>
     </div>
 </template>
 
@@ -58,6 +74,8 @@
 import Vue from 'vue';
 import Component from '@/plugins/nuxt-class-component';
 import gql from 'graphql-tag';
+
+import { eventBus } from '@/plugins/vueEventBus';
 
 type TabItem = {
     [index: string]: string | boolean;
@@ -111,12 +129,38 @@ export default class ManagerTree extends Vue {
 
     companies: Array<any> = [];
 
+    showCompanyAddDialog: boolean = false;
+
+    mounted() {
+        eventBus.$on('refreshManagerTree', () => {
+            this.treeRefresh();
+        });
+    }
+
+    beforeDestroy() {
+        eventBus.$off('refreshManagerTree');
+    }
+
     treeRefresh() {
         this.$apollo.queries.companies.refresh();
     }
 
+    unselectNode() {
+        this.$emit('select', { type: '', id: -1 });
+    }
+
     onChangeTabHeader() {
         this.treeRefresh();
+        this.$emit('select', { type: '', id: -1 });
+    }
+
+    onNodeSelect({ key = '' as string }: any) {
+        const [type, id] = key.split('_');
+
+        this.$emit('select', {
+            type: type === 'ac' ? 'Company' : type === 'aao' ? 'Operator' : '',
+            id: Number(id),
+        });
     }
 
     apolloFetch(companies: Array<any>) {
@@ -153,14 +197,22 @@ export default class ManagerTree extends Vue {
         if (!companies.some((company: any) => company.type === 'addCompany')) {
             companies.push({
                 type: 'addCompany',
+                selectable: false,
                 manipulable: false,
-                selecatable: false,
             });
         }
     }
 
+    addCompany() {
+        this.showCompanyAddDialog = true;
+    }
+
     get addCompanyLabel(): string {
-        return `[${this.tabList[this.selectedTabIndex].header}] 추가`;
+        return `[${this.tabList[this.selectedTabIndex].header}] 등록`;
+    }
+
+    get selectionInfo(): TabItem {
+        return this.tabList[this.selectedTabIndex];
     }
 }
 </script>
