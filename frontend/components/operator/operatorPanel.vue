@@ -1,9 +1,17 @@
 <template>
     <div id="i-operator-panel">
         <div class="p-d-flex p-px-2">
-            <div class="p-as-center p-text-bold i-title">오퍼레이터 그룹</div>
+            <div class="p-as-center p-text-bold i-title">
+                {{ operatorTitle }}
+            </div>
             <div class="p-ml-auto">
-                <Button icon="pi pi-check" label="적용" class="p-mr-2"></Button>
+                <Button
+                    icon="pi pi-check"
+                    label="적용"
+                    class="p-mr-2"
+                    :disabled="applyButtonDisabled"
+                    @click="UpdateOperator"
+                ></Button>
                 <Button
                     icon="pi pi-trash"
                     label="삭제"
@@ -12,14 +20,19 @@
             </div>
         </div>
 
-        <TabView>
+        <TabView :active-index.sync="tabIndex">
             <TabPanel>
                 <template #header>
                     <i class="pi pi-home p-mr-2"></i>
                     <span>기본정보</span>
                 </template>
 
-                <h2>기본정보란입니다!</h2>
+                <operator-panel-info
+                    ref="operatorPanelInfoRef"
+                    :operator-id="operatorId"
+                    :apply-button-disabled.sync="applyButtonDisabled"
+                    @opertor-data-refresh="operratorRefresh"
+                ></operator-panel-info>
             </TabPanel>
             <TabPanel>
                 <template #header>
@@ -54,6 +67,17 @@ import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 
+type Company = {
+    [index: string]: string;
+    NAME: string;
+};
+
+type Operator = {
+    [index: string]: string | Company;
+    NAME: string;
+    COMPANY: Company;
+};
+
 @Component<OperatorPanel>({
     props: {
         operatorId: Number,
@@ -78,13 +102,47 @@ import Component from '@/plugins/nuxt-class-component';
                 };
             },
             update: ({ Operator }) => {
-                console.info(Operator);
                 return Operator;
             },
         },
     },
 })
-export default class OperatorPanel extends Vue {}
+export default class OperatorPanel extends Vue {
+    $refs!: {
+        operatorPanelInfoRef: any;
+    };
+
+    operatorData: Operator = {
+        NAME: '',
+        COMPANY: {
+            NAME: '',
+        },
+    };
+
+    applyButtonDisabled = true;
+
+    tabIndex: number = 0;
+
+    operratorRefresh() {
+        this.$apollo.queries.operatorData.refresh();
+    }
+
+    get operatorTitle(): string {
+        const parent_name = this.operatorData.COMPANY?.NAME
+            ? `${this.operatorData.COMPANY.NAME}: `
+            : '';
+        return `${parent_name}${this.operatorData.NAME}`;
+    }
+
+    UpdateOperator() {
+        switch (this.tabIndex) {
+            case 0: {
+                this.$refs.operatorPanelInfoRef.updateOperatorInfo();
+                break;
+            }
+        }
+    }
+}
 </script>
 
 <style lang="scss" scoped>

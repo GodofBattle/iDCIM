@@ -79,13 +79,7 @@
                         </div>
                         <Button
                             v-if="protocol_file_name.length > 0"
-                            class="
-                                p-mt-2
-                                p-text-left
-                                p-button-sm
-                                p-button-outlined
-                                p-button-secondary
-                            "
+                            class="p-mt-2 p-text-left p-button-sm p-button-outlined p-button-secondary"
                             :label="protocol_file_name"
                             icon="pi pi-download"
                             @click="protocolFileDownload"
@@ -131,14 +125,14 @@ type Interface = {
 @Component<InterfacePanelInfo>({
     props: {
         id: Number,
-        applyButtonDisabled: Boolean
+        applyButtonDisabled: Boolean,
     },
     watch: {
         newInterfaceData: {
             deep: true,
             handler(_data: Interface) {
                 this.compareInterfaceData(_data);
-            }
+            },
         },
         chkProtocolFileField(_is_show) {
             if (_is_show) {
@@ -146,7 +140,7 @@ type Interface = {
             } else {
                 this.newInterfaceData.PROTOCOL_FILE_ID = null;
             }
-        }
+        },
     },
     apollo: {
         interfaceData: {
@@ -168,7 +162,7 @@ type Interface = {
             },
             variables(): any {
                 return {
-                    ID: this.id ? this.id : -1
+                    ID: this.id ? this.id : -1,
                 };
             },
             result({ data, loading }: any) {
@@ -179,7 +173,7 @@ type Interface = {
                         this.apolloFetch(PredefineInterface);
                     }
                 }
-            }
+            },
         },
         assetCodeList: {
             query: gql`
@@ -192,7 +186,7 @@ type Interface = {
                 }
             `,
             prefetch: false,
-            update: ({ PredefinedAssetCodes }) => PredefinedAssetCodes
+            update: ({ PredefinedAssetCodes }) => PredefinedAssetCodes,
         },
         interfaceTypeList: {
             query: gql`
@@ -204,9 +198,9 @@ type Interface = {
                 }
             `,
             prefetch: false,
-            update: ({ Codes }) => Codes
-        }
-    }
+            update: ({ Codes }) => Codes,
+        },
+    },
 })
 export default class InterfacePanelInfo extends Vue {
     $refs!: {
@@ -218,7 +212,7 @@ export default class InterfacePanelInfo extends Vue {
 
     invalidMessage = {
         NAME: undefined as string | undefined,
-        REMARK: undefined as string | undefined
+        REMARK: undefined as string | undefined,
     };
 
     interfaceData: Interface = {
@@ -227,7 +221,7 @@ export default class InterfacePanelInfo extends Vue {
         NAME: '',
         PROTOCOL_FILE_ID: undefined,
         REMARK: '',
-        PROTOCOL_FILE: undefined
+        PROTOCOL_FILE: undefined,
     };
 
     newInterfaceData: Interface = {
@@ -236,7 +230,7 @@ export default class InterfacePanelInfo extends Vue {
         NAME: '',
         PROTOCOL_FILE_ID: undefined,
         REMARK: '',
-        PROTOCOL_FILE: undefined
+        PROTOCOL_FILE: undefined,
     };
 
     protocolFileUploader = null;
@@ -366,7 +360,7 @@ export default class InterfacePanelInfo extends Vue {
                         DATA
                     }
                 }
-            `
+            `,
             })
             .then(({ data }) => {
                 const pd_file = data.PdFile;
@@ -392,7 +386,7 @@ export default class InterfacePanelInfo extends Vue {
                     severity: 'error',
                     summary: '파일 로드 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             });
     }
@@ -415,7 +409,7 @@ export default class InterfacePanelInfo extends Vue {
                 severity: 'warn',
                 summary: '제품 유효성 실패',
                 detail: '제품 내용을 확인하세요',
-                life: 2000
+                life: 2000,
             });
             return;
         }
@@ -424,7 +418,7 @@ export default class InterfacePanelInfo extends Vue {
             ID: this.$props.id,
             ASSET_CD: this.newInterfaceData.ASSET_CD,
             INTF_CD: this.newInterfaceData.INTF_CD,
-            NAME: this.newInterfaceData.NAME
+            NAME: this.newInterfaceData.NAME,
         };
 
         if (this.isChangeProtocolFile) {
@@ -432,7 +426,7 @@ export default class InterfacePanelInfo extends Vue {
                 value: this.protocol_file_blob,
                 configurable: true,
                 enumerable: true,
-                writable: true
+                writable: true,
             });
         }
 
@@ -442,7 +436,7 @@ export default class InterfacePanelInfo extends Vue {
                 : this.interfaceData.PROTOCOL_FILE_ID,
             configurable: true,
             enumerable: true,
-            writable: true
+            writable: true,
         });
 
         ['REMARK'].forEach((key: string) => {
@@ -451,7 +445,7 @@ export default class InterfacePanelInfo extends Vue {
                     value: this.newInterfaceData[key],
                     configurable: true,
                     enumerable: true,
-                    writable: true
+                    writable: true,
                 });
             }
         });
@@ -481,7 +475,7 @@ export default class InterfacePanelInfo extends Vue {
                         )
                     }
                 `,
-                variables
+                variables,
             })
             .then(() => {
                 eventBus.$emit('refreshInterfaceTree');
@@ -492,7 +486,7 @@ export default class InterfacePanelInfo extends Vue {
                     severity: 'info',
                     summary: '인터페이스 변경 완료',
                     detail: `${this.newInterfaceData.NAME} 인터페이스 변경`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -502,7 +496,7 @@ export default class InterfacePanelInfo extends Vue {
                     severity: 'error',
                     summary: '인터페이스 변경 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {

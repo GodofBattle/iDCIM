@@ -1,11 +1,11 @@
-import { Field, ID, Int, ObjectType } from "type-graphql";
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
+import { ArgsType, Field, ID, Int, ObjectType } from "type-graphql";
+import { Column, Entity, JoinColumn, JoinTable, ManyToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
 
 import { ac_company } from "./ac_company";
 
 @ObjectType()
-@Entity({ synchronize: false })
+@Entity({ synchronize: false, orderBy: { NAME: 'ASC' } })
 export class ac_asset_operator {
     @Field(() => ID, { nullable: true })
     @PrimaryGeneratedColumn('increment', { type: 'int', comment: '아이디' })
@@ -23,6 +23,10 @@ export class ac_asset_operator {
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 16, nullable: true, default: null, comment: '부서' })
     DEPT: string;
+
+    @Field(() => String, { nullable: true })
+    @Column({ type: 'varchar', length: 16, nullable: true, default: null, comment: '전화번호' })
+    PHONE: string;
 
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 8, nullable: true, default: null, comment: '내선번호' })
@@ -102,4 +106,28 @@ export class ac_asset_operator {
     get KEY(): string {
         return `aao_${this.ID}`;
     }
+}
+
+@ArgsType()
+export class ac_asset_operator_args {
+    @Field(() => String, { nullable: true })
+    NAME: string;
+
+    @Field(() => String, { nullable: true })
+    DEPT: string;
+
+    @Field(() => String, { nullable: true })
+    PHONE: string;
+
+    @Field(() => String, { nullable: true })
+    EXT_NO: string;
+
+    @Field(() => String, { nullable: true })
+    MOBILE: string;
+
+    @Field(() => String, { nullable: true })
+    EMAIL: string;
+
+    @Field(() => String, { nullable: true })
+    REMARK: string;
 }

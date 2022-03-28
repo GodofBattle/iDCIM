@@ -8,6 +8,7 @@
                 selectionMode="single"
                 :addable-type="addableType"
                 :moveable-type="moveableType"
+                @insert-tree="onInsertNode"
                 @node-select="onNodeSelect"
             >
                 <template #C="slotProps">
@@ -162,6 +163,36 @@ export default class ManagerTree extends Vue {
             id: Number(id),
             name: label,
         });
+    }
+
+    onInsertNode(target: any, dest: any) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql``,
+            })
+            .then(() => {
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '담당자 위치 변경 완료',
+                    detail: `[${target.label}] 담당자는 ${dest.label} 소속으로 변경되었습니다`,
+                    life: 1800,
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '담당자 위치 변경 실패',
+                    detail: error.message,
+                    life: 2000,
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
     }
 
     apolloFetch(companies: Array<any>) {

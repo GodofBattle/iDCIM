@@ -477,5 +477,13 @@ export default class CompanyPanel extends Vue {
         color: var(--text-color);
         width: 10vw;
     }
+
+    .p-tabview-panels {
+        padding: 1rem 0.5rem;
+    }
+
+    .p-tabview-nav-content {
+        padding: 0.25rem 0.25rem 0 0.25rem;
+    }
 }
 </style>

@@ -2,7 +2,7 @@ import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-
 import { Arg, Args, Ctx, ID, Mutation, Publisher, PubSub, Query, Resolver } from "type-graphql";
 import { getRepository } from "typeorm";
 
-import { ac_asset_operator } from "../entity/database/ac_asset_operator";
+import { ac_asset_operator, ac_asset_operator_args } from "../entity/database/ac_asset_operator";
 import { ac_company, ac_company_args } from "../entity/database/ac_company";
 import { ac_user } from "../entity/database/ac_user";
 
@@ -150,8 +150,42 @@ export class ManagerResolver {
         try {
             if (!id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
 
-            const result = await getRepository(ac_asset_operator).findOne({ where: { ID: id } });
+            const result = await getRepository(ac_asset_operator).findOne({ where: { ID: id }, join: { alias: 'o', leftJoinAndSelect: { COMPANY: 'o.COMPANY' } } });
             return result;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async UpdateOperator(
+        @Arg('ID', () => ID) id: number,
+        @Args() { NAME, DEPT, PHONE, EXT_NO, MOBILE, EMAIL, REMARK }: ac_asset_operator_args,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if (!id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+
+            const user = await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } });
+
+            const update_data = {
+                UPDATE_USER_ID: user.ID,
+                UPDATE_USER_DT: new Date()
+            };
+
+            for (const [key, value] of Object.entries({ NAME, DEPT, PHONE, EXT_NO, MOBILE, EMAIL, REMARK })) {
+                if (value !== undefined) update_data[key] = value;
+            }
+
+            const result = await getRepository(ac_asset_operator).update({ ID: id }, update_data);
+            return result.affected > 0 ? true : false;
         } catch (err) {
             throw new SchemaError(err.message);
         }
