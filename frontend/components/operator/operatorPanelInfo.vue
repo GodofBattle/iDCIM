@@ -126,7 +126,6 @@ type OperatorInfo = {
             deep: true,
             handler(_new_info: OperatorInfo) {
                 this.compareOperatorInfo(_new_info);
-                console.info('watch');
             },
         },
     },

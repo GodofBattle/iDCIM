@@ -163,8 +163,9 @@ export default {
             'TabView',
             'Textarea',
             'TieredMenu',
-            'Toolbar',
             'Toast',
+            'ToggleButton',
+            'Toolbar',
             'Tree',
             'TreeTable'
         ],

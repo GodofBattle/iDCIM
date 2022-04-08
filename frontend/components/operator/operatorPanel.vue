@@ -40,7 +40,10 @@
                     <span>알림설정</span>
                 </template>
 
-                <h3>알림을 설정하는 곳입니다!</h3>
+                <operator-panel-notify
+                    ref="operatorPanelNotifyRef"
+                    :operator-id="operatorId"
+                ></operator-panel-notify>
             </TabPanel>
             <TabPanel>
                 <template #header>
@@ -110,6 +113,7 @@ type Operator = {
 export default class OperatorPanel extends Vue {
     $refs!: {
         operatorPanelInfoRef: any;
+        operatorPanelNotifyRef: any;
     };
 
     operatorData: Operator = {
