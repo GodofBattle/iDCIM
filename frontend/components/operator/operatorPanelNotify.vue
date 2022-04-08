@@ -273,6 +273,13 @@ export default class OperatorNotify extends Vue {
         opacity: 1;
     }
 
+    .i-allowed-level.p-highlight:hover {
+        background: linear-gradient(
+            rgba(196, 196, 196, 0.25),
+            rgba(196, 196, 196, 0.25)
+        );
+    }
+
     .i-allowed-level.lvl0 {
         border-top-right-radius: 0px;
         border-bottom-right-radius: 0px;
@@ -283,10 +290,7 @@ export default class OperatorNotify extends Vue {
         color: var(--text-alert-color);
         background-color: var(--normal);
         border-color: var(--normal);
-    }
-
-    .i-allowed-level.p-highlight:hover {
-        filter: brightness(0.9);
+        text-shadow: 1px 1px 1px #333333;
     }
 
     .i-allowed-level.lvl1 {
@@ -298,6 +302,7 @@ export default class OperatorNotify extends Vue {
         color: var(--text-alert-warning-color);
         background-color: var(--warning);
         border-color: var(--warning);
+        font-weight: bold;
     }
 
     .i-allowed-level.lvl2 {
@@ -309,6 +314,7 @@ export default class OperatorNotify extends Vue {
         color: var(--text-alert-color);
         background-color: var(--major);
         border-color: var(--major);
+        text-shadow: 1px 1px 1px #333333;
     }
 
     .i-allowed-level.lvl3 {
@@ -320,6 +326,7 @@ export default class OperatorNotify extends Vue {
         color: var(--text-alert-color);
         background-color: var(--critical);
         border-color: var(--critical);
+        text-shadow: 1px 1px 1px #333333;
     }
 }
 </style>
