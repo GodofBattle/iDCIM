@@ -3,7 +3,10 @@
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
         <div class="p-d-flex i-interface-content">
             <div class="p-col-fixed" style="width: var(--tree-width)">
-                <interface-tree @select="onSelectTreeNode"></interface-tree>
+                <interface-tree
+                    @select="onSelectTreeNode"
+                    :style="{ height: '100%' }"
+                ></interface-tree>
             </div>
             <div class="p-col">
                 <div v-if="viewType === 'PredefineInterface'">

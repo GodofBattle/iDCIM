@@ -103,13 +103,7 @@
                                 </div>
                                 <Button
                                     v-if="manual_file_name.length > 0"
-                                    class="
-                                        p-mt-2
-                                        p-text-left
-                                        p-button-sm
-                                        p-button-outlined
-                                        p-button-secondary
-                                    "
+                                    class="p-mt-2 p-text-left p-button-sm p-button-outlined p-button-secondary"
                                     :label="manual_file_name"
                                     icon="pi pi-download"
                                     @click="manualFileDownload"
@@ -174,7 +168,7 @@
                         </small>
                     </div>
                 </div>
-                <div class="p-col-3 p-fluid p-input-filled">
+                <div class="p-col-3 p-fluid p-input-filled p-mr-6">
                     <div class="p-field">
                         <label for="info">부가정보(스펙)</label>
                         <DataTable
@@ -185,12 +179,12 @@
                             @cell-edit-complete="onCellEditComplete"
                         >
                             <Column
+                                :header-style="{ width: '2rem' }"
                                 :row-reorder="true"
-                                header-style="width: 2rem;"
                             ></Column>
                             <Column
                                 field="key"
-                                header-style="width: 30%;"
+                                :header-style="{ width: '30%' }"
                                 body-style="overflow-wrap: break-word"
                             >
                                 <template #editor="slotProps">
@@ -221,16 +215,12 @@
                             </Column>
                             <Column
                                 :row-reorder="false"
-                                header-style="width: 3rem;"
+                                :header-style="{ width: '3rem' }"
                             >
                                 <template #body="slotProps">
                                     <Button
                                         icon="pi pi-times"
-                                        class="
-                                            p-button-rounded
-                                            p-button-danger
-                                            p-button-text
-                                        "
+                                        class="p-button-rounded p-button-danger p-button-text"
                                         @click="
                                             deleteProductInfo(slotProps.index)
                                         "
@@ -244,14 +234,80 @@
                             :style="{
                                 width: '20px',
                                 height: '20px',
-                                padding: '0px'
+                                padding: '0px',
                             }"
                             @click="addProductInfo"
                         ></Button>
                     </div>
                 </div>
+                <div class="p-col-3 p-fluid p-input-filled">
+                    <div class="p-field">
+                        <label for="intf">사용 가능한 인터페이스</label>
+                        <DataTable
+                            :value="productInterfaces"
+                            class="p-datatable-sm"
+                        >
+                            <Column field="ID">
+                                <template #body="slotProps">
+                                    <Button
+                                        class="p-button-text p-button-info"
+                                        :label="
+                                            productInterfaceLabel(
+                                                slotProps.data
+                                            )
+                                        "
+                                        :style="{ 'text-align': 'left' }"
+                                        @click="
+                                            showInterfaceTreePanel(
+                                                $event,
+                                                slotProps.data
+                                            )
+                                        "
+                                    ></Button>
+                                </template>
+                            </Column>
+                            <Column :header-style="{ width: '3rem' }">
+                                <template #body="slotProps">
+                                    <Button
+                                        icon="pi pi-times"
+                                        class="p-button-rounded p-button-danger p-button-text"
+                                        @click="
+                                            deleteProductInterface(
+                                                slotProps.index
+                                            )
+                                        "
+                                    ></Button>
+                                </template>
+                            </Column>
+                        </DataTable>
+                        <Button
+                            class="p-mt-2"
+                            icon="pi pi-plus"
+                            :style="{
+                                width: '20px',
+                                height: '20px',
+                                padding: '0px',
+                            }"
+                            @click="addProductInterface"
+                        ></Button>
+                    </div>
+                </div>
             </div>
         </ScrollPanel>
+        <OverlayPanel
+            ref="interfaceTreePanel"
+            :showCloseIcon="true"
+            appendTo="body"
+            :style="{ width: '16vw', height: '42vh' }"
+        >
+            <interface-tree
+                :is-editing="false"
+                :show-only-parents="true"
+                :init-select-keys="selectedKeyToInterfaceTree"
+                :style="{ height: 'calc(42vh - 2rem)' }"
+                @select="onSelectInterfaceTree"
+            ></interface-tree>
+        </OverlayPanel>
     </div>
 </template>
 
@@ -277,7 +333,7 @@ type Product = {
 
 @Component<ProductPanel>({
     props: {
-        productId: Number
+        productId: Number,
     },
     watch: {
         productInfo(_info: any[]) {
@@ -296,7 +352,7 @@ type Product = {
             } else {
                 this.newProductData.MANUAL_FILE_ID = null;
             }
-        }
+        },
     },
     apollo: {
         productData: {
@@ -323,7 +379,7 @@ type Product = {
             },
             variables(): any {
                 return {
-                    ID: this.productId < 0 ? -1 : this.productId
+                    ID: this.productId < 0 ? -1 : this.productId,
                 };
             },
             result({ data, loading }: any) {
@@ -334,7 +390,37 @@ type Product = {
                         this.apolloFetch(Product);
                     }
                 }
-            }
+            },
+        },
+        dbProductInterfaces: {
+            query: gql`
+                query ProductInterfaces($PRODUCT_ID: Int!) {
+                    ProductInterfaces(PRODUCT_ID: $PRODUCT_ID) {
+                        ID
+                        PRODUCT_ID
+                        PD_INTF_ID
+                        INTERFACE {
+                            ASSET_CD
+                            NAME
+                        }
+                    }
+                }
+            `,
+            prefetch: false,
+            update: ({ ProductInterfaces }: any) => ProductInterfaces,
+            variables(): any {
+                return {
+                    PRODUCT_ID: this.productId < 0 ? -1 : this.productId,
+                };
+            },
+            result({ data, loading }: any) {
+                if (!loading) {
+                    const { ProductInterfaces } = data;
+                    if (ProductInterfaces) {
+                        this.apolloFetchProductInterfaces(ProductInterfaces);
+                    }
+                }
+            },
         },
         assetCodeList: {
             query: gql`
@@ -345,14 +431,15 @@ type Product = {
                     }
                 }
             `,
-            update: ({ PredefinedAssetCodes }: any) => PredefinedAssetCodes
-        }
-    }
+            update: ({ PredefinedAssetCodes }: any) => PredefinedAssetCodes,
+        },
+    },
 })
 export default class ProductPanel extends Vue {
     $refs!: {
         manualFileUploader: any;
         imageFileUploader: any;
+        interfaceTreePanel: any;
     };
 
     productData: Product = {
@@ -365,7 +452,7 @@ export default class ProductPanel extends Vue {
         MANUAL_FILE_ID: undefined,
         REMARK: '',
         IMAGE_FILE: undefined,
-        MANUAL_FILE: undefined
+        MANUAL_FILE: undefined,
     };
 
     newProductData: Product = {
@@ -378,18 +465,23 @@ export default class ProductPanel extends Vue {
         MANUAL_FILE_ID: undefined,
         REMARK: '',
         IMAGE_FILE: undefined,
-        MANUAL_FILE: undefined
+        MANUAL_FILE: undefined,
     };
 
     invalidMessage = {
         NAME: undefined as String | undefined,
         MODEL_NAME: undefined as String | undefined,
-        REMARK: undefined as String | undefined
+        REMARK: undefined as String | undefined,
     };
 
     assetCodeList: Array<any> = [];
 
     productInfo: Array<any> = [];
+
+    dbProductInterfaces: Array<any> = [];
+    productInterfaces: Array<any> = [];
+    selectedInterface: any = {};
+    selectedInterfaceIndex: number = -1;
 
     image_file = '';
     image_file_blob: any = undefined;
@@ -435,6 +527,22 @@ export default class ProductPanel extends Vue {
         this.parseInfoString(this.productData.INFO);
     }
 
+    apolloFetchProductInterfaces(data: Array<any>): void {
+        this.productInterfaces.splice(0, this.productInterfaces.length);
+
+        data.forEach((_datum: any) => {
+            this.productInterfaces.push({
+                ID: _datum.ID,
+                PRODUCT_ID: _datum.PRODUCT_ID,
+                PD_INTF_ID: _datum.PD_INTF_ID,
+                INTERFACE: {
+                    ASSET_CD: _datum.INTERFACE.ASSET_CD,
+                    NAME: _datum.INTERFACE.NAME,
+                },
+            });
+        });
+    }
+
     parseProductInfo(info: any[]): void {
         this.newProductData.INFO = info.length > 0 ? JSON.stringify(info) : '';
     }
@@ -445,6 +553,32 @@ export default class ProductPanel extends Vue {
         } catch {
             this.productInfo = [];
         }
+    }
+
+    assetName(asset_code: string) {
+        const asset_code_item = this.assetCodeList.find(
+            (code: any) => code.CODE === asset_code
+        );
+        return asset_code_item ? asset_code_item.NAME : '';
+    }
+
+    productInterfaceLabel(data: any) {
+        if (data.ID === null) {
+            return '클릭하여 인터페이스 지정';
+        }
+
+        if (data.INTERFACE === null) {
+            return '';
+        }
+
+        const { ASSET_CD, NAME } = data.INTERFACE;
+        const label = `${this.assetName(ASSET_CD)}: ${NAME}`;
+        return label;
+    }
+
+    showInterfaceTreePanel(event: Event, intf_data: any) {
+        this.selectedInterface = intf_data;
+        this.$refs.interfaceTreePanel.toggle(event);
     }
 
     get productName(): string {
@@ -463,12 +597,33 @@ export default class ProductPanel extends Vue {
             'INFO',
             'IMAGE_FILE_ID',
             'MANUAL_FILE_ID',
-            'REMARK'
+            'REMARK',
         ].forEach((key) => {
             if (this.productData[key] !== this.newProductData[key]) {
                 is_disabled = false;
             }
         });
+
+        if (
+            this.dbProductInterfaces.length !==
+            this.productInterfaces.filter((intf: any) => intf.ID !== null)
+                .length
+        ) {
+            // by shkoh 20220411: 사용 가능한 인터페이스의 전체 숫자가 변경된 경우
+            is_disabled = false;
+        } else {
+            for (const [idx, intf] of Object.entries(
+                this.dbProductInterfaces
+            )) {
+                if (
+                    intf.PD_INTF_ID !==
+                    this.productInterfaces[parseInt(idx)].PD_INTF_ID
+                ) {
+                    is_disabled = false;
+                    break;
+                }
+            }
+        }
 
         return is_disabled;
     }
@@ -510,7 +665,7 @@ export default class ProductPanel extends Vue {
                 severity: 'warn',
                 summary: '제품 유효성 실패',
                 detail: '제품 내용을 확인하세요',
-                life: 2000
+                life: 2000,
             });
             return;
         }
@@ -520,7 +675,7 @@ export default class ProductPanel extends Vue {
             MANUFACTURER_ID: this.newProductData.MANUFACTURER_ID,
             ASSET_CD: this.newProductData.ASSET_CD,
             NAME: this.newProductData.NAME,
-            MODEL_NAME: this.newProductData.MODEL_NAME
+            MODEL_NAME: this.newProductData.MODEL_NAME,
         };
 
         ['INFO', 'REMARK'].forEach((key: string) => {
@@ -529,7 +684,7 @@ export default class ProductPanel extends Vue {
                     value: this.newProductData[key],
                     configurable: true,
                     enumerable: true,
-                    writable: true
+                    writable: true,
                 });
             }
         });
@@ -540,7 +695,7 @@ export default class ProductPanel extends Vue {
                 value: this.image_file_blob,
                 configurable: true,
                 enumerable: true,
-                writable: true
+                writable: true,
             });
         }
 
@@ -551,7 +706,7 @@ export default class ProductPanel extends Vue {
                 : this.productData.IMAGE_FILE_ID,
             configurable: true,
             enumerable: true,
-            writable: true
+            writable: true,
         });
 
         if (this.isChangedManualFile) {
@@ -559,7 +714,7 @@ export default class ProductPanel extends Vue {
                 value: this.manual_file_blob,
                 configurable: true,
                 enumerable: true,
-                writable: true
+                writable: true,
             });
         }
 
@@ -569,7 +724,20 @@ export default class ProductPanel extends Vue {
                 : this.productData.MANUAL_FILE_ID,
             configurable: true,
             enumerable: true,
-            writable: true
+            writable: true,
+        });
+
+        const insert_product_interfaces = this.productInterfaces
+            .filter((intf: any) => intf.ID !== null)
+            .map((intf: any) => {
+                return intf.PD_INTF_ID;
+            });
+
+        Object.defineProperty(variables, 'INPUT', {
+            value: insert_product_interfaces,
+            configurable: true,
+            enumerable: true,
+            writable: true,
         });
 
         // by shkoh 20210927: product panel 데이터 업데이트 loading 페이지 시작
@@ -590,6 +758,7 @@ export default class ProductPanel extends Vue {
                         $REMARK: String
                         $IMAGE_FILE: Upload
                         $MANUAL_FILE: Upload
+                        $INPUT: [Int!]
                     ) {
                         UpdateProduct(
                             ID: $ID
@@ -604,9 +773,11 @@ export default class ProductPanel extends Vue {
                             IMAGE_FILE: $IMAGE_FILE
                             MANUAL_FILE: $MANUAL_FILE
                         )
+
+                        UpdateProductInterfaces(PRODUCT_ID: $ID, INPUT: $INPUT)
                     }
                 `,
-                variables
+                variables,
             })
             .then(() => {
                 eventBus.$emit('refreshProductTree');
@@ -616,7 +787,7 @@ export default class ProductPanel extends Vue {
                     severity: 'info',
                     summary: '제품 변경 완료',
                     detail: `${this.newProductData.NAME} 제품 변경`,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .catch((error) => {
@@ -626,7 +797,7 @@ export default class ProductPanel extends Vue {
                     severity: 'error',
                     summary: '제품 변경 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             })
             .finally(() => {
@@ -650,7 +821,7 @@ export default class ProductPanel extends Vue {
             blockScroll: false,
             accept: () => {
                 this.delete();
-            }
+            },
         });
     }
 
@@ -661,13 +832,13 @@ export default class ProductPanel extends Vue {
                     mutation {
                         DeleteProduct(ID: ${Number(this.$props.productId)})
                     }
-                `
+                `,
             })
             .then(() => {
                 this.$toast.add({
                     severity: 'success',
                     summary: `${this.productName} 삭제 완료`,
-                    life: 1500
+                    life: 1500,
                 });
 
                 eventBus.$emit('refreshProductTree');
@@ -679,7 +850,7 @@ export default class ProductPanel extends Vue {
                     severity: 'error',
                     summary: '제품 삭제 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             });
     }
@@ -735,6 +906,22 @@ export default class ProductPanel extends Vue {
         this.productInfo.splice(idx, 1);
     }
 
+    addProductInterface() {
+        this.productInterfaces.push({
+            ID: null,
+            PRODUCT_ID: null,
+            PD_INTF_ID: null,
+            INTERFACE: {
+                ASSET_CD: null,
+                NAME: null,
+            },
+        });
+    }
+
+    deleteProductInterface(idx: number) {
+        this.productInterfaces.splice(idx, 1);
+    }
+
     onRowReorder(event: any) {
         this.productInfo = event.value;
     }
@@ -773,7 +960,7 @@ export default class ProductPanel extends Vue {
                         DATA
                     }
                 }
-            `
+            `,
             })
             .then(({ data }) => {
                 const pd_file = data.PdFile;
@@ -787,7 +974,7 @@ export default class ProductPanel extends Vue {
                         [buf.buffer],
                         pd_file.FILE_NAME,
                         {
-                            type: pd_file.MIMETYPE
+                            type: pd_file.MIMETYPE,
                         }
                     );
 
@@ -803,7 +990,7 @@ export default class ProductPanel extends Vue {
                     severity: 'error',
                     summary: '파일 로드 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             });
     }
@@ -837,7 +1024,7 @@ export default class ProductPanel extends Vue {
                         DATA
                     }
                 }
-            `
+            `,
             })
             .then(({ data }) => {
                 const pd_file = data.PdFile;
@@ -851,7 +1038,7 @@ export default class ProductPanel extends Vue {
                         [buf.buffer],
                         pd_file.FILE_NAME,
                         {
-                            type: pd_file.MIMETYPE
+                            type: pd_file.MIMETYPE,
                         }
                     );
 
@@ -869,7 +1056,7 @@ export default class ProductPanel extends Vue {
                     severity: 'error',
                     summary: '파일 로드 실패',
                     detail: error.message,
-                    life: 2000
+                    life: 2000,
                 });
             });
     }
@@ -891,6 +1078,35 @@ export default class ProductPanel extends Vue {
 
     productDataRefresh() {
         this.$apollo.queries.productData.refresh();
+        this.$apollo.queries.dbProductInterfaces.refresh();
+    }
+
+    onSelectInterfaceTree(selected_node: any) {
+        const { id, name, asset_cd } = selected_node;
+
+        if (
+            this.productInterfaces.some((intf: any) => intf.PD_INTF_ID === id)
+        ) {
+            this.$toast.add({
+                severity: 'warn',
+                summary: '인터페이스 중복 선택',
+                detail: `${name} 인터페이스는 이미 설정이 되었습니다`,
+                life: 2000,
+            });
+        } else {
+            if (this.selectedInterface.ID === null) {
+                this.selectedInterface.ID = -1;
+            }
+            this.selectedInterface.PD_INTF_ID = id;
+            this.selectedInterface.INTERFACE.ASSET_CD = asset_cd;
+            this.selectedInterface.INTERFACE.NAME = name;
+
+            this.$refs.interfaceTreePanel.hide();
+        }
+    }
+
+    get selectedKeyToInterfaceTree(): number {
+        return -1;
     }
 }
 </script>

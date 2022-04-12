@@ -1,9 +1,10 @@
 <template>
     <div id="interface-tree">
         <Tree
-            :value="interfaces"
+            :value="interfacesToRender"
             :filter="true"
             selection-mode="single"
+            :selection-keys.sync="selectionKeys"
             @node-select="onSelect"
         >
             <template #AssetCode="slotProps">
@@ -55,6 +56,29 @@ import Component from '@/plugins/nuxt-class-component';
 import { eventBus } from '@/plugins/vueEventBus';
 
 @Component<InterfaceTree>({
+    props: {
+        isEditing: {
+            type: Boolean,
+            default: true,
+        },
+        showOnlyParents: {
+            type: Boolean,
+            default: false,
+        },
+        initSelectKeys: {
+            type: Number,
+            default: -1,
+        },
+    },
+    watch: {
+        initSelectKeys(_new_value) {
+            if (_new_value === -1) {
+                this.selectionKeys = {};
+            } else {
+                this.selectionKeys = { key: _new_value.toString() };
+            }
+        },
+    },
     apollo: {
         interfaces: {
             query: gql`
@@ -87,7 +111,7 @@ import { eventBus } from '@/plugins/vueEventBus';
             manual: false,
             prefetch: false,
             update({ PredefinedInterfaces }) {
-                this.insertAddButtons(PredefinedInterfaces);
+                if (this.isEditing) this.insertAddButtons(PredefinedInterfaces);
                 return PredefinedInterfaces;
             },
         },
@@ -99,6 +123,8 @@ export default class InterfaceTree extends Vue {
     showAddInterfaceDialog = false;
     assetCodeToAdding = '';
     assetCodeNameToAdding = '';
+
+    selectionKeys: object = {};
 
     mounted() {
         this.assetCodeToAdding = '';
@@ -123,6 +149,7 @@ export default class InterfaceTree extends Vue {
                 type: node.type,
                 id: Number(node.key),
                 name: node.label,
+                asset_cd: node.ASSET_CD,
             });
         }
     }
@@ -153,14 +180,66 @@ export default class InterfaceTree extends Vue {
         this.assetCodeNameToAdding = node.pName;
         this.showAddInterfaceDialog = true;
     }
+
+    hasInterfaceWithChildren(node: any) {
+        if (node) {
+            let has = false;
+
+            if (node.children && node.children.length > 0) {
+                const childNodes: Array<any> = [...node.children];
+
+                node.children = [];
+                for (const childNode of childNodes) {
+                    const copyChildNode: any = { ...childNode };
+
+                    if (
+                        this.hasInterfaceWithChildren(copyChildNode) ||
+                        copyChildNode.type === 'PredefineInterface'
+                    ) {
+                        node.children.push(copyChildNode);
+                        has = true;
+                    }
+                }
+            }
+
+            if (has) {
+                return true;
+            }
+        }
+    }
+
+    get interfacesToRender(): Array<any> | null {
+        if (this.$props.showOnlyParents) {
+            return this.onlyInterfacesWithChildren;
+        } else {
+            return this.interfaces;
+        }
+    }
+
+    get onlyInterfacesWithChildren(): Array<any> {
+        const nodes: Array<any> = [];
+
+        for (const node of this.interfaces) {
+            const _node = { ...node };
+
+            if (this.hasInterfaceWithChildren(_node)) {
+                nodes.push(_node);
+            }
+        }
+
+        return nodes;
+    }
 }
 </script>
 
 <style lang="scss" scoped>
-#interface-tree::v-deep .p-tree-container {
-    height: calc(
-        100vh - 20px - var(--header-height) - var(--tree-searching-height) -
-            var(--content-padding) * 3
-    );
+#interface-tree::v-deep {
+    .p-tree {
+        height: 100%;
+    }
+
+    .p-tree-container {
+        height: calc(100% - 2rem);
+    }
 }
 </style>

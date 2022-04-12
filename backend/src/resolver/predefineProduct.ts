@@ -1,6 +1,6 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
 import { GraphQLUpload, FileUpload } from "graphql-upload";
-import { Args, Ctx, Mutation, Query, Resolver, PubSub, Publisher, Arg, ID } from "type-graphql";
+import { Args, Ctx, Mutation, Query, Resolver, PubSub, Publisher, Arg, ID, Int } from "type-graphql";
 import { getRepository } from "typeorm";
 
 import { pd_manufacturer, pd_manufacturer_args } from '../entity/database/pd_manufacturer';
@@ -8,6 +8,7 @@ import { pd_product, pd_product_args } from '../entity/database/pd_product';
 import { pd_file } from '../entity/database/pd_file';
 
 import streamToBuffer from '../utils/streamToBuffer';
+import { pd_prod_intf } from "../entity/database/pd_prod_intf";
 
 @Resolver()
 export class PredefinedProductResolver {
@@ -191,8 +192,8 @@ export class PredefinedProductResolver {
             }
 
             let manual_file_id = undefined;
-            if(manualFileUpload) {
-                if(MANUAL_FILE_ID) {
+            if (manualFileUpload) {
+                if (MANUAL_FILE_ID) {
                     await getRepository(pd_file).delete({ ID: MANUAL_FILE_ID });
                 }
 
@@ -202,7 +203,7 @@ export class PredefinedProductResolver {
 
                 // by shkoh 20210914: 저장한 데이터는 Product를 갱신하는데 사용함
                 manual_file_id = result.identifiers.pop().ID;
-            } else if(MANUAL_FILE_ID === null) {
+            } else if (MANUAL_FILE_ID === null) {
                 const previous_manual_file_id = (await getRepository(pd_product).findOne(ID)).MANUAL_FILE_ID;
                 await getRepository(pd_file).delete({ ID: previous_manual_file_id });
                 manual_file_id = null;
@@ -234,7 +235,7 @@ export class PredefinedProductResolver {
             await publish();
 
             if (!ID) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
-            
+
             // by shkoh 20210928: 미구현. 추후에 product의 존재여부를 파악하여 삭제를 막음
             // by shkoh 20210928: 예시
             // const hasChild = await getRepository(pd_product).count({ where: { MANUFACTURER_ID: ID } });
@@ -246,11 +247,59 @@ export class PredefinedProductResolver {
             // by shkoh 20210928: Product 삭제 시 관련된 다른 정보(매뉴얼 파일, 제품 파일)들도 함께 삭제
             const product = await getRepository(pd_product).findOne(ID);
 
-            if(product.IMAGE_FILE_ID) await getRepository(pd_file).delete({ ID: product.IMAGE_FILE_ID });
-            if(product.MANUAL_FILE_ID) await getRepository(pd_file).delete({ ID: product.MANUAL_FILE_ID });
+            if (product.IMAGE_FILE_ID) await getRepository(pd_file).delete({ ID: product.IMAGE_FILE_ID });
+            if (product.MANUAL_FILE_ID) await getRepository(pd_file).delete({ ID: product.MANUAL_FILE_ID });
 
             const result = await getRepository(pd_product).delete(ID);
             return result.affected > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => [pd_prod_intf], { nullable: true })
+    async ProductInterfaces(
+        @Arg('PRODUCT_ID', () => Int!) product_id: number,
+        @Ctx() ctx: any
+    ): Promise<pd_prod_intf[]> | undefined {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            const prod_intf = await getRepository(pd_prod_intf).find({ where: { PRODUCT_ID: product_id } });
+            return prod_intf;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean, { nullable: true })
+    async UpdateProductInterfaces(
+        @Arg('PRODUCT_ID', () => ID) productId: number,
+        @Arg('INPUT', () => [Int], { nullable: true }) input: number[],
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ): Promise<Boolean> {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다')
+        }
+
+        try {
+            await publish();
+
+            if (!productId) throw new UserInputError('전달한 인자의 데이터가 존재하지 않습니다');
+
+            let is_result: number = 0;
+            const delete_result = await getRepository(pd_prod_intf).delete({ PRODUCT_ID: productId });
+            is_result = delete_result.affected;
+
+            input.forEach(async (pd_intf_id: number) => {
+                const result = await getRepository(pd_prod_intf).insert({ PRODUCT_ID: productId, PD_INTF_ID: pd_intf_id });
+                is_result += result.identifiers.length;
+            });
+
+            return is_result > 0 ? true : false;
         } catch (err) {
             throw new SchemaError(err.message);
         }

@@ -1,7 +1,8 @@
 import { Field, ID, ObjectType, Int, ArgsType } from "type-graphql";
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
 
 import { pd_asset_code } from './pd_asset_code';
+import { pd_prod_intf } from "./pd_prod_intf";
 
 @ObjectType()
 @Entity({ synchronize: false, orderBy: { NAME: 'ASC' } })
@@ -28,7 +29,7 @@ export class pd_interface {
     PROTOCOL_FILE_ID: number;
 
     @Field(() => String, { nullable: true })
-    @Column({ type: 'varchar', length: 256 , nullable: true, default: null, comment: '설명'})
+    @Column({ type: 'varchar', length: 256, nullable: true, default: null, comment: '설명' })
     REMARK: string;
 
     @Field(() => String)
@@ -39,6 +40,10 @@ export class pd_interface {
     @ManyToOne(() => pd_asset_code, (asset_code) => asset_code.PREDEFINED_INTERFACES, { createForeignKeyConstraints: false })
     @JoinColumn({ name: 'ASSET_CD', referencedColumnName: 'CODE' })
     ASSET_CODE: pd_asset_code;
+
+    @OneToOne(() => pd_prod_intf, { createForeignKeyConstraints: false, cascade: false })
+    @JoinColumn({ name: 'ID', referencedColumnName: 'PD_INTF_ID' })
+    PROD_INTF: pd_prod_intf;
 }
 
 @ArgsType()
