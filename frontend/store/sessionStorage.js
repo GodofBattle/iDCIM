@@ -6,7 +6,9 @@ export const state = () => ({
     ui: {
         is_sidebar: true,
         is_pos_tree: false,
-        is_cus_tree: false
+        is_cus_tree: false,
+        is_enable_sms: false,
+        is_enable_email: false
     },
     auth: {
         authenticated: false,
@@ -66,6 +68,12 @@ export const mutations = {
     },
     ISCUSTREE: (state, is_enable) => {
         state.ui.is_cus_tree = is_enable === 1;
+    },
+    ISENABLESMS: (state, is_enable) => {
+        state.ui.is_enable_sms = is_enable === 1;
+    },
+    ISENABLEEMAIL: (state, is_enable) => {
+        state.ui.is_enable_email = is_enable === 1;
     }
 };
 
@@ -149,13 +157,15 @@ export const actions = {
                 console.error(error.message);
             });
     },
-    TREE: ({ commit }) => {
+    SITE: ({ commit }) => {
         return new Promise((resolve, reject) => {
             const treeQuery = gql`
                 query {
                     Site {
                         IS_ENABLE_CUST_HIER_P
                         IS_ENABLE_CUST_HIER_C
+                        IS_ENABLE_SMS
+                        IS_ENABLE_EMAIL
                     }
                 }
             `
@@ -165,6 +175,8 @@ export const actions = {
                     if (Site) {
                         commit('ISPOSTREE', Site.IS_ENABLE_CUST_HIER_P);
                         commit('ISCUSTREE', Site.IS_ENABLE_CUST_HIER_C);
+                        commit('ISENABLESMS', Site.IS_ENABLE_SMS);
+                        commit('ISENABLEEMAIL', Site.IS_ENABLE_EMAIL);
                     }
                 }).catch(async (error) => {
                     console.error(error);

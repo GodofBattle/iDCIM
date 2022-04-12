@@ -43,6 +43,7 @@
                 <operator-panel-notify
                     ref="operatorPanelNotifyRef"
                     :operator-id="operatorId"
+                    :apply-button-disabled.sync="applyButtonDisabled"
                 ></operator-panel-notify>
             </TabPanel>
             <TabPanel>
@@ -142,6 +143,10 @@ export default class OperatorPanel extends Vue {
         switch (this.tabIndex) {
             case 0: {
                 this.$refs.operatorPanelInfoRef.updateOperatorInfo();
+                break;
+            }
+            case 1: {
+                this.$refs.operatorPanelNotifyRef.updateOperatorNotify();
                 break;
             }
         }

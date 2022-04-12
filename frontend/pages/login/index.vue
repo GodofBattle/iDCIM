@@ -165,7 +165,7 @@ export default class Login extends Vue {
             })
             .then(async () => {
                 // by shkoh 20220304: 로그인과 동시에 설정에 필요한 값을 지정
-                await this.$store.dispatch('sessionStorage/TREE');
+                await this.$store.dispatch('sessionStorage/SITE');
             })
             .catch(() => {
                 this.$toast.add({
