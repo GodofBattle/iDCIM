@@ -31,6 +31,6 @@
    },
    "scripts": {
       "dev": "nodemon",
-      "start": "DOTENV_CONFIG_PATH=../.env ts-node -r dotenv/config src/index.ts"
+      "start": "DOTENV_CONFIG_PATH=../.env NODE_OPTIONS='--max_old_space_size=8192' ts-node -r dotenv/config src/index.ts"
    }
 }
