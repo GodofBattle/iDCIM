@@ -130,4 +130,34 @@ export class ac_asset_operator_args {
 
     @Field(() => String, { nullable: true })
     REMARK: string;
+
+    @Field(() => String, { nullable: true })
+    NOTI_CHANNEL: string;
+
+    @Field(() => String, { nullable: true })
+    NOTI_SENSOR_ALARM_LEVEL: string;
+
+    @Field(() => String, { nullable: true })
+    NOTI_ASSET_ALARM_ENABLE: string;
+
+    @Field(() => String, { nullable: true })
+    NOTI_HOUR_MON: string;
+
+    @Field(() => String, { nullable: true })
+    NOTI_HOUR_TUE: string;
+
+    @Field(() => String, { nullable: true })
+    NOTI_HOUR_WED: string;
+
+    @Field(() => String, { nullable: true })
+    NOTI_HOUR_THU: string;
+
+    @Field(() => String, { nullable: true })
+    NOTI_HOUR_FRI: string;
+
+    @Field(() => String, { nullable: true })
+    NOTI_HOUR_SAT: string;
+
+    @Field(() => String, { nullable: true })
+    NOTI_HOUR_SUN: string;
 }

@@ -160,7 +160,7 @@ export class ManagerResolver {
     @Mutation(() => Boolean)
     async UpdateOperator(
         @Arg('ID', () => ID) id: number,
-        @Args() { NAME, DEPT, PHONE, EXT_NO, MOBILE, EMAIL, REMARK }: ac_asset_operator_args,
+        @Args() { NAME, DEPT, PHONE, EXT_NO, MOBILE, EMAIL, REMARK, NOTI_CHANNEL, NOTI_SENSOR_ALARM_LEVEL, NOTI_ASSET_ALARM_ENABLE, NOTI_HOUR_MON, NOTI_HOUR_TUE, NOTI_HOUR_WED, NOTI_HOUR_THU, NOTI_HOUR_FRI, NOTI_HOUR_SAT, NOTI_HOUR_SUN }: ac_asset_operator_args,
         @Ctx() ctx: any,
         @PubSub('REFRESHTOKEN') publish: Publisher<void>
     ) {
@@ -180,7 +180,7 @@ export class ManagerResolver {
                 UPDATE_USER_DT: new Date()
             };
 
-            for (const [key, value] of Object.entries({ NAME, DEPT, PHONE, EXT_NO, MOBILE, EMAIL, REMARK })) {
+            for (const [key, value] of Object.entries({ NAME, DEPT, PHONE, EXT_NO, MOBILE, EMAIL, REMARK, NOTI_CHANNEL, NOTI_SENSOR_ALARM_LEVEL, NOTI_ASSET_ALARM_ENABLE, NOTI_HOUR_MON, NOTI_HOUR_TUE, NOTI_HOUR_WED, NOTI_HOUR_THU, NOTI_HOUR_FRI, NOTI_HOUR_SAT, NOTI_HOUR_SUN })) {
                 if (value !== undefined) update_data[key] = value;
             }
 

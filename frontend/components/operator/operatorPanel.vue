@@ -31,7 +31,7 @@
                     ref="operatorPanelInfoRef"
                     :operator-id="operatorId"
                     :apply-button-disabled.sync="applyButtonDisabled"
-                    @opertor-data-refresh="operratorRefresh"
+                    @opertor-data-refresh="operatorRefresh"
                 ></operator-panel-info>
             </TabPanel>
             <TabPanel>
@@ -43,6 +43,7 @@
                 <operator-panel-notify
                     ref="operatorPanelNotifyRef"
                     :operator-id="operatorId"
+                    :operator-label="operatorTitle"
                     :apply-button-disabled.sync="applyButtonDisabled"
                 ></operator-panel-notify>
             </TabPanel>
@@ -128,7 +129,7 @@ export default class OperatorPanel extends Vue {
 
     tabIndex: number = 0;
 
-    operratorRefresh() {
+    operatorRefresh() {
         this.$apollo.queries.operatorData.refresh();
     }
 

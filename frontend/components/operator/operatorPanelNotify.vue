@@ -156,7 +156,7 @@
             </div>
 
             <div class="p-field">
-                <label for="allowedLevel">알림 허용 단계</label>
+                <label class="p-mt-3" for="allowedLevel">알림 허용 단계</label>
                 <div class="p-d-flex" style="width: 25rem">
                     <ToggleButton
                         class="i-allowed-level lvl0"
@@ -219,6 +219,7 @@ type OperatorNotifyType = {
 @Component<OperatorNotify>({
     props: {
         operatorId: Number,
+        operatorLabel: String,
         applyButtonDisabled: Boolean,
     },
     watch: {
@@ -339,6 +340,10 @@ export default class OperatorNotify extends Vue {
         }
     }
 
+    operatorNotifyRefresh() {
+        this.$apollo.queries.dbOperatorNotifyData.refresh();
+    }
+
     replaceAt(source: string, index: number, replacer: string) {
         const pre = source.substr(0, index);
         const post = source.substr(index + replacer.length);
@@ -361,7 +366,81 @@ export default class OperatorNotify extends Vue {
     }
 
     updateOperatorNotify() {
-        console.info('update - notify');
+        const variables = {
+            ID: this.$props.operatorId,
+        };
+
+        for (const [key, value] of Object.entries(this.operatorNotifyData)) {
+            if (value !== this.dbOperatorNotifyData[key]) {
+                Object.defineProperty(variables, key, {
+                    value: value,
+                    configurable: true,
+                    enumerable: true,
+                    writable: true,
+                });
+            }
+        }
+
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation (
+                        $ID: ID!
+                        $NOTI_CHANNEL: String
+                        $NOTI_SENSOR_ALARM_LEVEL: String
+                        $NOTI_ASSET_ALARM_ENABLE: String
+                        $NOTI_HOUR_MON: String
+                        $NOTI_HOUR_TUE: String
+                        $NOTI_HOUR_WED: String
+                        $NOTI_HOUR_THU: String
+                        $NOTI_HOUR_FRI: String
+                        $NOTI_HOUR_SAT: String
+                        $NOTI_HOUR_SUN: String
+                    ) {
+                        UpdateOperator(
+                            ID: $ID
+                            NOTI_CHANNEL: $NOTI_CHANNEL
+                            NOTI_SENSOR_ALARM_LEVEL: $NOTI_SENSOR_ALARM_LEVEL
+                            NOTI_ASSET_ALARM_ENABLE: $NOTI_ASSET_ALARM_ENABLE
+                            NOTI_HOUR_MON: $NOTI_HOUR_MON
+                            NOTI_HOUR_TUE: $NOTI_HOUR_TUE
+                            NOTI_HOUR_WED: $NOTI_HOUR_WED
+                            NOTI_HOUR_THU: $NOTI_HOUR_THU
+                            NOTI_HOUR_FRI: $NOTI_HOUR_FRI
+                            NOTI_HOUR_SAT: $NOTI_HOUR_SAT
+                            NOTI_HOUR_SUN: $NOTI_HOUR_SUN
+                        )
+                    }
+                `,
+                variables,
+            })
+            .then(({ data: { UpdateOperator } }: any) => {
+                if (UpdateOperator) {
+                    this.operatorNotifyRefresh();
+
+                    this.$toast.add({
+                        severity: 'info',
+                        summary: '알림설정 완료',
+                        detail: `${this.$props.operatorLabel} 알림설정 정보 변경`,
+                        life: 2000,
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '담당자 알림설정 변경 실패',
+                    detail: error.message,
+                    life: 2000,
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
     }
 
     get is_enable_sms(): boolean {
@@ -405,7 +484,7 @@ export default class OperatorNotify extends Vue {
     }
 
     get checked_level0(): boolean {
-        return Number(this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL) > 0;
+        return Number(this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL) > -1;
     }
 
     set checked_level0(checked: boolean) {
@@ -413,27 +492,35 @@ export default class OperatorNotify extends Vue {
     }
 
     get checked_level1(): boolean {
-        return Number(this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL) > 1;
+        return Number(this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL) > 0;
     }
 
     set checked_level1(checked: boolean) {
-        this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL = checked ? '2' : '1';
+        this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL = checked
+            ? '1'
+            : Number(this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL) > 1
+            ? '1'
+            : '0';
     }
 
     get checked_level2(): boolean {
-        return Number(this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL) > 2;
+        return Number(this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL) > 1;
     }
 
     set checked_level2(checked: boolean) {
-        this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL = checked ? '3' : '2';
+        this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL = checked
+            ? '2'
+            : Number(this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL) === 3
+            ? '2'
+            : '1';
     }
 
     get checked_level3(): boolean {
-        return Number(this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL) > 3;
+        return Number(this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL) > 2;
     }
 
     set checked_level3(checked: boolean) {
-        this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL = checked ? '4' : '3';
+        this.operatorNotifyData.NOTI_SENSOR_ALARM_LEVEL = checked ? '3' : '2';
     }
 
     get totally_monday(): boolean {
