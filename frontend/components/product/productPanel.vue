@@ -1067,7 +1067,7 @@ export default class ProductPanel extends Vue {
 
         reader.onloadend = (event: any) => {
             const link = document.createElement('a');
-            link.download = this.manual_file_name;
+            link.download = this.manual_file_name.normalize('NFC');
             link.href = event.target.result;
 
             document.body.appendChild(link);

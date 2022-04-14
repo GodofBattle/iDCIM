@@ -39,7 +39,7 @@ export class FileResolver extends Upload {
             const result = await getRepository(pd_file).findOne(ID);
 
             const file = new DataBaseFile();
-            file.FILE_NAME = result.NAME;
+            file.FILE_NAME = result.NAME.normalize('NFC');
 
             file.MIMETYPE = result.MIME_TYPE ? result.MIME_TYPE : 'application/octet-stream';
             file.DATA = result.DATA.toString('base64');
