@@ -93,7 +93,7 @@ const server: ApolloServer = new ApolloServer({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(graphqlUploadExpress({ maxFieldSize: 20 * 1024 * 1024, maxFileSize: 20 * 1024 * 1024, maxFiles: 2 }));
+app.use(graphqlUploadExpress({ maxFieldSize: 10 * 1024 * 1024, maxFileSize: 100 * 1024 * 1024, maxFiles: 10 }));
 app.use(server.getMiddleware({ path: graphql_path, cors: { credentials: false } }));
 
 const ip = process.env.API_HOST || 'localhost';
