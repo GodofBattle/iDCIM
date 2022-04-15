@@ -763,6 +763,8 @@ export default class IMoveableTree extends Vue {
 
 <style lang="scss" scoped>
 #i-moveable-tree::v-deep {
+    height: 100%;
+
     .i-fake-dragimage {
         display: block;
         pointer-events: none;

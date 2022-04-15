@@ -320,4 +320,44 @@ export class TreeResolver {
             throw new SchemaError(err.message);
         }
     }
+
+    @Query(() => [AssetTree])
+    async Tree(
+        @Arg('TYPE', () => String) type: string,
+        @Ctx() ctx: any
+    ): Promise<AssetTree[]> {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            const root = await getRepository(ac_config).findOne({ where: { ID: 1 } });
+            const site_name = root.SITE_NAME ? root.SITE_NAME : 'DCIM';
+
+            const trees = new Array({
+                key: `prh_0`,
+                label: site_name,
+                order: 1,
+                parent_key: null,
+                type: 'SITE',
+                manipulable: false
+            });
+
+            // (await getRepository(ac_cust_hier).find({ where: { TYPE: 'C' }, order: { P_TID: 'ASC', ORDER: 'ASC' } })).forEach((node: ac_cust_hier) => {
+            //     trees.push({
+            //         key: `ach_${node.TID}`,
+            //         label: node.NAME,
+            //         order: node.ORDER,
+            //         parent_key: node.P_TID === 0 ? `prh_0` : `ach_${node.P_TID}`,
+            //         type: 'CUSTOM',
+            //         manipulable: true
+            //     })
+            // });
+
+            const asset_tres: Array<AssetTree> = arrayToTree(trees, { id: 'key', p_id: 'parent_key' }) as Array<AssetTree>;
+            return asset_tres;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
 }

@@ -3,7 +3,10 @@
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
         <div class="p-d-flex i-manager-content">
             <div class="p-col-fixed" style="width: var(--tree-width)">
-                <manager-tree @select="onSelectTreeNode"></manager-tree>
+                <manager-tree
+                    @select="onSelectTreeNode"
+                    @move="onMoveTreeNode"
+                ></manager-tree>
             </div>
             <div class="p-col">
                 <div v-if="viewType === 'Company'">
@@ -14,6 +17,7 @@
                 </div>
                 <div v-else-if="viewType === 'Operator'">
                     <operator-panel
+                        ref="operatorPanel"
                         :operator-id="id"
                         :operator-name="name"
                     ></operator-panel>
@@ -37,6 +41,10 @@ import Component from '@/plugins/nuxt-class-component';
     },
 })
 export default class AdminManager extends Vue {
+    $refs!: {
+        operatorPanel: any;
+    };
+
     id: number = -1;
     name: string = '';
     viewType: string = '';
@@ -49,6 +57,10 @@ export default class AdminManager extends Vue {
         this.viewType = type;
         this.id = id;
         this.name = name;
+    }
+
+    onMoveTreeNode() {
+        this.$refs.operatorPanel.operatorRefresh();
     }
 
     reset() {

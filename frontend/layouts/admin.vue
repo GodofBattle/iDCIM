@@ -60,7 +60,7 @@ export default class Admin extends Vue {
         { label: 'HOME' },
         { separator: true },
         { label: '자산담당자', to: '/admin/manager' },
-        { label: '자산' },
+        { label: '자산', to: '/admin/asset' },
         { label: '운영그룹' },
     ];
 

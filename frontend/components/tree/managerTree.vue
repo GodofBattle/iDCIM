@@ -5,7 +5,7 @@
                 :value="companies"
                 :moveable="true"
                 :filter="true"
-                selectionMode="single"
+                selection-mode="single"
                 :addable-type="addableType"
                 :moveable-type="moveableType"
                 @insert-tree="onInsertNode"
@@ -170,15 +170,29 @@ export default class ManagerTree extends Vue {
 
         this.$apollo
             .mutate({
-                mutation: gql``,
+                mutation: gql`
+                    mutation {
+                        MoveOperatorTreeNode(
+                            key: "${target.key}"
+                            parent_key: "${target.parent_key}"
+                        )
+                    }
+                `,
+            })
+            .then(({ MoveOperatorTreeNode }: any) => {
+                if (MoveOperatorTreeNode) {
+                    this.$toast.add({
+                        severity: 'info',
+                        summary: '담당자 위치 변경 완료',
+                        detail: `[${target.label}] 담당자는 ${dest.label} 소속으로 변경되었습니다`,
+                        life: 1800,
+                    });
+                }
+
+                this.treeRefresh();
             })
             .then(() => {
-                this.$toast.add({
-                    severity: 'info',
-                    summary: '담당자 위치 변경 완료',
-                    detail: `[${target.label}] 담당자는 ${dest.label} 소속으로 변경되었습니다`,
-                    life: 1800,
-                });
+                this.$emit('move', target);
             })
             .catch((error) => {
                 console.error(error);

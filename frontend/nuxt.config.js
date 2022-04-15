@@ -262,6 +262,14 @@ export default {
                         meta: {
                             title: '자산담당자'
                         }
+                    },
+                    {
+                        path: '/asset',
+                        name: 'asset',
+                        component: 'pages/admin/asset.vue',
+                        meta: {
+                            title: '자산'
+                        }
                     }
                 ]
             }
