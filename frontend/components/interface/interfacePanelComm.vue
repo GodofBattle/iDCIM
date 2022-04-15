@@ -325,25 +325,17 @@ export default class InterfacePanelComm extends Vue {
         this.$apollo
             .mutate({
                 mutation: gql`
-                    mutation (
-                        $PD_INTF_ID: Int!
-                        $MC_ID: Int!
-                        $FUNC_NO: Int
-                        $START_ADDR: Int
-                        $POINT_CNT: Int
-                        $DTYPE_CD: String
-                    ) {
-                        CopyPredefineModbusCommand(
-                            PD_INTF_ID: $PD_INTF_ID
-                            MC_ID: $MC_ID
-                            FUNC_NO: $FUNC_NO
-                            START_ADDR: $START_ADDR
-                            POINT_CNT: $POINT_CNT
-                            DTYPE_CD: $DTYPE_CD
+                    mutation {
+                        AddPredefineModbusCommand(
+                            PD_INTF_ID: ${modbusCmd.PD_INTF_ID}
+                            MC_ID: ${this.commList.length + 1}
+                            FUNC_NO: ${modbusCmd.FUNC_NO}
+                            START_ADDR: ${modbusCmd.START_ADDR}
+                            POINT_CNT: ${modbusCmd.POINT_CNT}
+                            DTYPE_CD: "${modbusCmd.DTYPE_CD}"
                         )
                     }
                 `,
-                variables: modbusCmd,
             })
             .then(() => {
                 this.refreshCommList();

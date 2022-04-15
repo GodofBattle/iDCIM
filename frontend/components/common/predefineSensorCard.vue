@@ -44,7 +44,7 @@
         </template>
         <template #content>
             <div class="p-fluid p-formgrid p-grid p-input-filled">
-                <div class="p-field p-col-1 p-mb-0">
+                <div class="p-field p-col-2 p-mb-0">
                     <label for="p-sensor-name">NAME</label>
                     <InputText
                         id="p-sensor-name"

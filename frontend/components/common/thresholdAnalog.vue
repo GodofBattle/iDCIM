@@ -3,7 +3,10 @@
         <div
             v-if="showMinMax"
             class="p-col-fiexed p-text-center p-py-5"
-            :style="{ width: new_value_active.min ? '100px' : '80px' }"
+            :style="{
+                width: new_value_active.min ? '100px' : '80px',
+                'margin-right': '0.4rem',
+            }"
         >
             <Inplace :active.sync="new_value_active.min" :class="editorClass">
                 <template #display>
@@ -35,7 +38,10 @@
             :style="{ width: new_value_active.n3 ? '100px' : '60px' }"
         >
             <span>
-                <Inplace :active.sync="new_value_active.n3">
+                <Inplace
+                    :active.sync="new_value_active.n3"
+                    :class="editorClass"
+                >
                     <template #display>
                         <Tag :value="n3" class="i-critical"></Tag>
                     </template>
@@ -90,7 +96,7 @@
                 >
                     <Inplace
                         :active.sync="new_value_active.n1"
-                        class="i-tag-position"
+                        class="p-d-flex i-tag-position"
                     >
                         <template #display>
                             <Tag :value="n1" class="i-warning"></Tag>
@@ -134,16 +140,13 @@
                 >
                     <Inplace
                         :active.sync="new_value_active.p1"
-                        class="i-tag-position-top"
+                        class="p-d-flex i-tag-position-top"
                     >
                         <template #display>
                             <Tag :value="p1" class="i-warning"></Tag>
                         </template>
                         <template #content>
-                            <div
-                                class="p-inputgroup"
-                                :style="{ 'margin-top': '-32px' }"
-                            >
+                            <div class="p-inputgroup">
                                 <InputNumber
                                     v-model="inputValueP1"
                                     auto-focus
@@ -181,16 +184,13 @@
                 >
                     <Inplace
                         :active.sync="new_value_active.n2"
-                        class="i-tag-position-top"
+                        class="p-d-flex i-tag-position-top"
                     >
                         <template #display>
                             <Tag :value="n2" class="i-major"></Tag>
                         </template>
                         <template #content>
-                            <div
-                                class="p-inputgroup"
-                                :style="{ 'margin-top': '-32px' }"
-                            >
+                            <div class="p-inputgroup">
                                 <InputNumber
                                     v-model="inputValueN2"
                                     auto-focus
@@ -228,7 +228,7 @@
                 >
                     <Inplace
                         :active.sync="new_value_active.p2"
-                        class="i-tag-position"
+                        class="p-d-flex i-tag-position"
                     >
                         <template #display>
                             <Tag :value="p2" class="i-major"></Tag>
@@ -262,7 +262,10 @@
             :style="{ width: new_value_active.p3 ? '100px' : '60px' }"
         >
             <span>
-                <Inplace :active.sync="new_value_active.p3">
+                <Inplace
+                    :active.sync="new_value_active.p3"
+                    :class="editorClass"
+                >
                     <template #display>
                         <Tag :value="p3" class="i-critical"></Tag>
                     </template>
@@ -292,7 +295,10 @@
         <div
             v-if="showMinMax"
             class="p-col-fiexed p-text-center p-py-5"
-            :style="{ width: new_value_active.max ? '100px' : '80px' }"
+            :style="{
+                width: new_value_active.max ? '100px' : '80px',
+                'margin-left': '0.4rem',
+            }"
         >
             <Inplace :active.sync="new_value_active.max" :class="editorClass">
                 <template #display>
@@ -459,7 +465,7 @@ export default class ThresholdAnalog extends Vue {
     get editorClass(): Array<string | object> {
         return [
             {
-                'p-disabled': this.$props.disabled,
+                'p-disabled i-disabled-opacity': this.$props.disabled,
             },
         ];
     }
@@ -867,13 +873,13 @@ export default class ThresholdAnalog extends Vue {
 }
 
 .i-tag-position-top {
-    margin-left: auto;
-    margin-top: -24px;
+    margin-left: -0.2rem;
+    margin-top: -2.75rem;
 }
 
 .i-tag-position {
-    margin-left: auto;
-    margin-top: 16px;
+    margin-left: -0.3rem;
+    margin-top: 1.45rem;
 }
 
 .i-warning {
@@ -895,5 +901,9 @@ export default class ThresholdAnalog extends Vue {
 
 .i-input-minmax {
     width: 50px;
+}
+
+.i-disabled-opacity {
+    opacity: 1;
 }
 </style>
