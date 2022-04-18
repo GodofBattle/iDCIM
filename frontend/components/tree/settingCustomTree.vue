@@ -119,7 +119,7 @@ import Component from '@/plugins/nuxt-class-component';
 export default class SettingCustomTree extends Vue {
     customTree: Array<any> = [];
 
-    treeExpandedKey: any = { prh_0: true };
+    treeExpandedKey: any = { root_0: true };
     addableType = { SITE: true, CUSTOM: true };
     moveableType = { CUSTOM: true };
 

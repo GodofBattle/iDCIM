@@ -119,7 +119,7 @@ import Component from '@/plugins/nuxt-class-component';
 export default class SettingPositionTree extends Vue {
     positionTree: Array<any> = [];
 
-    treeExpandedKey: any = { prh_0: true };
+    treeExpandedKey: any = { root_0: true };
     addableType = { SITE: true, POSITION: true };
     moveableType = { POSITION: true };
 

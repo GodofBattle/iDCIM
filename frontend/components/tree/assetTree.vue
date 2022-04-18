@@ -5,6 +5,7 @@
                 :value="tree"
                 :moveable="false"
                 :filter="true"
+                :expanded-keys.sync="treeExpandedKey"
                 selection-mode="single"
             >
             </i-moveable-tree>
@@ -106,6 +107,7 @@ export default class AssetTree extends Vue {
     selectedTabIndex: number = 0;
 
     tree: Array<any> = [];
+    treeExpandedKey: any = { root_0: true };
 }
 </script>
 

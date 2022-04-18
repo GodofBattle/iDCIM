@@ -35,6 +35,7 @@ export class TreeResolver {
             });
 
             // by shkoh 20220311: 최상위 루트 정보
+            // by shkoh 20220418: pd_asset_hier에서 ROOT 정보를 삭제하여 해당 데이터 처리 방식 변경
             (await getRepository(pd_asset_hier).find({ order: { ORDER: 'ASC' } })).forEach((asset: pd_asset_hier) => {
                 trees.push({
                     key: `pah_${asset.ID}`,
@@ -170,7 +171,7 @@ export class TreeResolver {
             const site_name = root.SITE_NAME ? root.SITE_NAME : 'DCIM';
 
             const trees = new Array({
-                key: `prh_0`,
+                key: `root_0`,
                 label: site_name,
                 order: 1,
                 parent_key: null,
@@ -183,7 +184,7 @@ export class TreeResolver {
                     key: `ach_${node.TID}`,
                     label: node.NAME,
                     order: node.ORDER,
-                    parent_key: node.P_TID === 0 ? `prh_0` : `ach_${node.P_TID}`,
+                    parent_key: node.P_TID === 0 ? `root_0` : `ach_${node.P_TID}`,
                     type: 'POSITION',
                     manipulable: true
                 })
@@ -270,7 +271,7 @@ export class TreeResolver {
             const site_name = root.SITE_NAME ? root.SITE_NAME : 'DCIM';
 
             const trees = new Array({
-                key: `prh_0`,
+                key: `root_0`,
                 label: site_name,
                 order: 1,
                 parent_key: null,
@@ -283,7 +284,7 @@ export class TreeResolver {
                     key: `ach_${node.TID}`,
                     label: node.NAME,
                     order: node.ORDER,
-                    parent_key: node.P_TID === 0 ? `prh_0` : `ach_${node.P_TID}`,
+                    parent_key: node.P_TID === 0 ? `root_0` : `ach_${node.P_TID}`,
                     type: 'CUSTOM',
                     manipulable: true
                 })
@@ -360,7 +361,7 @@ export class TreeResolver {
                 case 'HIER01': { trees = await this.getTreeItemsByHIER01(root_info); break; }
                 case 'HIER02': { trees = await this.getTreeItemsByHIER02(root_info); break; }
                 case 'HIER03': { trees = await this.getTreeItemsByHIER03(root_info); break; }
-                case 'HIER04': { break; }
+                case 'HIER04': { trees = await this.getTreeItemsByHIER04(root_info); break; }
                 case 'HIER05': { break; }
                 case 'HIER06': { break; }
                 case 'HIER07': { break; }
@@ -385,7 +386,7 @@ export class TreeResolver {
                 order: node.ORDER,
                 parent_key: node.P_TID === 0 ? `root_0` : `ach_${node.P_TID}`,
                 type: 'CUSTOM',
-                manipulable: true
+                manipulable: false
             })
         });
 
@@ -403,7 +404,7 @@ export class TreeResolver {
                 order: node.ORDER,
                 parent_key: node.P_TID === 0 ? `root_0` : `ach_${node.P_TID}`,
                 type: 'POSITION',
-                manipulable: true
+                manipulable: false
             })
         });
 
@@ -414,16 +415,54 @@ export class TreeResolver {
         // by shkoh 20220415: HIER02 Asset Tree
         const trees = new Array(root);
 
-        (await getRepository(ac_cust_hier).find({ where: { TYPE: 'P' }, order: { P_TID: 'ASC', ORDER: 'ASC' } })).forEach((node: ac_cust_hier) => {
+        (await getRepository(pd_asset_hier).find({ order: { ORDER: 'ASC' } })).forEach((asset: pd_asset_hier) => {
             trees.push({
-                key: `ach_${node.TID}`,
-                label: node.NAME,
-                order: node.ORDER,
-                parent_key: node.P_TID === 0 ? `root_0` : `ach_${node.P_TID}`,
-                type: 'POSITION',
-                manipulable: true
+                key: `pah_${asset.ID}`,
+                label: asset.NAME,
+                order: asset.ORDER,
+                parent_key: asset.P_ID === 0 ? `root_0` : `pah_${asset.P_ID}`,
+                type: asset.TYPE,
+                manipulable: false
             })
         });
+
+        (await getRepository(pd_asset_code).find({
+            select: ['CODE', 'NAME', 'ALIAS', 'PD_ASSET_HIER_ID', 'ORDER'],
+            order: { 'PD_ASSET_HIER_ID': 'ASC', 'ORDER': 'ASC' }
+        })).forEach((asset: pd_asset_code) => {
+            trees.push({
+                key: `pac_${asset.CODE}`,
+                label: `${asset.ALIAS && asset.ALIAS.length > 0 ? asset.ALIAS : asset.NAME}`,
+                order: asset.ORDER,
+                parent_key: `pah_${asset.PD_ASSET_HIER_ID}`,
+                type: asset.TYPE,
+                manipulable: false
+            })
+        });
+
+        // by shkoh 20220224: parent id와 order를 기준으로 하여 오름차순으로 정리
+        trees.sort((a: AssetTree, b: AssetTree) => {
+            if (a.parent_key > b.parent_key) {
+                return 1;
+            } else if (a.parent_key < b.parent_key) {
+                return -1;
+            } else {
+                if (a.order > b.order) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            }
+        });
+
+        return trees;
+    }
+
+    private async getTreeItemsByHIER04(root: object) {
+        // by shkoh 20220415: HIER02 Asset Tree
+        const trees = new Array(root);
+
+
 
         return trees;
     }
