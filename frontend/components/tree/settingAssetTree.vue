@@ -123,7 +123,7 @@ export default class SettingAssetTree extends Vue {
 
     treeExpandedKey: any = { root_0: true };
     addableType = { ROOT: false, AssetHier: true };
-    moveableType = { ROOT: false, AssetHier: true, AssetCode: false };
+    moveableType = { ROOT: false, AssetHier: true, AssetCode: true };
 
     selectionKeys: null | object = null;
 

@@ -54,6 +54,7 @@ export default {
     components: {
         dirs: [
             '@/components',
+            '@/components/asset',
             '@/components/common',
             '@/components/company',
             '@/components/custom',
@@ -133,6 +134,8 @@ export default {
         components: [
             'AutoComplete',
             'Avatar',
+            'Badge',
+            'BadgeDirective',
             'Button',
             'Card',
             'Checkbox',
@@ -169,7 +172,7 @@ export default {
             'Tree',
             'TreeTable'
         ],
-        directives: ['Tooltip']
+        directives: ['Tooltip', 'BadgeDirective',]
     },
 
     // by shkoh 20210709: DCIM route

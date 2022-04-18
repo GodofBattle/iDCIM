@@ -67,16 +67,13 @@ export class TreeResolver {
 
             // by shkoh 20220224: parent id와 order를 기준으로 하여 오름차순으로 정리
             trees.sort((a: AssetTree, b: AssetTree) => {
-                if (a.parent_key > b.parent_key) {
+                if (a.order > b.order) {
                     return 1;
-                } else if (a.parent_key < b.parent_key) {
+                } else if (a.order < b.order) {
                     return -1;
                 } else {
-                    if (a.order > b.order) {
-                        return 1;
-                    } else {
-                        return -1;
-                    }
+                    if (a.parent_key > b.parent_key) return 1;
+                    else if (a.parent_key < b.parent_key) return -1;
                 }
             });
 

@@ -1,6 +1,6 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
 import { Query, Resolver, Ctx, Mutation, PubSub, Publisher, Arg, Args, Int, ID } from "type-graphql";
-import { DeleteResult, getRepository } from "typeorm";
+import { DeleteResult, getRepository, MoreThan } from "typeorm";
 
 import { pd_asset_code, pd_asset_code_args } from '../entity/database/pd_asset_code';
 import { pd_asset_hier, pd_asset_hier_args } from "../entity/database/pd_asset_hier";
@@ -115,6 +115,10 @@ export class PredefinedAssetResolver {
 
             let result: DeleteResult;
             if (has_used === 0) {
+                const delete_asset_code = await getRepository(pd_asset_code).findOne({ CODE: code });
+                await getRepository(pd_asset_hier).update({ P_ID: delete_asset_code.PD_ASSET_HIER_ID, ORDER: MoreThan(delete_asset_code.ORDER) }, { ORDER: () => '`ORDER` - 1' });
+                await getRepository(pd_asset_code).update({ PD_ASSET_HIER_ID: delete_asset_code.PD_ASSET_HIER_ID, ORDER: MoreThan(delete_asset_code.ORDER) }, { ORDER: () => '`ORDER` - 1' });
+
                 result = await getRepository(pd_asset_code).delete({ CODE: code });
             }
 
@@ -211,6 +215,10 @@ export class PredefinedAssetResolver {
 
             let result: DeleteResult;
             if (has_children_hier === 0) {
+                const deleted_asset_hier = await getRepository(pd_asset_hier).findOne({ ID: id });
+                await getRepository(pd_asset_hier).update({ P_ID: deleted_asset_hier.P_ID, ORDER: MoreThan(deleted_asset_hier.ORDER) }, { ORDER: () => '`ORDER` - 1' });
+                await getRepository(pd_asset_code).update({ PD_ASSET_HIER_ID: deleted_asset_hier.P_ID, ORDER: MoreThan(deleted_asset_hier.ORDER) }, { ORDER: () => '`ORDER` - 1' });
+
                 result = await getRepository(pd_asset_hier).delete({ ID: id });
             }
 
