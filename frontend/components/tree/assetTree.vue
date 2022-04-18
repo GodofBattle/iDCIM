@@ -93,14 +93,14 @@ type TabItem = {
 })
 export default class AssetTree extends Vue {
     tabList: Array<TabItem> = [
-        { header: '기본', disabled: false, type: 'BASIC' },
-        { header: '위치', disabled: false, type: 'POS' },
-        { header: '자산분류', disabled: false, type: 'KIND' },
-        { header: 'IP', disabled: false, type: 'IP' },
-        { header: 'IP/Port', disabled: false, type: 'PORT' },
-        { header: '담당자', disabled: false, type: 'WORKER' },
-        { header: '제조사', disabled: false, type: 'COMPANY' },
-        { header: '제품별', disabled: false, type: 'MODEL' },
+        { header: '기본', disabled: false, type: 'HIER01' },
+        { header: '위치', disabled: false, type: 'HIER02' },
+        { header: '자산분류', disabled: false, type: 'HIER03' },
+        { header: 'IP', disabled: false, type: 'HIER04' },
+        { header: 'IP/Port', disabled: false, type: 'HIER05' },
+        { header: '담당자', disabled: false, type: 'HIER06' },
+        { header: '제조사', disabled: false, type: 'HIER07' },
+        { header: '제품', disabled: false, type: 'HIER08' },
     ];
 
     selectedTabIndex: number = 0;
