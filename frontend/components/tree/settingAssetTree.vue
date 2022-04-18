@@ -121,7 +121,7 @@ import Component from '@/plugins/nuxt-class-component';
 export default class SettingAssetTree extends Vue {
     assetTree: Array<any> = [];
 
-    treeExpandedKey: any = { pah_1: true };
+    treeExpandedKey: any = { root_0: true };
     addableType = { ROOT: false, AssetHier: true };
     moveableType = { ROOT: false, AssetHier: true, AssetCode: false };
 
