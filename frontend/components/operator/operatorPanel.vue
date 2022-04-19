@@ -16,6 +16,7 @@
                     icon="pi pi-trash"
                     label="삭제"
                     class="p-button-danger"
+                    @click="deleteOperator"
                 ></Button>
             </div>
         </div>
@@ -151,6 +152,29 @@ export default class OperatorPanel extends Vue {
                 break;
             }
         }
+    }
+
+    deleteOperator() {
+        // by shkoh 20220419: 삭제하기 전에 데이터 갱신
+        this.operatorRefresh();
+
+        this.$confirmDialog.require({
+            group: 'deleteConfirmDialog',
+            message: `[${this.operatorData.NAME}] 담당자를 삭제하시겠습니까?\n자산정보 중에서 해당 담당자가 등록된 항목들은 모두 초기화 합니다.`,
+            header: `${this.operatorData.NAME} 삭제`,
+            position: 'top',
+            icon: 'pi pi-exclamation-triangle',
+            acceptClass: 'p-button-danger',
+            blockScroll: false,
+            accept: () => {
+                this.$toast.add({
+                    severity: 'error',
+                    summary: ' 미구현',
+                    detail: `아직 삭제 처리는 구현되지 않았습니다`,
+                    life: 2000,
+                });
+            },
+        });
     }
 }
 </script>

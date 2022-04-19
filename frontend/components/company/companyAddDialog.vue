@@ -1,18 +1,18 @@
 <template>
     <i-dialog
         :visible.sync="showDialog"
-        :content-style="{ width: '18vw' }"
+        :content-style="{ width: '18vw', 'overflow-y': 'hidden' }"
         :modal="true"
         :draggable="true"
         @hide="onDialogHide"
     >
         <template #header> {{ title }} </template>
 
-        <div class="p-fluid p-input-filled">
+        <div class="p-fluid p-input-filled p-pr-2">
             <div class="p-field">
                 <small>{{ subTitle }}</small>
             </div>
-            <ScrollPanel class="i-company-add-panel-content p-px-2">
+            <ScrollPanel class="i-company-add-panel-content">
                 <div class="p-field">
                     <label for="name">업체명</label>
                     <InputText
@@ -122,7 +122,7 @@
         </div>
 
         <template #footer>
-            <div class="p-fluid p-d-flex p-mx-2">
+            <div class="p-fluid p-d-flex">
                 <Button
                     label="추가"
                     icon="pi pi-plus"

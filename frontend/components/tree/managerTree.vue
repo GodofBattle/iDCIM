@@ -46,11 +46,12 @@
                         @click="addCompany"
                     ></Button>
                 </template>
-                <template #addOperator>
+                <template #addOperator="slotProps">
                     <Button
                         class="p-button-info p-button-sm p-py-1"
                         label="[담당자] 등록"
                         icon="pi pi-plus"
+                        @click="addOperator(slotProps.node)"
                     ></Button>
                 </template>
             </i-moveable-tree>
@@ -68,6 +69,14 @@
             :tab-type="selectionInfo"
             @refresh="treeRefresh"
         ></company-add-dialog>
+        <operator-add-dialog
+            :visible.sync="showOperatorAddDialog"
+            :tab-type="selectionInfo"
+            :company-id="selected_company_id"
+            :company-name="selected_company_name"
+            @refresh="treeRefresh"
+        >
+        </operator-add-dialog>
     </div>
 </template>
 
@@ -131,6 +140,10 @@ export default class ManagerTree extends Vue {
     companies: Array<any> = [];
 
     showCompanyAddDialog: boolean = false;
+    showOperatorAddDialog: boolean = false;
+
+    selected_company_id: number | null = null;
+    selected_company_name: string | null = null;
 
     mounted() {
         eventBus.$on('refreshManagerTree', () => {
@@ -251,6 +264,12 @@ export default class ManagerTree extends Vue {
 
     addCompany() {
         this.showCompanyAddDialog = true;
+    }
+
+    addOperator(node: any) {
+        this.selected_company_id = node.pId.split('_')[1];
+        this.selected_company_name = node.pName;
+        this.showOperatorAddDialog = true;
     }
 
     get addCompanyLabel(): string {

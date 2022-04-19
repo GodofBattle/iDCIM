@@ -110,6 +110,9 @@ export class ac_asset_operator {
 
 @ArgsType()
 export class ac_asset_operator_args {
+    @Field(() => Int, { nullable: true })
+    COMPANY_ID: number;
+
     @Field(() => String, { nullable: true })
     NAME: string;
 

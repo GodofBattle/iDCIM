@@ -158,6 +158,40 @@ export class ManagerResolver {
     }
 
     @Mutation(() => Boolean)
+    async AddOperator(
+        @Args() { COMPANY_ID, NAME, DEPT, PHONE, EXT_NO, MOBILE, EMAIL, REMARK }: ac_asset_operator_args,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if (!COMPANY_ID) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            if (!NAME) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+
+            const user = await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } });
+
+            const insert_data = {
+                UPDATE_USER_ID: user.ID,
+                UPDATE_USER_DT: new Date()
+            };
+
+            for (const [key, value] of Object.entries({ COMPANY_ID, NAME, DEPT, PHONE, EXT_NO, MOBILE, EMAIL, REMARK })) {
+                if (value !== undefined) insert_data[key] = value;
+            }
+
+            const result = await getRepository(ac_asset_operator).insert(insert_data);
+            return result.identifiers.length > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
     async UpdateOperator(
         @Arg('ID', () => ID) id: number,
         @Args() { NAME, DEPT, PHONE, EXT_NO, MOBILE, EMAIL, REMARK, NOTI_CHANNEL, NOTI_SENSOR_ALARM_LEVEL, NOTI_ASSET_ALARM_ENABLE, NOTI_HOUR_MON, NOTI_HOUR_TUE, NOTI_HOUR_WED, NOTI_HOUR_THU, NOTI_HOUR_FRI, NOTI_HOUR_SAT, NOTI_HOUR_SUN }: ac_asset_operator_args,

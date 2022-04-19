@@ -98,15 +98,15 @@ export default Vue.extend({
                 this.insertAddButtons(Manufacturers);
 
                 return Manufacturers;
-            }
-        }
+            },
+        },
     },
     data: () => ({
         manufacturers: [] as Array<any>,
         showAddManufacturerDialog: false,
         showAddProductDialog: false,
         manufacturerId: -1,
-        manufacturerName: ''
+        manufacturerName: '',
     }),
     mounted() {
         eventBus.$on('refreshProductTree', () => {
@@ -144,7 +144,7 @@ export default Vue.extend({
                             type: 'addProduct',
                             selectable: false,
                             pId: datum.key,
-                            pName: datum.label
+                            pName: datum.label,
                         });
                     }
                 }
@@ -154,11 +154,11 @@ export default Vue.extend({
             if (!data.some((datum: any) => datum.type === 'addManufacturer')) {
                 data.push({
                     type: 'addManufacturer',
-                    selectable: false
+                    selectable: false,
                 });
             }
-        }
-    }
+        },
+    },
 });
 </script>
 
