@@ -43,9 +43,6 @@ import Component from '@/plugins/nuxt-class-component';
                                 access_token: ACCESS_TOKEN,
                                 refresh_token: REFRESH_TOKEN,
                             });
-                        })
-                        .then(() => {
-                            this.$apollo.subscriptions.refreshToken.refresh();
                         });
                 },
                 error(err: any) {

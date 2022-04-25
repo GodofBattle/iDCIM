@@ -15,7 +15,10 @@ const PERM = PERM_CD;
 @Resolver()
 export class UserResolver {
     @Query(() => ac_user!)
-    async User(@Ctx() ctx: any, @PubSub('REFRESHTOKEN') publish: Publisher<void>) {
+    async User(
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
         if (!ctx.isAuth) {
             throw new AuthenticationError('인증되지 않은 접근입니다');
         }
@@ -29,7 +32,12 @@ export class UserResolver {
     }
 
     @Mutation(() => String)
-    async UserName(@Arg('userId') user_id: string, @Arg('newName') new_name: string, @PubSub('REFRESHTOKEN') publish: Publisher<void>, @Ctx() ctx: any) {
+    async UserName(
+        @Arg('userId') user_id: string,
+        @Arg('newName') new_name: string,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
         if (!ctx.isAuth) {
             throw new AuthenticationError('인증되지 않은 접근입니다');
         }
@@ -53,7 +61,6 @@ export class UserResolver {
         }
 
         try {
-            console.info(user_id + ', ' + password);
             const user = await getRepository(ac_user).findOne({ where: { USER_ID: Like(user_id), PASSWD: Like(password) } });
             if (!!user) {
                 const access_token = jwt.sign(
@@ -72,7 +79,7 @@ export class UserResolver {
         }
     }
 
-    // by shkoh 20210728: 
+    // by shkoh 20210728: TOKEN Subscription
     @Subscription(() => Token, { topics: 'REFRESHTOKEN' })
     RefreshToken(@Ctx() ctx: any): Token {
         if (!ctx.isAuth) {
@@ -80,7 +87,6 @@ export class UserResolver {
         }
 
         const access_token = jwt.sign({ iDCIM: ctx.user.iDCIM }, privateKey, { algorithm: 'HS256', subject: ctx.user.sub, expiresIn: accessTokenExpiresIn });
-
         const token: Token = new Token({ access_token: access_token });
         return token;
     }

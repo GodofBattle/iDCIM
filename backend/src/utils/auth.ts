@@ -5,6 +5,15 @@ import { ExpressContext } from 'apollo-server-express';
 export default ({ req, connection }: ExpressContext) => {
     let request_token = connection ? connection.context.authorization : req.headers.authorization;
 
+    let address: string;
+    let port: number;
+    let webSocketKey: string;
+    if (connection) {
+        address = connection.context.remote.address;
+        port = connection.context.remote.port;
+        webSocketKey = connection.context.remote.webSocketKey
+    }
+
     // by shkoh 20210727: Header Not Found
     if (!request_token) return { isAuth: false };
 
@@ -26,5 +35,13 @@ export default ({ req, connection }: ExpressContext) => {
     if (!!!decode_token) return { isAuth: false };
 
     // by shkoh 20210727: Token deced successfully, and extracted data
-    return { isAuth: true, user: decode_token };
+    return {
+        isAuth: true,
+        user: decode_token,
+        remote: {
+            address: address,
+            port: port,
+            webSocketKey: webSocketKey
+        }
+    };
 };

@@ -7,6 +7,7 @@
                 :filter="true"
                 :expanded-keys.sync="treeExpandedKey"
                 selection-mode="single"
+                @node-select="onSelectNode"
             >
             </i-moveable-tree>
         </div>
@@ -108,6 +109,36 @@ export default class AssetTree extends Vue {
 
     tree: Array<any> = [];
     treeExpandedKey: any = { root_0: true };
+
+    tree_keys: Array<number | string> = [];
+
+    onSelectNode(node: any) {
+        const type = this.tabList[this.selectedTabIndex].type;
+        this.tree_keys = [];
+
+        this.findKeys(node, type);
+        this.$emit('select', { type, treeKeys: this.tree_keys });
+    }
+
+    findKeys(node: any, type: string) {
+        const [code, id] = node.key.split('_');
+
+        if (code === 'root') {
+            return;
+        }
+
+        switch (type) {
+            case 'HIER01':
+            case 'HIER02': {
+                this.tree_keys.push(id);
+                break;
+            }
+        }
+
+        for (const child of node.children) {
+            this.findKeys(child, type);
+        }
+    }
 }
 </script>
 
@@ -117,7 +148,7 @@ export default class AssetTree extends Vue {
         height: calc(100% - 38px);
 
         .p-tree {
-            border-bottom: none;
+            border: none;
             height: 100%;
         }
 

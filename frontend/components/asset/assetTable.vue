@@ -1,5 +1,5 @@
 <template>
-    <div id="asset-table" class="p-py-1">
+    <div id="asset-table" class="p-pt-2">
         <DataTable
             class="p-datatable-sm"
             :value="assetList"
@@ -35,7 +35,7 @@
                 }"
             >
                 <template #body="slotProps">
-                    <Avatar class="i-asset-index">
+                    <Avatar class="i-asset-index p-px-1">
                         <span>{{ slotProps.index + 1 }}</span>
                         <Badge class="i-asset-comm-status"></Badge>
                     </Avatar>
@@ -52,37 +52,38 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 import { FilterMatchMode } from 'primevue/api';
 
-@Component<AssetTable>({})
+@Component<AssetTable>({
+    props: {
+        treeType: String,
+        treeKeys: Array,
+    },
+    apollo: {
+        assetList: {
+            query: gql`
+                query ($TYPE: String!, $KEYS: [String!]!) {
+                    Assets(TYPE: $TYPE, KEYS: $KEYS) {
+                        ID
+                        PRODUCT_ID
+                        NAME
+                    }
+                }
+            `,
+            variables() {
+                return {
+                    TYPE: this.$props.treeType ?? '',
+                    KEYS: this.$props.treeKeys ?? [],
+                };
+            },
+            update: ({ Assets }: any) => Assets,
+        },
+    },
+})
 export default class AssetTable extends Vue {
-    assetList: Array<any> = [
-        { ID: 1, IDX: 0, NAME: '가' },
-        { ID: 2, IDX: 1, NAME: '나' },
-        { ID: 3, IDX: 2, NAME: '다' },
-        { ID: 4, IDX: 3, NAME: '라' },
-        { ID: 5, IDX: 4, NAME: '마' },
-        { ID: 6, IDX: 5, NAME: '바' },
-        { ID: 7, IDX: 6, NAME: '사' },
-        { ID: 8, IDX: 7, NAME: '아' },
-        { ID: 9, IDX: 7, NAME: '아' },
-        { ID: 10, IDX: 7, NAME: '아' },
-        { ID: 11, IDX: 7, NAME: '아' },
-        { ID: 12, IDX: 7, NAME: '아' },
-        { ID: 13, IDX: 7, NAME: '아' },
-        { ID: 14, IDX: 7, NAME: '아' },
-        { ID: 15, IDX: 7, NAME: '아' },
-        { ID: 16, IDX: 7, NAME: '아' },
-        { ID: 17, IDX: 7, NAME: '아' },
-        { ID: 18, IDX: 7, NAME: '아' },
-        { ID: 19, IDX: 7, NAME: '아' },
-        { ID: 20, IDX: 7, NAME: '아' },
-        { ID: 21, IDX: 7, NAME: '아' },
-        { ID: 22, IDX: 7, NAME: '아' },
-        { ID: 23, IDX: 7, NAME: '아' },
-        { ID: 24, IDX: 7, NAME: '아' },
-    ];
+    assetList: Array<any> = [];
 
     assetFilterData: any = {
         NAME: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -98,6 +99,8 @@ export default class AssetTable extends Vue {
 
     .i-asset-index {
         position: relative;
+        width: auto;
+        min-width: 2rem;
 
         .i-asset-comm-status {
             position: absolute;

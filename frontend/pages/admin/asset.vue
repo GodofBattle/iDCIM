@@ -10,12 +10,19 @@
         </div>
         <div class="p-d-flex p-pr-2 i-asset-content">
             <div class="p-col-fixed" style="width: var(--tree-width)">
-                <asset-tree :style="{ height: '100%' }"></asset-tree>
+                <asset-tree
+                    :style="{ height: '100%' }"
+                    @select="onSelectTreeNode"
+                ></asset-tree>
             </div>
             <div class="p-col-fixed" style="width: var(--tree-width)">
-                <asset-table :style="{ height: '100%' }"></asset-table>
+                <asset-table
+                    :style="{ height: '100%' }"
+                    :tree-type="treeType"
+                    :tree-keys="treeKeys"
+                ></asset-table>
             </div>
-            <div class="p-col" style="background-color: #cafafa">
+            <div class="p-col">
                 <h2>Asset Content</h2>
             </div>
         </div>
@@ -36,8 +43,16 @@ import Component from '@/plugins/nuxt-class-component';
     },
 })
 export default class AdminAsset extends Vue {
+    treeType: string | null = null;
+    treeKeys: Array<number | string> = [];
+
     head() {
         return { title: `iDCIM - ${this.$props.title}` };
+    }
+
+    onSelectTreeNode({ type, treeKeys }: any) {
+        console.info(type, treeKeys);
+        this.treeType = type;
     }
 }
 </script>

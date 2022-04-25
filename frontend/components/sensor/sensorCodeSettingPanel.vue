@@ -9,7 +9,7 @@
     >
         <template #header> {{ title }} </template>
 
-        <ScrollPanel style="height: 50vh; padding: 0.4rem">
+        <ScrollPanel style="width: 100%; height: 50vh; padding: 0.4rem">
             <div class="p-fluid p-input-filled">
                 <div class="p-field">
                     <small>{{ subTitle }}</small>
@@ -111,7 +111,7 @@ export default Vue.extend({
         isEdit: Boolean,
         visibleSensorCodeDialog: Boolean,
         sensorCodeData: Object,
-        sensorCodes: Array
+        sensorCodes: Array,
     },
     data() {
         return {
@@ -121,7 +121,7 @@ export default Vue.extend({
             invalidMessageRemark: undefined as String | undefined,
             types: [
                 { name: 'Analog', value: 'A' },
-                { name: 'Digital', value: 'D' }
+                { name: 'Digital', value: 'D' },
             ],
             subTitle: '',
             CODE: '',
@@ -129,7 +129,7 @@ export default Vue.extend({
             TYPE: 'A',
             UNIT: '',
             IS_DISP_CONV: 0,
-            REMARK: ''
+            REMARK: '',
         };
     },
     computed: {
@@ -139,12 +139,12 @@ export default Vue.extend({
             },
             set(is_show: Boolean) {
                 this.$emit('update:visibleSensorCodeDialog', is_show);
-            }
+            },
         },
         title: {
             get(): string {
                 return `센서코드 ${this.isEdit ? '수정' : '추가'}`;
-            }
+            },
         },
         is_disp_conv: {
             get(): boolean {
@@ -152,7 +152,7 @@ export default Vue.extend({
             },
             set(value: boolean) {
                 this.IS_DISP_CONV = value ? 1 : 0;
-            }
+            },
         },
         applyDisabled() {
             let is_disabled = true;
@@ -167,10 +167,10 @@ export default Vue.extend({
             );
 
             return is_disabled === true;
-        }
+        },
     },
     watch: {
-        CODE(_code) {
+        CODE(_code: string) {
             if (_code.length > 8) {
                 this.invalidMessageCode = '코드는 8자 이하입니다';
             } else if (_code.length < 2) {
@@ -178,11 +178,13 @@ export default Vue.extend({
             } else if (
                 this.sensorCodes.some(
                     (data: any) =>
-                        _code !== this.sensorCodeData.CODE &&
-                        data.CODE === _code
+                        _code.toLowerCase() !==
+                            this.sensorCodeData.CODE.toLowerCase() &&
+                        data.CODE.toLowerCase() === _code.toLowerCase()
                 )
             ) {
-                this.invalidMessageCode = '동일한 코드가 존재합니다';
+                this.invalidMessageCode =
+                    '동일한 코드가 존재합니다(대소문자 구분없음)';
             } else {
                 this.invalidMessageCode = undefined;
             }
@@ -207,10 +209,10 @@ export default Vue.extend({
             } else {
                 this.invalidMessageRemark = undefined;
             }
-        }
+        },
     },
     methods: {
-        setSubTitle() {
+        setSubTitle(): string {
             if (
                 this.isEdit &&
                 this.sensorCodeData.hasOwnProperty('CODE') &&
@@ -249,7 +251,7 @@ export default Vue.extend({
                     severity: 'warn',
                     summary: '센서코드 유효성 실패',
                     detail: '센서코드 내용을 확인하세요',
-                    life: 2000
+                    life: 2000,
                 });
                 return;
             }
@@ -288,15 +290,15 @@ export default Vue.extend({
                         TYPE: this.TYPE,
                         UNIT: this.UNIT,
                         IS_DISP_CONV: this.IS_DISP_CONV,
-                        REMARK: this.REMARK
-                    }
+                        REMARK: this.REMARK,
+                    },
                 })
                 .then(() => {
                     this.$toast.add({
                         severity: 'success',
                         summary: '센서코드 등록',
                         detail: `${this.CODE} | ${this.NAME} 등록완료`,
-                        life: 1500
+                        life: 1500,
                     });
 
                     this.$emit('refresh');
@@ -309,16 +311,16 @@ export default Vue.extend({
                         severity: 'error',
                         summary: '센서코드 적용 실패',
                         detail: error.message,
-                        life: 2000
+                        life: 2000,
                     });
                 });
         },
         updateSensorCode() {
             const variables = {
-                ID: this.sensorCodeData.CODE as string,
+                ID: this.sensorCodeData.ID,
                 CODE: this.CODE,
                 NAME: this.NAME,
-                TYPE: this.TYPE
+                TYPE: this.TYPE,
             };
 
             ['UNIT', 'IS_DISP_CONV', 'REMARK'].forEach((key: string) => {
@@ -327,7 +329,7 @@ export default Vue.extend({
                         value: this.$data[key],
                         configurable: true,
                         enumerable: true,
-                        writable: true
+                        writable: true,
                     });
                 }
             });
@@ -336,7 +338,7 @@ export default Vue.extend({
                 .mutate({
                     mutation: gql`
                         mutation UpdateSensorCode(
-                            $ID: String!
+                            $ID: ID!
                             $CODE: String!
                             $NAME: String!
                             $TYPE: String!
@@ -355,7 +357,7 @@ export default Vue.extend({
                             )
                         }
                     `,
-                    variables
+                    variables,
                 })
                 .then(() => {
                     this.$emit('refresh');
@@ -368,10 +370,10 @@ export default Vue.extend({
                         severity: 'error',
                         summary: '센서코드 적용 실패',
                         detail: error.message,
-                        life: 2000
+                        life: 2000,
                     });
                 });
-        }
-    }
+        },
+    },
 });
 </script>

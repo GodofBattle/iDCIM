@@ -23,6 +23,7 @@ import { FileResolver } from './resolver/file';
 import { TreeResolver } from './resolver/tree';
 import { AccountCustomResolver } from './resolver/accountCustom';
 import { ManagerResolver } from "./resolver/manager";
+import { AssetResolver } from './resolver/asset';
 
 import Auth from './utils/auth';
 
@@ -42,7 +43,8 @@ const schemas = buildSchemaSync({
         FileResolver,
         TreeResolver,
         AccountCustomResolver,
-        ManagerResolver
+        ManagerResolver,
+        AssetResolver
     ],
 });
 
@@ -81,7 +83,15 @@ const server: ApolloServer = new ApolloServer({
     subscriptions: {
         onConnect: (connectionParams, webSocket, context) => {
             if (connectionParams['Authorization']) {
-                return { authorization: connectionParams['Authorization'] };
+                return {
+                    authorization: connectionParams['Authorization'],
+                    remote: {
+                        // by shkoh 20220425: 웹소켓 정보를 체크하기 위해서 임시로 추가함. 필요 여부에 따라서 향후 삭제 가능
+                        webSocketKey: context.request.headers['sec-websocket-key'],
+                        address: context.request.connection.remoteAddress,
+                        port: context.request.connection.remotePort
+                    }
+                };
             }
         },
         path: '/wsapi'

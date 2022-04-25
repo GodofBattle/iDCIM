@@ -35,6 +35,9 @@ const configuer = ({ env, store, redirect }: Context) => {
         wsEndpoint: `ws://${env.API_HOST}:${env.API_PORT}/wsapi`,
         httpLinkOptions: {
             credentials: 'same-origin'
+        },
+        wsLinkOptions: {
+            reconnect: true
         }
     };
 };
