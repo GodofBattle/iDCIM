@@ -1,6 +1,7 @@
 import { Field, ID, Int, ObjectType } from "type-graphql";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToOne, OneToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
+import { pd_product } from "./pd_product";
 
 @ObjectType()
 @Entity({ synchronize: false })
@@ -11,6 +12,7 @@ export class ac_asset {
 
     @Field(() => Int, { nullable: true })
     @Column({ type: 'int', nullable: false, comment: '제품아이디(pd_product.ID)' })
+    @RelationId((asset: ac_asset) => asset.PRODUCT)
     PRODUCT_ID: number;
 
     @Field(() => String, { nullable: true })
@@ -72,4 +74,8 @@ export class ac_asset {
     @Field(() => String, { nullable: true })
     @Column({ length: 256, type: 'varchar', nullable: true, default: null, comment: '설명' })
     REMARK?: string;
+
+    @ManyToOne(() => pd_product, (product: pd_product) => product.ASSETS, { createForeignKeyConstraints: false })
+    @JoinColumn({ name: 'PRODUCT_ID', referencedColumnName: 'ID' })
+    PRODUCT: pd_product;
 }

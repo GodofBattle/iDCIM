@@ -133,6 +133,11 @@ export default class AssetTree extends Vue {
                 this.tree_keys.push(id);
                 break;
             }
+            case 'HIER03': {
+                this.tree_keys.push(node.key);
+                if (code === 'pah') return;
+                break;
+            }
         }
 
         for (const child of node.children) {

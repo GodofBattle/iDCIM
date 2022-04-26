@@ -1,5 +1,7 @@
 import { Field, ObjectType, Int, ArgsType } from "type-graphql";
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
+import { TypeormLoader } from "type-graphql-dataloader";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, RelationId } from "typeorm";
+import { ac_asset } from "./ac_asset";
 
 import { pd_manufacturer } from './pd_manufacturer';
 
@@ -51,6 +53,10 @@ export class pd_product {
     get TYPE(): string {
         return 'Product';
     };
+
+    @OneToMany(() => ac_asset, (asset: ac_asset) => asset.PRODUCT, { primary: false, cascade: true, createForeignKeyConstraints: false })
+    @TypeormLoader((asset: ac_asset) => asset.PRODUCT_ID, { selfKey: true })
+    ASSETS?: Array<ac_asset>;
 }
 
 @ArgsType()
@@ -69,7 +75,7 @@ export class pd_product_args {
 
     @Field(() => String, { nullable: true })
     INFO: string | undefined;
-    
+
     @Field(() => Int, { nullable: true })
     MANUAL_FILE_ID: number | undefined;
 

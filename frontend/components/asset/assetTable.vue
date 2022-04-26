@@ -22,12 +22,15 @@
                     </span>
                 </div>
             </template>
+
             <template #empty> 해당 그룹의 자산이 없습니다 </template>
+
             <template #loading>
                 자산을 조회하고 있습니다. 잠시만 기다려주세요
             </template>
+
             <Column
-                field="IDX"
+                ID="ID"
                 :styles="{
                     'flex-grow': 1,
                     'flex-basis': '50px',
@@ -42,9 +45,12 @@
                 </template>
             </Column>
             <Column
-                field="NAME"
+                key="NAME"
                 :styles="{ 'flex-grow': 1, 'flex-basis': 'calc(100% - 50px)' }"
             >
+                <template #body="slotProps">
+                    {{ slotProps.data.NAME }}
+                </template>
             </Column>
         </DataTable>
     </div>
@@ -78,7 +84,20 @@ import { FilterMatchMode } from 'primevue/api';
                     KEYS: this.$props.treeKeys ?? [],
                 };
             },
-            update: ({ Assets }: any) => Assets,
+            update: ({ Assets }) => Assets,
+            prefetch: true,
+            fetchPolicy: 'cache-and-network',
+        },
+    },
+    watch: {
+        treeType(_new_tree_type) {
+            this.reloadAssetList();
+        },
+        treeKeys: {
+            deep: true,
+            handler(_new_tree_keys) {
+                this.reloadAssetList();
+            },
         },
     },
 })
@@ -88,6 +107,32 @@ export default class AssetTable extends Vue {
     assetFilterData: any = {
         NAME: { value: null, matchMode: FilterMatchMode.CONTAINS },
     };
+
+    reloadAssetList() {
+        this.$apollo.queries.assetList.stopPolling();
+        this.$apollo.queries.assetList.refresh();
+    }
+
+    reset() {
+        this.assetList.splice(0, this.assetList.length);
+    }
+
+    apolloFetch(data: Array<any>) {
+        this.reset();
+
+        this.$nextTick()
+            .then(() => {
+                data.forEach((datum: any) => {
+                    console.info(datum);
+                    const asset: any = Object.assign(datum);
+
+                    this.assetList.push(asset);
+                });
+            })
+            .then(() => {
+                this.$apollo.queries.assetList.startPolling(10000);
+            });
+    }
 }
 </script>
 
