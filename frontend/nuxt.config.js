@@ -103,7 +103,7 @@ export default {
     },
 
     server: {
-        host: '0'
+        host: process.env.HOST
     },
 
     vue: {

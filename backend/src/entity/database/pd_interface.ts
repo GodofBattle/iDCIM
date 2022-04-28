@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType, Int, ArgsType } from "type-graphql";
+import { TypeormLoader } from "type-graphql-dataloader";
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
 
 import { pd_asset_code } from './pd_asset_code';
@@ -37,8 +38,9 @@ export class pd_interface {
         return 'PredefineInterface';
     }
 
-    @ManyToOne(() => pd_asset_code, (asset_code) => asset_code.PREDEFINED_INTERFACES, { createForeignKeyConstraints: false })
+    @ManyToOne(() => pd_asset_code, (asset_code) => asset_code.PREDEFINED_INTERFACES, { primary: false, createForeignKeyConstraints: false })
     @JoinColumn({ name: 'ASSET_CD', referencedColumnName: 'CODE' })
+    @TypeormLoader((inft: pd_interface) => inft.ASSET_CD, { selfKey: false })
     ASSET_CODE: pd_asset_code;
 
     @OneToOne(() => pd_prod_intf, { createForeignKeyConstraints: false, cascade: false })

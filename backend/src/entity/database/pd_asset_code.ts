@@ -1,14 +1,18 @@
-import { ArgsType, Field, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, ID, Int, ObjectType } from "type-graphql";
 import { TypeormLoader } from "type-graphql-dataloader";
-import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToMany, PrimaryColumn, PrimaryGeneratedColumn, RelationId } from "typeorm";
 
 import { pd_interface } from './pd_interface';
 
 @ObjectType()
 @Entity({ synchronize: false })
 export class pd_asset_code {
+    @Field(() => ID)
+    @PrimaryGeneratedColumn('increment', { type: 'int', comment: '아이디' })
+    ID: number;
+
     @Field(() => String!)
-    @PrimaryColumn({ type: 'varchar', length: 8, nullable: false, default: '', comment: '코드' })
+    @Column({ type: 'varchar', length: 8, nullable: false, default: '', comment: '코드' })
     CODE: string;
 
     @Field(() => String, { nullable: true })
@@ -37,9 +41,12 @@ export class pd_asset_code {
     };
 
     @Field(() => [pd_interface], { nullable: true })
-    @OneToMany(() => pd_interface, (intf: pd_interface) => intf.ASSET_CODE, { primary: false, cascade: true, createForeignKeyConstraints: false })
-    @TypeormLoader(() => pd_interface, (intf: pd_interface) => intf.ASSET_CD, { selfKey: true })
+    @OneToMany(() => pd_interface, (intf: pd_interface) => intf.ASSET_CODE, { createForeignKeyConstraints: false })
+    @TypeormLoader((asset_code: pd_asset_code) => asset_code.INTF_CODES, { selfKey: false })
     PREDEFINED_INTERFACES?: pd_interface[];
+
+    @RelationId((asset_code: pd_asset_code) => asset_code.PREDEFINED_INTERFACES)
+    INTF_CODES: Array<string>
 }
 
 @ArgsType()

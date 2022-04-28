@@ -1,6 +1,6 @@
 <template>
     <div v-if="productId > 0" id="productPanel">
-        <div class="p-d-flex p-px-2">
+        <div class="p-d-flex p-mx-2">
             <div class="p-as-center i-title p-text-bold">
                 {{ productName }}
             </div>
@@ -23,7 +23,7 @@
         </div>
         <Divider />
         <ScrollPanel class="i-product-scrollpanel">
-            <div class="p-grid p-px-2">
+            <div class="p-grid">
                 <div class="p-col-3 p-fluid p-input-filled p-mr-6">
                     <div class="p-field">
                         <label for="asset_cd">자산분류</label>
@@ -37,6 +37,7 @@
                             :filter="true"
                             filter-placeholder="검색"
                             empty-filter-message="해당 유형의 자산은 존재하지 않습니다"
+                            append-to="body"
                         ></Dropdown>
                     </div>
                     <div class="p-field">

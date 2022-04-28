@@ -10,6 +10,9 @@ import { pd_asset_hier } from "../entity/database/pd_asset_hier";
 import { AssetTree, AssetTreeArgs } from "../entity/web/assetTree";
 
 import arrayToTree from '../utils/arrayToTree';
+import { pd_product } from "../entity/database/pd_product";
+import { ac_asset } from "../entity/database/ac_asset";
+import { cn_interface } from "../entity/database/cn_interface";
 
 @Resolver()
 export class TreeResolver {
@@ -359,8 +362,8 @@ export class TreeResolver {
                 case 'HIER02': { trees = await this.getTreeItemsByHIER02(root_info); break; }
                 case 'HIER03': { trees = await this.getTreeItemsByHIER03(root_info); break; }
                 case 'HIER04': { trees = await this.getTreeItemsByHIER04(root_info); break; }
-                case 'HIER05': { break; }
-                case 'HIER06': { break; }
+                case 'HIER05': { trees = await this.getTreeItemsByHIER05(root_info); break; }
+                case 'HIER06': { trees = await this.getTreeItemsByHIER06(root_info); break; }
                 case 'HIER07': { break; }
                 case 'HIER08': { break; }
             }
@@ -409,24 +412,27 @@ export class TreeResolver {
     }
 
     private async getTreeItemsByHIER03(root: object) {
-        // by shkoh 20220415: HIER02 Asset Tree
+        // by shkoh 20220415: HIER03 Asset Tree에 ROOT를 추가하면서 시작
         const trees = new Array(root);
 
-        (await getRepository(pd_asset_hier).find({ order: { ORDER: 'ASC' } })).forEach((asset: pd_asset_hier) => {
-            trees.push({
-                key: `pah_${asset.ID}`,
-                label: asset.NAME,
-                order: asset.ORDER,
-                parent_key: asset.P_ID === 0 ? `root_0` : `pah_${asset.P_ID}`,
-                type: asset.TYPE,
-                manipulable: false
-            })
-        });
+        // by shkoh 20220426: 현행 자산의 CODE 리스트를 추출함
+        const asset_code_list_query = getRepository(pd_product)
+            .createQueryBuilder('product')
+            .select('product.ASSET_CD')
+            .innerJoin(ac_asset, 'asset', 'product.ID = asset.PRODUCT_ID')
+            .groupBy('product.ASSET_CD');
 
-        (await getRepository(pd_asset_code).find({
-            select: ['CODE', 'NAME', 'ALIAS', 'PD_ASSET_HIER_ID', 'ORDER'],
-            order: { 'PD_ASSET_HIER_ID': 'ASC', 'ORDER': 'ASC' }
-        })).forEach((asset: pd_asset_code) => {
+        // by shkoh 20220426: pd_asset_code에서 현재 등록된 자산이 가지고 있는 CODE 리스트만 추출
+        const asset_code_tree = await getRepository(pd_asset_code)
+            .createQueryBuilder('asset_code')
+            .where('asset_code.CODE IN (' + asset_code_list_query.getQuery() + ')')
+            .orderBy('asset_code.PD_ASSET_HIER_ID', 'ASC')
+            .addOrderBy('asset_code.ORDER', 'ASC')
+            .getMany();
+
+        const asset_hier_ids = [];
+
+        asset_code_tree.forEach((asset: pd_asset_code) => {
             trees.push({
                 key: `pac_${asset.CODE}`,
                 label: `${asset.ALIAS && asset.ALIAS.length > 0 ? asset.ALIAS : asset.NAME}`,
@@ -434,8 +440,15 @@ export class TreeResolver {
                 parent_key: `pah_${asset.PD_ASSET_HIER_ID}`,
                 type: asset.TYPE,
                 manipulable: false
-            })
+            });
+
+            asset_hier_ids.push(asset.PD_ASSET_HIER_ID);
         });
+
+        const asset_hiers = await getRepository(pd_asset_hier).find({ order: { ORDER: 'ASC' } });
+        for (const id of asset_hier_ids) {
+            this.addAssetHierParentTreeNode(trees, asset_hiers, id);
+        }
 
         // by shkoh 20220224: parent id와 order를 기준으로 하여 오름차순으로 정리
         trees.sort((a: AssetTree, b: AssetTree) => {
@@ -455,11 +468,100 @@ export class TreeResolver {
         return trees;
     }
 
+    // by shkoh 20220427: HIER03에서 특정 자산 데이터만을 추출하기 위하여 데이터 기록
+    private addAssetHierParentTreeNode(tree_data: Array<any>, hier_list: Array<pd_asset_hier>, p_id: number) {
+        const asset_hier: pd_asset_hier | undefined = hier_list.find((asset: pd_asset_hier) => asset.ID === p_id);
+        // by shkoh 20220427: asset_hier 데이터가 존재하지 않다면, ROOT이거나 데이터베이스에 존재하지 않는 데이터임으로 더 이상 진행하지 않는다
+        if (!asset_hier) return;
+
+        if (!tree_data.some((tree_node: any) => tree_node.key === `pah_${p_id}`)) {
+            tree_data.push({
+                key: `pah_${asset_hier.ID}`,
+                label: asset_hier.NAME,
+                order: asset_hier.ORDER,
+                parent_key: asset_hier.P_ID === 0 ? 'root_0' : `pah_${asset_hier.P_ID}`,
+                type: asset_hier.TYPE,
+                manipulable: false
+            });
+        }
+
+        this.addAssetHierParentTreeNode(tree_data, hier_list, asset_hier.P_ID);
+    }
+
     private async getTreeItemsByHIER04(root: object) {
-        // by shkoh 20220415: HIER02 Asset Tree
+        // by shkoh 20220415: HIER04 Asset Tree
         const trees = new Array(root);
 
+        const interfaces = await getRepository(cn_interface)
+            .createQueryBuilder('intf')
+            .groupBy('intf.IP_ADDR')
+            .getMany();
 
+        let intf_index = 1;
+        interfaces.forEach((intf: cn_interface, index: number) => {
+            if (intf.IP_ADDR && intf.IP_ADDR.length > 0) {
+                trees.push({
+                    key: `ip_${intf.IP_ADDR}`,
+                    label: intf.IP_ADDR,
+                    order: intf_index++,
+                    parent_key: 'root_0',
+                    type: 'IP_ADDR',
+                    manipulable: false
+                });
+            }
+        });
+
+        trees.push({
+            key: `ip_null`,
+            label: '일반자산',
+            order: intf_index,
+            parent_key: 'root_0',
+            type: 'IP_ADDR',
+            manipulable: false
+        });
+
+        return trees;
+    }
+
+    private async getTreeItemsByHIER05(root: object) {
+        // by shkoh 20220415: HIER04 Asset Tree
+        const trees = new Array(root);
+
+        const interfaces = await getRepository(cn_interface)
+            .createQueryBuilder('intf')
+            .groupBy('intf.IP_ADDR')
+            .addGroupBy('intf.PORT')
+            .getMany();
+
+        let intf_index = 1;
+        interfaces.forEach((intf: cn_interface, index: number) => {
+            if (intf.IP_ADDR && intf.IP_ADDR.length > 0 && intf.PORT !== null) {
+                trees.push({
+                    key: `ipp_${intf.IP_ADDR}:${intf.PORT}`,
+                    label: `${intf.IP_ADDR}:${intf.PORT}`,
+                    order: intf_index++,
+                    parent_key: 'root_0',
+                    type: 'HIER05',
+                    manipulable: false
+                });
+            }
+        });
+
+        trees.push({
+            key: `ipp_null`,
+            label: '일반자산',
+            order: intf_index,
+            parent_key: 'root_0',
+            type: 'HIER05',
+            manipulable: false
+        });
+
+        return trees;
+    }
+
+    private async getTreeItemsByHIER06(root: object) {
+        // by shkoh 20220415: HIER04 Asset Tree
+        const trees = new Array(root);
 
         return trees;
     }
