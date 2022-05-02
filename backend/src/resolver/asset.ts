@@ -56,6 +56,59 @@ export class AssetResolver {
 
                         break;
                     }
+                    case 'HIER04': {
+                        const ip = keys[0];
+
+                        let query_where = '';
+                        if (ip === 'null') {
+                            query_where = `intf.IP_ADDR IS NULL OR intf.IP_ADDR = ''`;
+                        } else {
+                            query_where = `intf.IP_ADDR = "${ip}"`;
+                        }
+
+                        result = await getRepository(ac_asset)
+                            .createQueryBuilder('asset')
+                            .leftJoinAndSelect('asset.INTERFACE', 'intf')
+                            .where(query_where)
+                            .getMany();
+
+                        break;
+                    }
+                    case 'HIER05': {
+                        const [ip, port] = keys[0].split(':');
+
+                        let query_where = '';
+                        if (ip === 'null') {
+                            query_where = `intf.IP_ADDR IS NULL OR intf.IP_ADDR = '' OR intf.PORT IS NULL OR intf.PORT = 0`;
+                        } else {
+                            query_where = `intf.IP_ADDR = "${ip}" AND intf.PORT = ${port}`;
+                        }
+
+                        result = await getRepository(ac_asset)
+                            .createQueryBuilder('asset')
+                            .leftJoinAndSelect('asset.INTERFACE', 'intf')
+                            .where(query_where)
+                            .getMany();
+
+                        break;
+                    }
+                    case 'HIER07': {
+                        const manufacturer_id = keys[0];
+                        result = await getRepository(ac_asset)
+                            .createQueryBuilder('asset')
+                            .leftJoinAndSelect('asset.PRODUCT', 'product')
+                            .where(`product.MANUFACTURER_ID = ${manufacturer_id}`)
+                            .getMany();
+                        break;
+                    }
+                    case 'HIER08': {
+                        const product_id = keys[0];
+                        result = await getRepository(ac_asset)
+                            .createQueryBuilder('asset')
+                            .where(`asset.PRODUCT_ID = ${product_id}`)
+                            .getMany();
+                        break;
+                    }
                 }
             }
 

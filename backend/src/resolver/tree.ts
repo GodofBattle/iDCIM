@@ -13,6 +13,7 @@ import arrayToTree from '../utils/arrayToTree';
 import { pd_product } from "../entity/database/pd_product";
 import { ac_asset } from "../entity/database/ac_asset";
 import { cn_interface } from "../entity/database/cn_interface";
+import { pd_manufacturer } from "../entity/database/pd_manufacturer";
 
 @Resolver()
 export class TreeResolver {
@@ -364,8 +365,8 @@ export class TreeResolver {
                 case 'HIER04': { trees = await this.getTreeItemsByHIER04(root_info); break; }
                 case 'HIER05': { trees = await this.getTreeItemsByHIER05(root_info); break; }
                 case 'HIER06': { trees = await this.getTreeItemsByHIER06(root_info); break; }
-                case 'HIER07': { break; }
-                case 'HIER08': { break; }
+                case 'HIER07': { trees = await this.getTreeItemsByHIER07(root_info); break; }
+                case 'HIER08': { trees = await this.getTreeItemsByHIER08(root_info); break; }
             }
 
             const asset_tres: Array<AssetTree> = arrayToTree(trees, { id: 'key', p_id: 'parent_key' }) as Array<AssetTree>;
@@ -524,7 +525,7 @@ export class TreeResolver {
     }
 
     private async getTreeItemsByHIER05(root: object) {
-        // by shkoh 20220415: HIER04 Asset Tree
+        // by shkoh 20220415: HIER05 Asset Tree
         const trees = new Array(root);
 
         const interfaces = await getRepository(cn_interface)
@@ -560,8 +561,64 @@ export class TreeResolver {
     }
 
     private async getTreeItemsByHIER06(root: object) {
+        // by shkoh 20220502: HIER06 Asset Tree: 담당자
+        const trees = new Array(root);
+
+        return trees;
+    }
+
+    private async getTreeItemsByHIER07(root: object) {
+        // by shkoh 20220502: HIER07 Asset Tree
+        const trees = new Array(root);
+
+        // by shkoh 20220502: 현행 자산의 제품 리스트를 추출함
+        const asset_list_query = getRepository(pd_product)
+            .createQueryBuilder('product')
+            .select('product.MANUFACTURER_ID')
+            .innerJoin(ac_asset, 'asset', 'product.ID = asset.PRODUCT_ID')
+            .groupBy('product.MANUFACTURER_ID');
+
+        // by shkoh 20220502: pd_manufactuere에서 현재 등록된 자산이 가지고 있는 제조사 리스트만 추출
+        const manufacturers = await getRepository(pd_manufacturer)
+            .createQueryBuilder('manufacturer')
+            .where('manufacturer.ID IN (' + asset_list_query.getQuery() + ')')
+            .orderBy('manufacturer.NAME', 'ASC')
+            .getMany();
+
+        manufacturers.forEach((manu: pd_manufacturer) => {
+            trees.push({
+                key: `mf_${manu.ID}`,
+                label: `${manu.NAME}`,
+                parent_key: 'root_0',
+                type: 'HIER07',
+                manipulable: false
+            });
+        });
+
+        return trees;
+    }
+
+    private async getTreeItemsByHIER08(root: object) {
         // by shkoh 20220415: HIER04 Asset Tree
         const trees = new Array(root);
+
+        // by shkoh 20220502: 현행 자산의 제품 리스트를 추출함
+        const asset_product_list_query = await getRepository(pd_product)
+            .createQueryBuilder('product')
+            .innerJoin(ac_asset, 'asset', 'product.ID = asset.PRODUCT_ID')
+            .orderBy('product.NAME', 'ASC')
+            .groupBy('product.ID')
+            .getMany();
+
+        asset_product_list_query.forEach((p: pd_product) => {
+            trees.push({
+                key: `product_${p.ID}`,
+                label: `${p.NAME}`,
+                parent_key: 'root_0',
+                type: 'HIER08',
+                manipulable: false
+            });
+        });
 
         return trees;
     }

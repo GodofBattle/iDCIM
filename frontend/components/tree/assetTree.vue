@@ -6,6 +6,7 @@
                 :moveable="false"
                 :filter="true"
                 :expanded-keys.sync="treeExpandedKey"
+                :selection-keys.sync="treeSelectedKey"
                 selection-mode="single"
                 @node-select="onSelectNode"
             >
@@ -109,6 +110,7 @@ export default class AssetTree extends Vue {
 
     tree: Array<any> = [];
     treeExpandedKey: any = { root_0: true };
+    treeSelectedKey: any = {};
 
     tree_keys: Array<number | string> = [];
 
@@ -129,7 +131,11 @@ export default class AssetTree extends Vue {
 
         switch (type) {
             case 'HIER01':
-            case 'HIER02': {
+            case 'HIER02':
+            case 'HIER04':
+            case 'HIER05':
+            case 'HIER07':
+            case 'HIER08': {
                 this.tree_keys.push(id);
                 break;
             }

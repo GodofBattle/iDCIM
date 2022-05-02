@@ -1,6 +1,8 @@
 import { Field, ID, Int, ObjectType } from "type-graphql";
+import { TypeormLoader } from "type-graphql-dataloader";
 import { Column, Entity, JoinColumn, JoinTable, ManyToOne, OneToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
+import { cn_interface } from "./cn_interface";
 import { pd_product } from "./pd_product";
 
 @ObjectType()
@@ -8,6 +10,7 @@ import { pd_product } from "./pd_product";
 export class ac_asset {
     @Field(() => ID, { nullable: false })
     @PrimaryGeneratedColumn('increment', { type: 'int', comment: '아이디' })
+    @RelationId((asset: ac_asset) => asset.INTERFACE)
     ID: number;
 
     @Field(() => Int, { nullable: true })
@@ -78,4 +81,8 @@ export class ac_asset {
     @ManyToOne(() => pd_product, (product: pd_product) => product.ASSETS, { createForeignKeyConstraints: false })
     @JoinColumn({ name: 'PRODUCT_ID', referencedColumnName: 'ID' })
     PRODUCT: pd_product;
+
+    @OneToOne(() => cn_interface, (intf: cn_interface) => intf.ASSET, { primary: true, cascade: false, createForeignKeyConstraints: false })
+    @JoinColumn({ name: 'ID', referencedColumnName: 'ID' })
+    INTERFACE: cn_interface;
 }

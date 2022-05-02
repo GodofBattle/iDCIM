@@ -1,6 +1,7 @@
 import { Field, ID, Int, ObjectType } from "type-graphql";
-import { Column, Entity, PrimaryColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
+import { ac_asset } from "./ac_asset";
 
 @ObjectType()
 @Entity({ synchronize: false })
@@ -72,4 +73,8 @@ export class cn_interface {
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256, nullable: true, default: null, comment: '설명' })
     REMARK?: string;
+
+    @OneToOne(() => ac_asset, (asset: ac_asset) => asset.INTERFACE, { createForeignKeyConstraints: false })
+    @JoinColumn({ name: 'ID', referencedColumnName: 'ID' })
+    ASSET: ac_asset;
 }
