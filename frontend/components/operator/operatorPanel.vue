@@ -184,7 +184,7 @@ export default class OperatorPanel extends Vue {
     .i-title {
         font-size: 1.6rem;
         color: var(--text-color);
-        width: 10vw;
+        width: 30vw;
     }
 }
 </style>

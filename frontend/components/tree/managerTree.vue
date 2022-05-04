@@ -20,7 +20,7 @@
                         <div class="p-p-1">{{ slotProps.node.label }}</div>
                     </div>
                 </template>
-                <template #O="slotProps">
+                <template #M="slotProps">
                     <div class="p-d-flex">
                         <i
                             class="pi pi-shield p-p-1 p-mr-1"
@@ -130,12 +130,12 @@ export default class ManagerTree extends Vue {
     tabList: Array<TabItem> = [
         { header: '고객사', disabled: false, type: 'C' },
         { header: '협력사', disabled: false, type: 'P' },
-        { header: '유지보수사', disabled: false, type: 'O' },
+        { header: '유지보수사', disabled: false, type: 'M' },
     ];
 
     selectedTabIndex: number = 0;
-    addableType: any = { C: true, P: true, O: true, Operator: false };
-    moveableType: any = { C: false, P: false, O: false, Operator: false };
+    addableType: any = { C: true, P: true, M: true, Operator: false };
+    moveableType: any = { C: false, P: false, M: false, Operator: false };
 
     companies: Array<any> = [];
 
@@ -227,7 +227,7 @@ export default class ManagerTree extends Vue {
             switch (company.type) {
                 case 'C':
                 case 'P':
-                case 'O': {
+                case 'M': {
                     Object.defineProperty(company, 'manipulable', {
                         value: false,
                         configurable: true,

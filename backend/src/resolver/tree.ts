@@ -564,6 +564,32 @@ export class TreeResolver {
         // by shkoh 20220502: HIER06 Asset Tree: 담당자
         const trees = new Array(root);
 
+        // by shkoh 20220504: 고객사, 협력사, 유지보수 사 추가
+        trees.push({
+            key: `hier06_customer`,
+            label: `고객사`,
+            order: 1,
+            parent_key: `root_0`,
+            type: 'HIER06',
+            manipulable: false
+        }, {
+            key: `hier06_partner`,
+            label: `협력사`,
+            order: 2,
+            parent_key: `root_0`,
+            type: 'HIER06',
+            manipulable: false
+        }, {
+            key: `hier06_operator`,
+            label: `유지보수사`,
+            order: 3,
+            parent_key: `root_0`,
+            type: 'HIER06',
+            manipulable: false
+        });
+
+        // const asset_list = getRepository(ac_asset).
+
         return trees;
     }
 
