@@ -144,6 +144,10 @@ export default class AssetTree extends Vue {
                 if (code === 'pah') return;
                 break;
             }
+            case 'HIER06': {
+                this.tree_keys.push(node.key);
+                break;
+            }
         }
 
         for (const child of node.children) {

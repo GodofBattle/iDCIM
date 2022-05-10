@@ -92,6 +92,38 @@ export class AssetResolver {
 
                         break;
                     }
+                    case 'HIER06': {
+                        let condition_type = '';
+                        const op_ids: Array<string> = [];
+                        for (const id of keys) {
+                            const [k, i] = id.split('_');
+
+                            if (k !== 'hier06') {
+                                op_ids.push(i);
+                                condition_type = k.substring(2, 3);
+                            }
+                        }
+
+                        let query_where = '';
+                        switch (condition_type) {
+                            case 'C':
+                            case 'P': {
+                                query_where = `asset.OP_ID_M IN (${op_ids.toString()}) OR asset.OP_ID_S IN (${op_ids.toString()})`;
+                                break;
+                            }
+                            case 'M': {
+                                query_where = `asset.MA_USER_ID IN (${op_ids.toString()})`;
+                                break;
+                            }
+                        }
+
+                        result = await getRepository(ac_asset)
+                            .createQueryBuilder('asset')
+                            .where(query_where)
+                            .getMany();
+
+                        break;
+                    }
                     case 'HIER07': {
                         const manufacturer_id = keys[0];
                         result = await getRepository(ac_asset)

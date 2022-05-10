@@ -1,6 +1,6 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
 import { Arg, Args, Ctx, Mutation, PubSub, Publisher, Query, Resolver } from "type-graphql";
-import { Between, getRepository, MoreThan, MoreThanOrEqual } from "typeorm";
+import { Between, getManager, getRepository, MoreThan, MoreThanOrEqual } from "typeorm";
 
 import { ac_user } from '../entity/database/ac_user';
 import { ac_config } from "../entity/database/ac_config";
@@ -14,6 +14,7 @@ import { pd_product } from "../entity/database/pd_product";
 import { ac_asset } from "../entity/database/ac_asset";
 import { cn_interface } from "../entity/database/cn_interface";
 import { pd_manufacturer } from "../entity/database/pd_manufacturer";
+import { ac_company } from "../entity/database/ac_company";
 
 @Resolver()
 export class TreeResolver {
@@ -588,7 +589,32 @@ export class TreeResolver {
             manipulable: false
         });
 
-        // const asset_list = getRepository(ac_asset).
+        // by shkoh 20220504: 자산을 기준으로 고객사 담당자 및 업체 정보 로드
+        const customers = await getManager().query(`
+            SELECT
+                ac.NAME AS COMPANY_NAME, ac.TYPE AS COMPANY_TYPE, aao.ID,  aao.NAME AS OP_NAME
+            FROM ac_asset_operator aao
+            JOIN ac_company ac ON aao.COMPANY_ID = ac.ID
+            ORDER BY aao.NAME
+        `);
+
+        customers.forEach((c: any, index: number) => {
+            let p_key = ``
+            switch (c.COMPANY_TYPE) {
+                case 'C': p_key = 'hier06_customer'; break;
+                case 'P': p_key = 'hier06_partner'; break;
+                case 'M': p_key = 'hier06_operator'; break;
+            }
+
+            trees.push({
+                key: `op${c.COMPANY_TYPE}_${c.ID}`,
+                label: `${c.OP_NAME} - ${c.COMPANY_NAME}`,
+                order: index + 1,
+                parent_key: p_key,
+                type: 'OPERATOR',
+                manipulable: false
+            });
+        });
 
         return trees;
     }
