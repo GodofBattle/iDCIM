@@ -20,10 +20,11 @@
                     :style="{ height: '100%' }"
                     :tree-type="treeType"
                     :tree-keys="treeKeys"
+                    :selected-asset.sync="selectedAsset"
                 ></asset-table>
             </div>
-            <div class="p-col">
-                <h2>Asset Content</h2>
+            <div class="p-col" :style="{ width: '30vw' }">
+                <asset-panel :item="selectedAsset"></asset-panel>
             </div>
         </div>
     </div>
@@ -41,10 +42,16 @@ import Component from '@/plugins/nuxt-class-component';
             default: '자산',
         },
     },
+    watch: {
+        selectedAsset(_asset) {
+            console.info(_asset);
+        },
+    },
 })
 export default class AdminAsset extends Vue {
     treeType: string | null = null;
     treeKeys: Array<number | string> = [];
+    selectedAsset: any = null;
 
     head() {
         return { title: `iDCIM - ${this.$props.title}` };

@@ -82,7 +82,8 @@ export class ac_asset {
     @JoinColumn({ name: 'PRODUCT_ID', referencedColumnName: 'ID' })
     PRODUCT: pd_product;
 
+    @Field(() => cn_interface, { nullable: true })
     @OneToOne(() => cn_interface, (intf: cn_interface) => intf.ASSET, { primary: true, cascade: false, createForeignKeyConstraints: false })
     @JoinColumn({ name: 'ID', referencedColumnName: 'ID' })
-    INTERFACE: cn_interface;
+    INTERFACE?: cn_interface;
 }

@@ -86,10 +86,10 @@ type TabItem = {
                     TYPE: this.tabList[this.selectedTabIndex].type,
                 };
             },
-            fetchResults: true,
-            fetchPolicy: 'no-cache',
+            fetchResults: false,
+            fetchPolicy: 'cache-and-network',
             manual: false,
-            prefetch: false,
+            prefetch: true,
             update: ({ Tree }) => Tree,
         },
     },

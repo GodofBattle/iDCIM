@@ -4,6 +4,7 @@ import { getRepository, In, Raw } from "typeorm";
 import { ac_asset } from "../entity/database/ac_asset";
 import { pd_asset_code } from "../entity/database/pd_asset_code";
 import { pd_asset_hier } from "../entity/database/pd_asset_hier";
+import { cn_interface } from '../entity/database/cn_interface';
 
 @Resolver()
 export class AssetResolver {
@@ -22,15 +23,15 @@ export class AssetResolver {
 
             let result;
             if (keys.length === 0) {
-                result = await getRepository(ac_asset).find();
+                result = await getRepository(ac_asset).find({ relations: ['INTERFACE'] });
             } else {
                 switch (type) {
                     case 'HIER01': {
-                        result = await getRepository(ac_asset).find({ where: { CUST_HIER_ID_C: In(keys) } });
+                        result = await getRepository(ac_asset).find({ where: { CUST_HIER_ID_C: In(keys) }, relations: ['INTERFACE'] });
                         break;
                     }
                     case 'HIER02': {
-                        result = await getRepository(ac_asset).find({ where: { CUST_HIER_ID_P: In(keys) } });
+                        result = await getRepository(ac_asset).find({ where: { CUST_HIER_ID_P: In(keys) }, relations: ['INTERFACE'] });
                         break;
                     }
                     case 'HIER03': {
@@ -51,6 +52,7 @@ export class AssetResolver {
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
                             .leftJoinAndSelect('asset.PRODUCT', 'product')
+                            .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where('product.ASSET_CD IN (' + code_query.getQuery() + ')')
                             .getMany();
 
@@ -119,6 +121,7 @@ export class AssetResolver {
 
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
+                            .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where(query_where)
                             .getMany();
 
@@ -129,6 +132,7 @@ export class AssetResolver {
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
                             .leftJoinAndSelect('asset.PRODUCT', 'product')
+                            .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where(`product.MANUFACTURER_ID = ${manufacturer_id}`)
                             .getMany();
                         break;
@@ -137,6 +141,7 @@ export class AssetResolver {
                         const product_id = keys[0];
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
+                            .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where(`asset.PRODUCT_ID = ${product_id}`)
                             .getMany();
                         break;

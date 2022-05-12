@@ -5,7 +5,6 @@
             <Divider></Divider>
         </div>
         <div class="p-mt-2 p-mb-2">
-            <!-- <TieredMenu :model="items" style="width: 100%"></TieredMenu> -->
             <i-tiered-menu :model="items" style="width: 100%"></i-tiered-menu>
         </div>
         <div class="p-mt-auto">
@@ -28,6 +27,7 @@ let timerId: NodeJS.Timeout;
 })
 export default class HeadLeft extends Vue {
     nowTime = new String('0000/00/00 00:00:00');
+    timerId: any = null;
 
     beforeDestroy() {
         clearInterval(timerId);

@@ -30,14 +30,18 @@ const configuer = ({ env, store, redirect }: Context) => {
 
     return {
         link: from([apolloError]),
-        ssr: true,
         httpEndpoint: `http://${env.API_HOST}:${env.API_PORT}/api`,
         wsEndpoint: `ws://${env.API_HOST}:${env.API_PORT}/wsapi`,
         httpLinkOptions: {
             credentials: 'same-origin'
         },
-        wsLinkOptions: {
-            reconnect: true
+        apollo: {
+            $query: {
+                fetchPolicy: 'network-only'
+            },
+            wsLinkOptions: {
+                reconnect: true
+            },
         }
     };
 };
