@@ -45,6 +45,7 @@ export class pd_product {
     @Column({ type: 'varchar', length: 256, default: null, comment: '설명' })
     REMARK?: string;
 
+    @Field(() => pd_manufacturer, { nullable: true })
     @ManyToOne(() => pd_manufacturer, (manufacturer) => manufacturer.PRODUCTS, { createForeignKeyConstraints: false })
     @JoinColumn({ name: 'MANUFACTURER_ID', referencedColumnName: 'ID' })
     MANUFACTURER: pd_manufacturer;

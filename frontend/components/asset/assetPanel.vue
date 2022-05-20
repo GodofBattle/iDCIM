@@ -14,7 +14,7 @@
             </tab-header-list>
         </div>
         <div class="i-asset-content">
-            <asset-panel-info v-if="tabIndex === 0"></asset-panel-info>
+            <asset-panel-info v-if="tabIndex === 0" :asset-item="item"></asset-panel-info>
             <div v-else-if="tabIndex === 1">
                 <h1>{{ assetTabList[tabIndex].header }}</h1>
             </div>

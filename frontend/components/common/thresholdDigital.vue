@@ -267,7 +267,7 @@ export default class ThresholdDigital extends Vue {
 
 .i-digit-row {
     border-radius: var(--border-radius);
-    background: var(--surface-d);
+    border: 1px solid var(--surface-d);
     cursor: pointer;
 }
 

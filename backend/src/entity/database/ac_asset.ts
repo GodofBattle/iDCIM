@@ -78,6 +78,7 @@ export class ac_asset {
     @Column({ length: 256, type: 'varchar', nullable: true, default: null, comment: '설명' })
     REMARK?: string;
 
+    @Field(() => pd_product, { nullable: true })
     @ManyToOne(() => pd_product, (product: pd_product) => product.ASSETS, { createForeignKeyConstraints: false })
     @JoinColumn({ name: 'PRODUCT_ID', referencedColumnName: 'ID' })
     PRODUCT: pd_product;

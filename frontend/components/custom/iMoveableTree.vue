@@ -771,6 +771,14 @@ export default class IMoveableTree extends Vue {
         opacity: 0;
         position: fixed;
     }
+
+    .p-tree {
+        height: 100%;
+    }
+
+    .p-tree-container {
+        height: calc(100% - 2rem);
+    }
 }
 
 .i-real-dragimage {

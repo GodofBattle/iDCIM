@@ -12,7 +12,7 @@
             >
             </i-moveable-tree>
         </div>
-        <div class="i-tree-navigation">
+        <div class="i-tree-navigation" v-if="!is_overlay_panel">
             <tab-header-list
                 :tabs="tabList"
                 alignment="bottom"
@@ -36,6 +36,12 @@ type TabItem = {
 };
 
 @Component<AssetTree>({
+    props: {
+        is_overlay_panel: {
+            type: Boolean,
+            default: false
+        }
+    },
     apollo: {
         tree: {
             query: gql`
@@ -96,8 +102,6 @@ type TabItem = {
 })
 export default class AssetTree extends Vue {
     tabList: Array<TabItem> = [
-        { header: '기본', disabled: false, type: 'HIER01' },
-        { header: '위치', disabled: false, type: 'HIER02' },
         { header: '자산분류', disabled: false, type: 'HIER03' },
         { header: 'IP', disabled: false, type: 'HIER04' },
         { header: 'IP/Port', disabled: false, type: 'HIER05' },
@@ -113,6 +117,18 @@ export default class AssetTree extends Vue {
     treeSelectedKey: any = {};
 
     tree_keys: Array<number | string> = [];
+
+    mounted() {
+        // by shkoh 20220517: custom tree와 position tree는 사이트 설정에 의해서 사용 가능 여부를 판단함
+        // by shkoh 20220517: 순서는 기본 | 위치 순서로 표시를 하기 위해서 우선 위치를 우선 놓고 진행
+        if(this.$store.state.sessionStorage.ui.is_pos_tree) {
+            this.tabList.splice(0, 0, { header: '위치', disabled: false, type: 'HIER02' });
+        }
+
+        if(this.$store.state.sessionStorage.ui.is_cus_tree) {
+            this.tabList.splice(0, 0, { header: '기본', disabled: false, type: 'HIER01' });
+        }
+    }
 
     onSelectNode(node: any) {
         const type = this.tabList[this.selectedTabIndex].type;

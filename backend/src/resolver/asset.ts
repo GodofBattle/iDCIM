@@ -1,10 +1,9 @@
 import { AuthenticationError, SchemaError } from "apollo-server-express";
-import { Arg, Ctx, Query, Resolver, Subscription } from "type-graphql";
+import { Arg, Ctx, ID, Query, Resolver, Subscription } from "type-graphql";
 import { getRepository, In, Raw } from "typeorm";
+
 import { ac_asset } from "../entity/database/ac_asset";
 import { pd_asset_code } from "../entity/database/pd_asset_code";
-import { pd_asset_hier } from "../entity/database/pd_asset_hier";
-import { cn_interface } from '../entity/database/cn_interface';
 
 @Resolver()
 export class AssetResolver {
@@ -19,9 +18,7 @@ export class AssetResolver {
         }
 
         try {
-            console.info(type, keys);
-
-            let result;
+            let result: any;
             if (keys.length === 0) {
                 result = await getRepository(ac_asset).find({ relations: ['INTERFACE'] });
             } else {
@@ -152,6 +149,22 @@ export class AssetResolver {
             return result;
         } catch (err) {
             throw new SchemaError(err.message)
+        }
+    }
+
+    @Query(() => ac_asset, { nullable: true })
+    async Asset(
+        @Arg('ID', () => ID, { nullable: true }) id: number,
+        @Ctx() ctx: any
+    ) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return await getRepository(ac_asset).findOne({ where: { ID: id }, relations: ['PRODUCT', 'INTERFACE', 'PRODUCT.MANUFACTURER'] });
+        } catch (err) {
+            throw new SchemaError(err.message);
         }
     }
 }

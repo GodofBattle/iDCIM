@@ -41,12 +41,7 @@ import Component from '@/plugins/nuxt-class-component';
             type: String,
             default: '자산',
         },
-    },
-    watch: {
-        selectedAsset(_asset) {
-            console.info(_asset);
-        },
-    },
+    }
 })
 export default class AdminAsset extends Vue {
     treeType: string | null = null;

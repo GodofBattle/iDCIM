@@ -251,8 +251,8 @@ export default class AssetTable extends Vue {
     }
 
     .i-lvl00 {
-        background-color: var(--normal);
-        color: var(--text-alert-color);
+        background: transparent;
+        border: 1px solid var(--surface-border);
     }
 
     .i-lvl01 {
