@@ -24,7 +24,7 @@
                 ></asset-table>
             </div>
             <div class="p-col" :style="{ width: '30vw' }">
-                <asset-panel :item="selectedAsset"></asset-panel>
+                <!-- <asset-panel :item="selectedAsset"></asset-panel> -->
             </div>
         </div>
     </div>
