@@ -126,18 +126,20 @@ export default class AssetTree extends Vue {
         // by shkoh 20220517: 순서는 기본 | 위치 순서로 표시를 하기 위해서 우선 위치를 우선 놓고 진행
         this.$nextTick(() => {
             if (this.$store.state.sessionStorage.ui.is_pos_tree) {
-                this.tabList.splice(0, 0, {
-                    header: '위치',
-                    disabled: false,
-                    type: 'HIER02'
-                });
+                console.info('ui.is_pos_tree');
+                // this.tabList.splice(0, 0, {
+                //     header: '위치',
+                //     disabled: false,
+                //     type: 'HIER02'
+                // });
             }
             if (this.$store.state.sessionStorage.ui.is_cus_tree) {
-                this.tabList.splice(0, 0, {
-                    header: '기본',
-                    disabled: false,
-                    type: 'HIER01'
-                });
+                console.info('ui.is_cus_tree');
+                // this.tabList.splice(0, 0, {
+                //     header: '기본',
+                //     disabled: false,
+                //     type: 'HIER01'
+                // });
             }
         });
     }
