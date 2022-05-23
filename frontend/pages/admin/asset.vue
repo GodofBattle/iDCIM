@@ -1,7 +1,7 @@
 <template>
     <div id="admin-asset">
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
-        <div class="p-d-flex p-px-2 p-jc-end" style="padding-top: 20px">
+        <!-- <div class="p-d-flex p-px-2 p-jc-end" style="padding-top: 20px">
             <Button
                 icon="pi pi-plus"
                 label="자산추가"
@@ -24,9 +24,9 @@
                 ></asset-table>
             </div>
             <div class="p-col" :style="{ width: '30vw' }">
-                <!-- <asset-panel :item="selectedAsset"></asset-panel> -->
+                <asset-panel :item="selectedAsset"></asset-panel>
             </div>
-        </div>
+        </div> -->
     </div>
 </template>
 
