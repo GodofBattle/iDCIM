@@ -15,7 +15,7 @@
                     @select="onSelectTreeNode"
                 ></asset-tree>
             </div>
-        <!--    <div class="p-col-fixed" style="width: var(--tree-width)">
+            <div class="p-col-fixed" style="width: var(--tree-width)">
                 <asset-table
                     :style="{ height: '100%' }"
                     :tree-type="treeType"
@@ -26,7 +26,6 @@
             <div class="p-col" :style="{ width: '30vw' }">
                 <asset-panel :item="selectedAsset"></asset-panel>
             </div>
-        -->
         </div>
     </div>
 </template>
@@ -40,8 +39,8 @@ import Component from '@/plugins/nuxt-class-component';
     props: {
         title: {
             type: String,
-            default: '자산',
-        },
+            default: '자산'
+        }
     }
 })
 export default class AdminAsset extends Vue {

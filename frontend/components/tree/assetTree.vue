@@ -131,19 +131,6 @@ export default class AssetTree extends Vue {
                 disabled: false,
                 type: 'HIER02'
             });
-
-            // this.$nextTick(() => {
-            //     this.tabList.splice(0, 0, {
-            //         header: '위치',
-            //         disabled: false,
-            //         type: 'HIER02'
-            //     });
-            // });
-            // this.$set(this.tabList, 0, {
-            //     header: '위치',
-            //     disabled: false,
-            //     type: 'HIER02'
-            // });
         }
 
         if (this.$store.state.sessionStorage.ui.is_cus_tree) {
