@@ -120,7 +120,8 @@ export default class AssetTree extends Vue {
 
     tree_keys: Array<number | string> = [];
 
-    mounted() {
+    fetch() {
+        console.info('mounted');
         // by shkoh 20220517: custom tree와 position tree는 사이트 설정에 의해서 사용 가능 여부를 판단함
         // by shkoh 20220517: 순서는 기본 | 위치 순서로 표시를 하기 위해서 우선 위치를 우선 놓고 진행
         this.$nextTick(() => {
