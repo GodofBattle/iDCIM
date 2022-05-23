@@ -1,5 +1,5 @@
 <template>
-    <div id="i-asset-panel" v-if="item">
+    <div v-if="item" id="i-asset-panel">
         <div class="p-d-flex p-px-2 p-mt-3">
             <div class="p-as-center p-text-bold i-title">
                 {{ item.NAME }}
@@ -14,7 +14,10 @@
             </tab-header-list>
         </div>
         <div class="i-asset-content">
-            <asset-panel-info v-if="tabIndex === 0" :asset-item="item"></asset-panel-info>
+            <asset-panel-info
+                v-if="tabIndex === 0"
+                :asset-item="item"
+            ></asset-panel-info>
             <div v-else-if="tabIndex === 1">
                 <h1>{{ assetTabList[tabIndex].header }}</h1>
             </div>
@@ -59,8 +62,8 @@ type TabItem = {
 
 @Component<AssetPanel>({
     props: {
-        item: Object,
-    },
+        item: Object
+    }
 })
 export default class AssetPanel extends Vue {
     assetTabList: Array<TabItem> = [
@@ -73,10 +76,10 @@ export default class AssetPanel extends Vue {
         { header: '통신로그', disabled: false, type: 'ASSETCONTENT07' },
         { header: '알람정보', disabled: false, type: 'ASSETCONTENT08' },
         { header: '작업이력', disabled: false, type: 'ASSETCONTENT09' },
-        { header: '담당자 알림정보', disabled: false, type: 'ASSETCONTENT10' },
+        { header: '담당자 알림정보', disabled: false, type: 'ASSETCONTENT10' }
     ];
 
-    tabIndex: number = -1;
+    tabIndex: number = 0;
 }
 </script>
 

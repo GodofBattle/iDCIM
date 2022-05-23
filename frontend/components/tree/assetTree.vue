@@ -12,7 +12,7 @@
             >
             </i-moveable-tree>
         </div>
-        <div class="i-tree-navigation" v-if="!is_overlay_panel">
+        <div v-if="!is_overlay_panel" class="i-tree-navigation">
             <tab-header-list
                 :tabs="tabList"
                 alignment="bottom"
@@ -36,6 +36,8 @@ type TabItem = {
 };
 
 @Component<AssetTree>({
+    fetchOnServer: false,
+    fetchKey: 'AssetTree' + new Date().getUTCMilliseconds(),
     props: {
         is_overlay_panel: {
             type: Boolean,
@@ -89,16 +91,16 @@ type TabItem = {
             `,
             variables() {
                 return {
-                    TYPE: this.tabList[this.selectedTabIndex].type,
+                    TYPE: this.tabList[this.selectedTabIndex].type
                 };
             },
             fetchResults: false,
             fetchPolicy: 'cache-and-network',
             manual: false,
             prefetch: true,
-            update: ({ Tree }) => Tree,
-        },
-    },
+            update: ({ Tree }) => Tree
+        }
+    }
 })
 export default class AssetTree extends Vue {
     tabList: Array<TabItem> = [
@@ -107,7 +109,7 @@ export default class AssetTree extends Vue {
         { header: 'IP/Port', disabled: false, type: 'HIER05' },
         { header: '담당자', disabled: false, type: 'HIER06' },
         { header: '제조사', disabled: false, type: 'HIER07' },
-        { header: '제품', disabled: false, type: 'HIER08' },
+        { header: '제품', disabled: false, type: 'HIER08' }
     ];
 
     selectedTabIndex: number = 0;
@@ -121,13 +123,22 @@ export default class AssetTree extends Vue {
     mounted() {
         // by shkoh 20220517: custom tree와 position tree는 사이트 설정에 의해서 사용 가능 여부를 판단함
         // by shkoh 20220517: 순서는 기본 | 위치 순서로 표시를 하기 위해서 우선 위치를 우선 놓고 진행
-        if(this.$store.state.sessionStorage.ui.is_pos_tree) {
-            this.tabList.splice(0, 0, { header: '위치', disabled: false, type: 'HIER02' });
-        }
-
-        if(this.$store.state.sessionStorage.ui.is_cus_tree) {
-            this.tabList.splice(0, 0, { header: '기본', disabled: false, type: 'HIER01' });
-        }
+        this.$nextTick(() => {
+            if (this.$store.state.sessionStorage.ui.is_pos_tree) {
+                this.tabList.splice(0, 0, {
+                    header: '위치',
+                    disabled: false,
+                    type: 'HIER02'
+                });
+            }
+            if (this.$store.state.sessionStorage.ui.is_cus_tree) {
+                this.tabList.splice(0, 0, {
+                    header: '기본',
+                    disabled: false,
+                    type: 'HIER01'
+                });
+            }
+        });
     }
 
     onSelectNode(node: any) {
