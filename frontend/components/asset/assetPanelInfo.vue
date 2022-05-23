@@ -94,7 +94,7 @@
                     class="p-col-fixed"
                     :style="{ width: '70%' }"
                 >
-                    <div class="p-field p-grid">
+                    <div class="p-field p-grid" v-if="productInterfaces.length > 0">
                         <div class="p-field-checkbox p-mb-0 p-mr-4 i-model-key">
                             <Checkbox
                                 id="is_intf"
@@ -106,25 +106,31 @@
                         <div class="p-col-fixed i-model-value">
                             <Dropdown
                                 id="mc-id"
+                                v-model="productInterfaceID"
+                                :options="productInterfaces"
                                 placeholder="사용 가능 인터페이스"
                                 empty-filter-message="사용 가능한 인터페이스가 존재하지 않습니다"
                                 append-to="body"
+                                data-key="ID"
+                                option-label="INTERFACE.NAME"
+                                option-value="PD_INTF_ID"
                                 :style="{ width: '70%' }"
                             >
                             </Dropdown>
                             <Button label="적용" icon="pi pi-check" class="p-button" :style="{ 'max-width': '80px', 'min-width': '68px' }"></Button>
                         </div>
                     </div>
-                    <div class="p-field p-grid">
+                    <div class="p-field p-grid" v-if="hasManual">
                         <label for="manual" class="p-col-fixed p-mb-0 p-mr-4 i-model-key">
                             메뉴얼
                         </label>
                         <div class="p-col-fixed i-model-value">
                             <Button
                                 class="p-text-nowrap p-text-truncate p-text-left p-button-sm p-button-outlined p-button-secondary"
-                                label="샘플 매뉴얼 파일로 표시만 한 것입니다.pdf"
+                                :label="manual_file_name"
                                 icon="pi pi-download"
                                 :style="{ 'max-width': '100%', 'display': 'block' }"
+                                @click="downloadManualFile"
                             ></Button>
                         </div>
                     </div>
@@ -136,13 +142,13 @@
                             <label>{{ assetCodeTreeLabel }}</label>
                         </div>
                     </div>
-                    <Divider/>
-                    <div class="p-field p-grid" v-for="(temp, id) of temps" :key="id">
+                    <Divider v-if="productInfo.length > 0" :style="{ 'margin-left': '-0.5rem' }"/>
+                    <div class="p-field p-grid p-mb-1" v-for="(data, index) of productInfo" :key="index">
                         <Tag class="p-col-fixed p-mb-0 p-mr-4 p-py-1 i-model-key" severity="info">
-                            {{ temp.key }}
+                            {{ data.key }}
                         </Tag>
                         <div class="p-col-fixed p-py-1 i-model-value">
-                            <label>{{ temp.value }}</label>
+                            <label>{{ data.value }}</label>
                         </div>
                     </div>
                 </div>
@@ -153,6 +159,9 @@
                                 <span class="pi pi-images"></span>
                             </button>
                         </template>
+                        <div class="i-image-content">
+                            <img class="i-product-image" :src="image_file" v-if="image_file.length > 0"/>
+                        </div>
                     </Panel>
                 </div>
             </div>
@@ -192,6 +201,7 @@ import Component from '@/plugins/nuxt-class-component';
                 query Asset($ID: ID!) {
                     Asset(ID: $ID) {
                         ID
+                        PRODUCT_ID
                         NAME
                         SERIAL
                         CUST_HIER_ID_P
@@ -199,12 +209,16 @@ import Component from '@/plugins/nuxt-class-component';
                         PRODUCT {
                             ASSET_CD
                             NAME
+                            MANUAL_FILE_ID
+                            IMAGE_FILE_ID
+                            INFO
                             MANUFACTURER {
                                 NAME
                             }
                         }
                         INTERFACE {
                             ID
+                            PROD_INTF_ID
                         }
                     }
                 }
@@ -391,6 +405,26 @@ import Component from '@/plugins/nuxt-class-component';
                     }
                 }
             }
+        },
+        productInterfaces: {
+            query: gql`
+                query ProductInterfaces($PRODUCT_ID: Int!) {
+                    ProductInterfaces(PRODUCT_ID: $PRODUCT_ID) {
+                        ID
+                        PRODUCT_ID
+                        PD_INTF_ID
+                        INTERFACE {
+                            NAME
+                        }
+                    }
+                }
+            `,
+            variables() {
+                return {
+                    PRODUCT_ID: -1
+                }
+            },
+            update: ({ ProductInterfaces }) => ProductInterfaces
         }
     }
 })
@@ -400,19 +434,24 @@ export default class AssetPanelInfo extends Vue {
     };
 
     temps = [
-        { id: 1, key: 'key1', value: 'value1' },
-        { id: 2, key: 'key2', value: 'value11' },
-        { id: 3, key: 'key3', value: 'value12' },
-        { id: 4, key: 'key4', value: 'value13' },
+        { key: 'key1', value: 'value1' },
+        { key: 'key2', value: 'value11' },
+        { key: 'key3', value: 'value12' },
+        { key: 'key4', value: 'value13' },
     ];
 
     treeHier01: Array<any> = [];
     treeHier02: Array<any> = [];
     treeHier03: Array<any> = [];
 
+    productInterfaces: Array<any> = [];
+
     customTreeLabel: string = '';
     positionTreeLabel: string = '';
     assetCodeTreeLabel: string = '';
+
+    manual_file_name: string = '';
+    image_file: any = '';
 
     dbAsset = null;
     asset: any = {
@@ -424,12 +463,15 @@ export default class AssetPanelInfo extends Vue {
         PRODUCT: {
             ASSET_CD: '',
             NAME: '',
+            MANUAL_FILE_ID: null as number | null,
+            INFO: '',
             MANUFACTURER: {
                 NAME: ''
             }
         },
         INTERFACE: {
-            ID: -1
+            ID: -1,
+            PROD_INTF_ID: -1
         }
     };
 
@@ -454,9 +496,26 @@ export default class AssetPanelInfo extends Vue {
                 this.$apollo.queries.treeHier02.refresh();
             }
 
-            if(key === 'PRODUCT') {
+            if(key === 'PRODUCT_ID' && value !== null) {
+                this.$apollo.queries.productInterfaces.refetch({ PRODUCT_ID: value });
+            }
+
+            if(key === 'PRODUCT') {                
                 this.$apollo.queries.treeHier03.refresh();
             }
+        }
+
+        if(this.asset.PRODUCT.MANUAL_FILE_ID) {
+            // by shkoh 20220520: 파일을 입력하기 전에 데이터 초기화 작업을 한 번 수행
+            this.manual_file_name = '';
+            this.loadManualFile();
+        }
+
+        //console.info(this.image_file);
+        if(this.asset.PRODUCT.IMAGE_FILE_ID) {
+            this.loadImageFile();
+        } else {
+            this.image_file = '';
         }
     }
 
@@ -557,6 +616,115 @@ export default class AssetPanelInfo extends Vue {
         this.overlayTreePanelMode = '';
     }
 
+    loadManualFile() {
+        this.$apollo.query({
+            query: gql`
+                query {
+                    PdFile(ID: ${this.asset.PRODUCT.MANUAL_FILE_ID}) {
+                        FILE_NAME
+                        MIMETYPE
+                    }
+                }
+            `
+        }).then(({ data }) => {
+            const manual_file = data.PdFile;
+            this.manual_file_name = manual_file.FILE_NAME;
+        }).catch((error) => {
+            console.error(error);
+
+            this.$toast.add({
+                severity: 'error',
+                summary: '파일 로드 실패',
+                detail: error.message,
+                life: 2000
+            });
+        });
+    }
+
+    downloadManualFile() {
+        this.$nuxt.$loading.start();
+
+        this.$apollo.query({
+            query: gql`
+                query {
+                    PdFile(ID: ${this.asset.PRODUCT.MANUAL_FILE_ID}) {
+                        FILE_NAME
+                        MIMETYPE
+                        DATA
+                    }
+                }
+            `
+        }).then(({ data }) => {
+            const manual_file = data.PdFile;
+
+            this.$nextTick(() => {
+                const buf = Buffer.from(manual_file.DATA, 'base64');
+                const manual = new File(
+                    [buf.buffer],
+                    manual_file.FILE_NAME,
+                    { type: manual_file.MIMETYPE }
+                );
+
+                const reader = new FileReader();
+                reader.readAsDataURL(manual);
+
+                reader.onloadend = (event: any) => {
+                    const link = document.createElement('a');
+                    link.download = manual_file.FILE_NAME;
+                    link.href = event.target.result;
+
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    this.$nuxt.$loading.finish();
+                }
+            });
+        }).catch((error) => {
+            console.error(error);
+
+            this.$toast.add({
+                severity: 'error',
+                summary: '파일 불러오기 실패',
+                detail: error.message,
+                life: 2000
+            });
+
+            this.$nuxt.$loading.finish();
+        });
+    }
+
+    loadImageFile() {
+        this.$apollo.query({
+            query: gql`
+                query {
+                    PdFile(ID: ${this.asset.PRODUCT.IMAGE_FILE_ID}) {
+                        FILE_NAME
+                        MIMETYPE
+                        DATA
+                    }
+                }
+            `
+        }).then(({ data }) => {
+            const _image_file = data.PdFile;
+
+            this.$nextTick(() => {
+                this.image_file = `data:${_image_file.MIMETYPE};base64,${_image_file.DATA}`;
+            });
+        }).catch((error) => {
+            console.error(error);
+
+            this.$toast.add({
+                severity: 'error',
+                summary: '파일 불러오기 실패',
+                detail: error.message,
+                life: 2000
+            });
+
+            this.$nuxt.$loading.finish();
+        });
+    }
+
     get overlayTreeToRender(): Array<any> {
         return this.overlayTreePanelMode === 'custom' ? this.treeHier01 : this.treeHier02;
     }
@@ -580,6 +748,33 @@ export default class AssetPanelInfo extends Vue {
     set is_interface(_val: boolean) {
         this.asset.INTERFACE = _val ? { ID: this.asset.ID } : null;
     }
+
+    get productInterfaceID(): number {
+        return this.asset?.INTERFACE?.PROD_INTF_ID ?? -1;
+    }
+
+    set productInterfaceID(_new_prod_intf_id) {
+        Object.defineProperty(this.asset, 'INTERFACE', {
+            value: { PROD_INTF_ID: _new_prod_intf_id },
+            configurable: true,
+            enumerable: true,
+            writable: true
+        });
+    }
+
+    get productInfo(): Array<any> {
+        let infos: Array<any> = [];
+
+        if(this.asset.PRODUCT.INFO !== null && this.asset.PRODUCT.INFO.length > 0) {
+            infos = JSON.parse(this.asset.PRODUCT.INFO);
+        }
+
+        return infos;
+    }
+
+    get hasManual(): boolean {
+        return !!this.asset.PRODUCT?.MANUAL_FILE_ID ?? false;
+    }
 }
 </script>
 
@@ -601,6 +796,17 @@ export default class AssetPanelInfo extends Vue {
     .i-model-value {
         flex-basis: 50%;
         max-width: 70%;
+    }
+
+    .i-image-content {
+        width: 100%;
+        text-align: center;
+
+        .i-product-image {
+            max-width: 100%;
+            max-height: 30vh;
+            border-radius: 3px;
+        }
     }
 }
 </style>
