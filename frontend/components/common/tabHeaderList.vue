@@ -125,9 +125,7 @@ export default class TabHeaderList extends Vue {
     }
 
     getKey(tab: TabItem, index: number) {
-        return tab.header
-            ? ObjectUtils.resolveFieldData(tab, tab.header)
-            : index;
+        return tab.type ? ObjectUtils.resolveFieldData(tab, tab.type) : index;
     }
 
     isTabDisabled(tab: TabItem) {
