@@ -5,12 +5,12 @@
     >
         <div class="i-tree-navigation p-tabview-nav-container">
             <button
-                ref="prevBtn"
                 v-if="!backwardIsDisabled"
+                ref="prevBtn"
+                v-ripple
                 :class="prevButtonClasses"
                 :disabled="backwardIsDisabled"
                 type="button"
-                v-ripple
                 @click="navBackward"
             >
                 <span class="pi pi-chevron-left"></span>
@@ -22,26 +22,26 @@
                     role="tablist"
                 >
                     <li
-                        role="presentation"
                         v-for="(tab, i) of tabs"
                         :key="getKey(tab, i)"
+                        role="presentation"
                         :class="[
                             {
                                 'p-highlight': d_activeIndex === i,
-                                'p-disabled': isTabDisabled(tab),
-                            },
+                                'p-disabled': isTabDisabled(tab)
+                            }
                         ]"
                     >
                         <a
+                            v-ripple
                             role="tab"
                             class="p-tabview-nav-link"
                             :aria-selected="d_activeIndex"
-                            v-ripple
                             :tabindex="isTabDisabled(tab) ? null : '0'"
                             @click="onTabClick($event, i)"
                             @keydown="onTabKeydown($event, i)"
                         >
-                            <span class="p-tabview-title" v-if="tab.header">
+                            <span v-if="tab.header" class="p-tabview-title">
                                 {{ tab.header }}
                             </span>
                         </a>
@@ -50,12 +50,12 @@
                 </ul>
             </div>
             <button
-                ref="nextBtn"
                 v-if="!forwardIsDisabled"
+                ref="nextBtn"
+                v-ripple
                 :class="nextButtonClasses"
                 :disabled="forwardIsDisabled"
                 type="button"
-                v-ripple
                 @click="navForward"
             >
                 <span class="pi pi-chevron-right"></span>
@@ -66,8 +66,8 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import Component from '@/plugins/nuxt-class-component';
 import Ripple from 'primevue/ripple';
+import Component from '@/plugins/nuxt-class-component';
 import ObjectUtils from '@/plugins/primevue.ObjectUtils';
 import DomHandler from '@/plugins/primevue.DomHandler';
 
@@ -79,28 +79,28 @@ type TabItem = {
 
 @Component<TabHeaderList>({
     directives: {
-        ripple: Ripple,
+        ripple: Ripple
     },
     props: {
         tabs: {
             type: Array,
-            default: null,
+            default: null
         },
         activeIndex: {
             type: Number,
-            default: 0,
+            default: 0
         },
         alignment: {
             type: String,
-            default: 'top',
-        },
+            default: 'top'
+        }
     },
     watch: {
         activeIndex(new_index) {
             this.d_activeIndex = new_index;
             this.updateScrollBar(new_index);
-        },
-    },
+        }
+    }
 })
 export default class TabHeaderList extends Vue {
     $refs!: {
@@ -144,7 +144,7 @@ export default class TabHeaderList extends Vue {
 
             this.$emit('tab-change', {
                 originalEvent: event,
-                index: i,
+                index: i
             });
 
             this.updateScrollBar(i);
@@ -152,7 +152,7 @@ export default class TabHeaderList extends Vue {
 
         this.$emit('tab-click', {
             originalEvent: event,
-            index: i,
+            index: i
         });
     }
 
@@ -169,7 +169,7 @@ export default class TabHeaderList extends Vue {
 
     updateInkBar() {
         if (this.$refs.nav.children.length > 1) {
-            let tabHeader = this.$refs.nav.children[this.d_activeIndex];
+            const tabHeader = this.$refs.nav.children[this.d_activeIndex];
 
             this.$refs.inkbar.style.width =
                 DomHandler.getWidth(tabHeader) + 'px';
@@ -181,7 +181,7 @@ export default class TabHeaderList extends Vue {
     }
 
     updateScrollBar(index: number) {
-        let tabHeader = this.$refs.nav.children[index];
+        const tabHeader = this.$refs.nav.children[index];
         tabHeader.scrollIntoView({ block: 'nearest', inline: 'center' });
     }
 
@@ -226,14 +226,14 @@ export default class TabHeaderList extends Vue {
     get prevButtonClasses(): Array<string | object> {
         return [
             'p-tabview-nav-prev p-tabview-nav-btn p-link',
-            { 'p-disabled': this.backwardIsDisabled },
+            { 'p-disabled': this.backwardIsDisabled }
         ];
     }
 
     get nextButtonClasses(): Array<string | object> {
         return [
             'p-tabview-nav-next p-tabview-nav-btn p-link',
-            { 'p-disabled': this.forwardIsDisabled },
+            { 'p-disabled': this.forwardIsDisabled }
         ];
     }
 
