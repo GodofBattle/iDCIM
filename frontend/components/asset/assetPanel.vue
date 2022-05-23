@@ -76,7 +76,7 @@ export default class AssetPanel extends Vue {
         { header: '담당자 알림정보', disabled: false, type: 'ASSETCONTENT10' },
     ];
 
-    tabIndex: number = 0;
+    tabIndex: number = -1;
 }
 </script>
 
