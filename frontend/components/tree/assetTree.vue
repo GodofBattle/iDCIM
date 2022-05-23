@@ -13,12 +13,14 @@
             </i-moveable-tree>
         </div>
         <div v-if="!is_overlay_panel" class="i-tree-navigation">
-            <tab-header-list
-                :tabs="tabList"
-                alignment="bottom"
-                :active-index.sync="selectedTabIndex"
-            >
-            </tab-header-list>
+            <client-only>
+                <tab-header-list
+                    :tabs="tabList"
+                    alignment="bottom"
+                    :active-index.sync="selectedTabIndex"
+                >
+                </tab-header-list>
+            </client-only>
         </div>
     </div>
 </template>
@@ -104,16 +106,6 @@ type TabItem = {
 })
 export default class AssetTree extends Vue {
     tabList: Array<TabItem> = [
-        {
-            header: '기본',
-            disabled: false,
-            type: 'HIER01'
-        },
-        {
-            header: '위치',
-            disabled: false,
-            type: 'HIER02'
-        },
         { header: '자산분류', disabled: false, type: 'HIER03' },
         { header: 'IP', disabled: false, type: 'HIER04' },
         { header: 'IP/Port', disabled: false, type: 'HIER05' },
@@ -133,21 +125,13 @@ export default class AssetTree extends Vue {
     fetch() {
         // by shkoh 20220517: custom tree와 position tree는 사이트 설정에 의해서 사용 가능 여부를 판단함
         // by shkoh 20220517: 순서는 기본 | 위치 순서로 표시를 하기 위해서 우선 위치를 우선 놓고 진행
-        if (!this.$store.state.sessionStorage.ui.is_cus_tree) {
-            const idx = this.tabList.findIndex(
-                (tab: TabItem) => tab.type === 'HIER01'
-            );
-            this.$delete(this.tabList, idx);
-        }
-
         if (this.$store.state.sessionStorage.ui.is_pos_tree) {
-            const idx = this.tabList.findIndex(
-                (tab: TabItem) => tab.type === 'HIER02'
-            );
-
-            this.$nextTick(() => {
-                this.$delete(this.tabList, idx);
+            this.tabList.splice(0, 0, {
+                header: '위치',
+                disabled: false,
+                type: 'HIER02'
             });
+
             // this.$nextTick(() => {
             //     this.tabList.splice(0, 0, {
             //         header: '위치',
@@ -163,18 +147,11 @@ export default class AssetTree extends Vue {
         }
 
         if (this.$store.state.sessionStorage.ui.is_cus_tree) {
-            // this.$nextTick(() => {
-            //     this.tabList.splice(0, 0, {
-            //         header: '기본',
-            //         disabled: false,
-            //         type: 'HIER01'
-            //     });
-            // });
-            //     this.$set(this.tabList, 0, {
-            //         header: '기본',
-            //         disabled: false,
-            //         type: 'HIER01'
-            //     });
+            this.tabList.splice(0, 0, {
+                header: '기본',
+                disabled: false,
+                type: 'HIER01'
+            });
         }
     }
 

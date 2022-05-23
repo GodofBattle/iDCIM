@@ -669,15 +669,15 @@ export default class AssetPanelInfo extends Vue {
                 reader.readAsDataURL(manual);
 
                 reader.onloadend = (event: any) => {
-                    // const link = document.createElement('a');
-                    // link.download = manual_file.FILE_NAME;
-                    // link.href = event.target.result;
+                    const link = document.createElement('a');
+                    link.download = manual_file.FILE_NAME;
+                    link.href = event.target.result;
 
-                    // document.body.appendChild(link);
-                    // link.click();
-                    // document.body.removeChild(link);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
 
-                    // this.$nuxt.$loading.finish();
+                    this.$nuxt.$loading.finish();
                 }
             });
         }).catch((error) => {
