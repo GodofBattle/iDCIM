@@ -8,14 +8,14 @@
                 class="p-field p-button-outlined p-button-secondary"
             ></Button>
         </div>
-        <!-- <div class="p-d-flex p-pr-2 i-asset-content">
+        <div class="p-d-flex p-pr-2 i-asset-content">
             <div class="p-col-fixed" style="width: var(--tree-width)">
                 <asset-tree
                     :style="{ height: '100%' }"
                     @select="onSelectTreeNode"
                 ></asset-tree>
             </div>
-            <div class="p-col-fixed" style="width: var(--tree-width)">
+        <!--    <div class="p-col-fixed" style="width: var(--tree-width)">
                 <asset-table
                     :style="{ height: '100%' }"
                     :tree-type="treeType"
@@ -26,7 +26,8 @@
             <div class="p-col" :style="{ width: '30vw' }">
                 <asset-panel :item="selectedAsset"></asset-panel>
             </div>
-        </div> -->
+        -->
+        </div>
     </div>
 </template>
 
