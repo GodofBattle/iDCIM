@@ -121,32 +121,36 @@ export default class AssetTree extends Vue {
     tree_keys: Array<number | string> = [];
 
     fetch() {
-        console.info('mounted');
         // by shkoh 20220517: custom tree와 position tree는 사이트 설정에 의해서 사용 가능 여부를 판단함
         // by shkoh 20220517: 순서는 기본 | 위치 순서로 표시를 하기 위해서 우선 위치를 우선 놓고 진행
-
         if (this.$store.state.sessionStorage.ui.is_pos_tree) {
-            console.info('ui.is_pos_tree');
-
-            this.$set(this.tabList, 0, {
-                header: '위치',
-                disabled: false,
-                type: 'HIER02'
+            this.$nextTick(() => {
+                this.tabList.splice(0, 0, {
+                    header: '위치',
+                    disabled: false,
+                    type: 'HIER02'
+                });
             });
-
-            // this.tabList = [
-            //     { header: '위치', disabled: false, type: 'HIER02' },
-            //     ...this.tabList
-            // ];
+            // this.$set(this.tabList, 0, {
+            //     header: '위치',
+            //     disabled: false,
+            //     type: 'HIER02'
+            // });
         }
 
         if (this.$store.state.sessionStorage.ui.is_cus_tree) {
-            console.info('ui.is_cus_tree');
-            // this.tabList.splice(0, 0, {
-            //     header: '기본',
-            //     disabled: false,
-            //     type: 'HIER01'
-            // });
+            this.$nextTick(() => {
+                this.tabList.splice(0, 0, {
+                    header: '기본',
+                    disabled: false,
+                    type: 'HIER01'
+                });
+            });
+            //     this.$set(this.tabList, 0, {
+            //         header: '기본',
+            //         disabled: false,
+            //         type: 'HIER01'
+            //     });
         }
     }
 
