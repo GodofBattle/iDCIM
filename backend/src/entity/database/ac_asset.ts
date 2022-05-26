@@ -67,6 +67,14 @@ export class ac_asset {
     INSPECT_INFO?: string;
 
     @Field(() => Int, { nullable: true })
+    @Column({ type: 'int', nullable: true, default: null, comment: '이미지 파일아이디(ac_file.ID. 0이면 제품이미지)' })
+    IMAGE_FILE_ID: number;
+
+    @Field(() => Int, { nullable: true })
+    @Column({ type: 'int', nullable: false, default: 0, comment: '인터페이스 사용여부(재사용시 인터페이스 정보 재활용)' })
+    IS_USE_INTF: number;
+
+    @Field(() => Int, { nullable: true })
     @Column({ type: 'int', nullable: true, default: null, comment: '변경사용자 아이디' })
     UPDATE_USER_ID?: number;
 

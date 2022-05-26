@@ -96,7 +96,7 @@ type Interface = {
 @Component<InterfacePanel>({
     props: {
         interfaceId: Number,
-        interfaceName: String,
+        interfaceName: String
     },
     apollo: {
         interfaceData: {
@@ -111,12 +111,12 @@ type Interface = {
             prefetch: false,
             variables(): any {
                 return {
-                    ID: this.interfaceId ? this.interfaceId : -1,
+                    ID: this.interfaceId ? this.interfaceId : -1
                 };
             },
-            update: ({ PredefineInterface }) => PredefineInterface,
-        },
-    },
+            update: ({ PredefineInterface }) => PredefineInterface
+        }
+    }
 })
 export default class InterfacePanel extends Vue {
     $refs!: {
@@ -128,13 +128,8 @@ export default class InterfacePanel extends Vue {
     // by shkoh 20211007: 인터페이스 기본 정보
     interfaceData: Interface = {
         NAME: '',
-        INTF_CD: '',
+        INTF_CD: ''
     };
-
-    // by shkoh 20211006: TabView Component Ref
-    interfacePanelInfo = null;
-    interfacePanelComm = null;
-    interfacePanelSensor = null;
 
     interfaceTabIndex = 0;
 
@@ -176,7 +171,7 @@ export default class InterfacePanel extends Vue {
             blockScroll: false,
             accept: () => {
                 this.delete();
-            },
+            }
         });
     }
 
@@ -193,7 +188,7 @@ export default class InterfacePanel extends Vue {
                     mutation {
                         DeleteInterface(ID: ${this.$props.interfaceId})
                     }
-                `,
+                `
             })
             .then(({ data: { DeleteInterface } }) => {
                 if (DeleteInterface) {
@@ -201,7 +196,7 @@ export default class InterfacePanel extends Vue {
                         severity: 'success',
                         summary: '인터페이스 삭제',
                         detail: `[${this.interfaceData.NAME}] 통신 인터페이스가 정상적으로 삭제되었습니다`,
-                        life: 2000,
+                        life: 2000
                     });
 
                     eventBus.$emit('refreshInterfaceTree');
@@ -215,7 +210,7 @@ export default class InterfacePanel extends Vue {
                     severity: 'error',
                     summary: '인터페이스 삭제 실패',
                     detail: error.graphQLErrors[0].message,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .finally(() => {

@@ -1,8 +1,24 @@
 <template>
     <div v-if="item" id="i-asset-panel">
-        <div class="p-d-flex p-px-2 p-mt-3">
+        <div class="p-d-flex p-px-2 p-py-1 p-mt-3">
             <div class="p-as-center p-text-bold i-title">
                 {{ item.NAME }}
+            </div>
+            <div class="p-ml-auto">
+                <Button
+                    class="p-button-rounded p-button-text p-mr-1"
+                    icon="pi pi-globe"
+                ></Button>
+                <Button
+                    class="p-button-rounded p-button-text p-mr-1"
+                    icon="pi pi-save"
+                    :disabled="applyButtonDisabled"
+                    @click="updateAsset"
+                ></Button>
+                <Button
+                    class="p-button-rounded p-button-text p-button-danger"
+                    icon="pi pi-trash"
+                ></Button>
             </div>
         </div>
         <div class="i-navigation">
@@ -16,7 +32,9 @@
         <div class="i-asset-content">
             <asset-panel-info
                 v-if="tabIndex === 0"
+                ref="assetPanelInfo"
                 :asset-item="item"
+                :apply-button-disabled.sync="applyButtonDisabled"
             ></asset-panel-info>
             <div v-else-if="tabIndex === 1">
                 <h1>{{ assetTabList[tabIndex].header }}</h1>
@@ -66,6 +84,10 @@ type TabItem = {
     }
 })
 export default class AssetPanel extends Vue {
+    $refs!: {
+        assetPanelInfo: any;
+    };
+
     assetTabList: Array<TabItem> = [
         { header: '기본정보', disabled: false, type: 'ASSETCONTENT01' },
         { header: '관리정보', disabled: false, type: 'ASSETCONTENT02' },
@@ -80,6 +102,17 @@ export default class AssetPanel extends Vue {
     ];
 
     tabIndex: number = 0;
+
+    applyButtonDisabled: boolean = true;
+
+    updateAsset() {
+        switch (this.tabIndex) {
+            case 0: {
+                this.$refs.assetPanelInfo.updateAsset();
+                break;
+            }
+        }
+    }
 }
 </script>
 

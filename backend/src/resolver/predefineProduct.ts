@@ -267,7 +267,14 @@ export class PredefinedProductResolver {
         }
 
         try {
-            const prod_intf = await getRepository(pd_prod_intf).find({ where: { PRODUCT_ID: product_id } });
+            // const prod_intf = await getRepository(pd_prod_intf).find({ where: { PRODUCT_ID: product_id } });
+            const prod_intf = await getRepository(pd_prod_intf)
+                .createQueryBuilder('prod')
+                .innerJoinAndSelect('prod.INTERFACE', 'intf', 'prod.PD_INTF_ID = intf.ID')
+                .where(`prod.PRODUCT_ID = ${product_id}`)
+                .orderBy('intf.NAME', 'ASC')
+                .getMany();
+            
             return prod_intf;
         } catch (err) {
             throw new SchemaError(err.message);

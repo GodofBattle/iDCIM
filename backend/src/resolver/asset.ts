@@ -1,5 +1,5 @@
 import { AuthenticationError, SchemaError } from "apollo-server-express";
-import { Arg, Ctx, ID, Query, Resolver, Subscription } from "type-graphql";
+import { Arg, Ctx, ID, Mutation, Query, Resolver, Subscription } from "type-graphql";
 import { getRepository, In, Raw } from "typeorm";
 
 import { ac_asset } from "../entity/database/ac_asset";
@@ -167,4 +167,13 @@ export class AssetResolver {
             throw new SchemaError(err.message);
         }
     }
+
+    @Mutation(() => Boolean)
+    async AddAssetInterface() {}
+
+    @Mutation(() => Boolean)
+    async ChangeAssetInterface() {}
+
+    @Mutation(() => Boolean)
+    async DeleteAssetInterface() {}
 }

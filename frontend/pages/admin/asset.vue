@@ -1,14 +1,17 @@
 <template>
     <div id="admin-asset">
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
-        <div class="p-d-flex p-px-2 p-jc-end" style="padding-top: 20px">
+        <!-- <div class="p-d-flex p-px-2 p-jc-end" style="padding-top: 20px">
             <Button
                 icon="pi pi-plus"
                 label="자산추가"
                 class="p-field p-button-outlined p-button-secondary"
             ></Button>
-        </div>
-        <div class="p-d-flex p-pr-2 i-asset-content">
+        </div> -->
+        <div
+            class="p-d-flex p-pr-2 i-asset-content"
+            :style="{ 'padding-top': '20px' }"
+        >
             <div class="p-col-fixed" style="width: var(--tree-width)">
                 <asset-tree
                     :style="{ height: '100%' }"
@@ -63,7 +66,7 @@ export default class AdminAsset extends Vue {
 <style lang="scss" scoped>
 #admin-asset::v-deep {
     .i-asset-content {
-        height: calc(100vh - var(--header-height) - 50px);
+        height: calc(100vh - var(--header-height));
     }
 }
 </style>

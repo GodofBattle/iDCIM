@@ -6,9 +6,9 @@
     --major: #ee811b;
     --critical: #ee6666;
     --comm00-color: #99cfed;
-    --comm01-color: #3ca84c;
+    --comm01-color: #15c912;
     --comm04-color: #a824c9;
-    --comm05-color: #142027;
+    --comm05-color: #111111;
     --text-alert-color: #ffffffde;
     --text-alert-warning-color: #212529;
     --tree-width: 18vw;
@@ -47,7 +47,7 @@ body {
     }
 
     50% {
-        box-shadow: 0px 0px 6px 0px inset;
+        box-shadow: 0px 0px 4px 4px inset;
     }
 
     95% {

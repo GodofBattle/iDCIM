@@ -89,86 +89,45 @@
             </div>
         </div>
         <Panel :header="productName" :toggleable="true">
-            <template #icons>
-                <button
-                    class="p-panel-header-icon p-link"
-                    @click="showInterfaceSettingPanel"
-                >
-                    <span class="pi pi-cog"></span>
-                </button>
-                <OverlayPanel
-                    ref="intfPanel"
-                    :show-close-icon="false"
-                    append-to="body"
-                    :style="{
-                        width: '12vw'
-                    }"
-                >
-                    <Card id="i-setting-intf-panel">
-                        <template #content>
-                            <div class="p-fluid">
-                                <div
-                                    class="p-field"
-                                    :style="{ 'font-weight': 'bold' }"
-                                >
-                                    자산 인터페이스 설정
-                                </div>
-                                <Divider />
-                                <div class="p-field-checkbox p-mb-5">
-                                    <InputSwitch
-                                        id="is_interface"
-                                        v-model="is_interface"
-                                    >
-                                    </InputSwitch>
-                                    <label for="is_interface">
-                                        {{ is_interface_label }}
-                                    </label>
-                                </div>
-                                <div
-                                    v-for="intf of productInterfaces"
-                                    :key="intf.ID"
-                                    class="p-field-radiobutton"
-                                >
-                                    <RadioButton
-                                        :id="intf.ID"
-                                        v-model="productInterfaceID"
-                                        name="intf"
-                                        :value="intf.PD_INTF_ID"
-                                        :disabled="!is_interface"
-                                    ></RadioButton>
-                                    <label
-                                        :for="intf.ID"
-                                        :style="{
-                                            opacity: is_interface ? 1 : 0.6
-                                        }"
-                                    >
-                                        {{ intf.INTERFACE.NAME }}
-                                    </label>
-                                </div>
-                                <div class="p-field p-mt-6 p-mb-0">
-                                    <Button
-                                        label="적용"
-                                        icon="pi pi-check"
-                                        :style="{ width: '100%' }"
-                                        :disabled="status_asset_interface === 0"
-                                        @click="applyAssetInterface"
-                                    ></Button>
-                                </div>
-                            </div>
-                        </template>
-                    </Card>
-                </OverlayPanel>
-            </template>
             <div class="p-d-flex">
                 <div class="p-col-fixed" :style="{ width: '70%' }">
-                    <div class="p-field p-grid">
-                        <label
-                            class="p-col-fixed p-mb-0 p-mr-4 p-py-2 i-model-key"
-                        >
-                            자산분류
-                        </label>
-                        <div class="p-col-fixed p-py-2 i-model-value">
-                            <label>{{ assetCodeTreeLabel }}</label>
+                    <div
+                        v-if="productInterfaces.length > 0"
+                        class="p-field p-grid"
+                    >
+                        <div class="p-field-checkbox p-mb-0 p-mr-4 i-model-key">
+                            <Checkbox
+                                id="is_intf"
+                                v-model="is_interface"
+                                :binary="true"
+                            />
+                            <label for="is_intf">인터페이스</label>
+                        </div>
+                        <div class="p-col-fixed i-model-value">
+                            <Dropdown
+                                id="mc-id"
+                                v-model="productInterfaceID"
+                                :options="productInterfaces"
+                                placeholder="사용 가능 인터페이스"
+                                empty-filter-message="사용 가능한 인터페이스가 존재하지 않습니다"
+                                append-to="body"
+                                data-key="PD_INTF_ID"
+                                option-label="INTERFACE.NAME"
+                                option-value="PD_INTF_ID"
+                                :style="{ width: '70%' }"
+                                :disabled="!is_interface"
+                            >
+                            </Dropdown>
+                            <Button
+                                label="적용"
+                                icon="pi pi-check"
+                                class="p-button"
+                                :style="{
+                                    'max-width': '80px',
+                                    'min-width': '68px'
+                                }"
+                                @click="changeInterface"
+                            ></Button>
                         </div>
                     </div>
                     <div v-if="hasManual" class="p-field p-grid">
@@ -189,6 +148,16 @@
                                 }"
                                 @click="downloadManualFile"
                             ></Button>
+                        </div>
+                    </div>
+                    <div class="p-field p-grid">
+                        <label
+                            class="p-col-fixed p-mb-0 p-mr-4 p-py-2 i-model-key"
+                        >
+                            자산분류
+                        </label>
+                        <div class="p-col-fixed p-py-2 i-model-value">
+                            <label>{{ assetCodeTreeLabel }}</label>
                         </div>
                     </div>
                     <Divider
@@ -253,7 +222,6 @@
 </template>
 
 <script lang="ts">
-import { stat } from 'fs';
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
@@ -287,9 +255,8 @@ type ASSET = {
     SERIAL: string;
     CUST_HIER_ID_P: number | null;
     CUST_HIER_ID_C: number | null;
-    IS_USE_INTF: number;
     PRODUCT: PRODUCT;
-    INTERFACE: ASSET_INTERFACE;
+    INTERFACE: ASSET_INTERFACE | null;
 };
 
 @Component<AssetPanelInfo>({
@@ -308,7 +275,6 @@ type ASSET = {
                         SERIAL
                         CUST_HIER_ID_P
                         CUST_HIER_ID_C
-                        IS_USE_INTF
                         PRODUCT {
                             ASSET_CD
                             NAME
@@ -540,23 +506,9 @@ type ASSET = {
         asset: {
             deep: true,
             handler(_asset: ASSET) {
-                if (this.dbAsset) {
-                    const diff =
-                        this.dbAsset === null
-                            ? false
-                            : this.isDiffAssetData(this.dbAsset, _asset);
+                const diff = this.isDiffAssetData(this.dbAsset, _asset);
 
-                    console.info(
-                        !this.is_valid,
-                        !diff,
-                        !this.is_valid || !diff
-                    );
-
-                    this.$emit(
-                        'update:applyButtonDisabled',
-                        !this.is_valid || !diff
-                    );
-                }
+                this.$emit('update:applyButtonDisabled', !diff);
             }
         }
     }
@@ -564,8 +516,27 @@ type ASSET = {
 export default class AssetPanelInfo extends Vue {
     $refs!: {
         treePanel: any;
-        intfPanel: any;
     };
+
+    temps = [
+        { key: 'key1', value: 'value1' },
+        { key: 'key2', value: 'value11' },
+        { key: 'key3', value: 'value12' },
+        { key: 'key4', value: 'value13' }
+    ];
+
+    treeHier01: Array<any> = [];
+    treeHier02: Array<any> = [];
+    treeHier03: Array<any> = [];
+
+    productInterfaces: Array<any> = [];
+
+    customTreeLabel: string = '';
+    positionTreeLabel: string = '';
+    assetCodeTreeLabel: string = '';
+
+    manual_file_name: string = '';
+    image_file: any = '';
 
     dbAsset: ASSET | null = null;
     asset: ASSET = {
@@ -575,7 +546,6 @@ export default class AssetPanelInfo extends Vue {
         SERIAL: '',
         CUST_HIER_ID_P: null as number | null,
         CUST_HIER_ID_C: null as number | null,
-        IS_USE_INTF: 0,
         PRODUCT: {
             ASSET_CD: '',
             NAME: '',
@@ -597,51 +567,7 @@ export default class AssetPanelInfo extends Vue {
         SERIAL: undefined as string | undefined
     };
 
-    // by shkoh 20220525: Tree 선택 팝업
     overlayTreePanelMode: string = '';
-
-    // by shkoh 20220525: 설정 Tree의 구조를 breadcrumb 방식 텍스트로 표현하기 위해 사용
-    customTreeLabel: string = '';
-    positionTreeLabel: string = '';
-    assetCodeTreeLabel: string = '';
-
-    treeHier01: Array<any> = [];
-    treeHier02: Array<any> = [];
-    treeHier03: Array<any> = [];
-    productInterfaces: Array<any> = [];
-
-    // by shkoh 20220525: manual file 및 image file 데이터 처리
-    manual_file_name: string = '';
-    image_file: any = '';
-
-    updateAsset() {
-        if (this.is_interface && this.productInterfaceID === -1) {
-            this.$toast.add({
-                severity: 'warn',
-                summary: '인터페이스 설정 안내',
-                detail: `사용 가능한 인터페이스를 지정해주세요. 미지정 시 인터페이스 부분은 삭제됩니다`,
-                life: 2000
-            });
-
-            return;
-        }
-
-        const variables = {
-            ID: this.asset.ID
-        };
-
-        // by shkoh 20220525: ASSET 정보 업데이트
-        ['NAME', 'SERIAL', 'CUST_HIER_ID_P', 'CUST_HIER_ID_C'].forEach(
-            (key: string) => {
-                if (
-                    this.dbAsset !== null &&
-                    this.asset[key] !== this.dbAsset[key]
-                ) {
-                    this.$set(variables, key, this.asset[key]);
-                }
-            }
-        );
-    }
 
     apolloFetch(data: ASSET) {
         for (const [key, value] of Object.entries(data)) {
@@ -656,8 +582,6 @@ export default class AssetPanelInfo extends Vue {
                             this.asset[key][p_key][m_key] = m_value;
                         }
                     } else {
-                        this.asset[key][p_key] = p_value;
-
                         if (p_key === 'MANUAL_FILE_ID') {
                             this.manual_file_name = '';
                             this.loadManualFile();
@@ -668,17 +592,19 @@ export default class AssetPanelInfo extends Vue {
                                 this.image_file = '';
                             }
                         }
+
+                        this.asset[key][p_key] = p_value;
                     }
                 }
             } else if (key === 'INTERFACE') {
-                if (data[key] === null) {
-                    // by shkoh 20220525: 자산의 인터페이스가 없는 경우
-                    this.asset[key].ID = -1;
-                    this.asset[key].PROD_INTF_ID = -1;
-                } else {
-                    // by shkoh 20220525: 자산의 인터페이스가 존재하는 경우
-                    for (const [i_key, i_value] of Object.entries(data[key])) {
-                        this.asset[key][i_key] = i_value;
+                if (value !== null) {
+                    const asset_intf = this.asset[key];
+                    if (asset_intf) {
+                        for (const [i_key, i_value] of Object.entries(
+                            data[key] ?? []
+                        )) {
+                            asset_intf[i_key] = i_value;
+                        }
                     }
                 }
             } else {
@@ -697,42 +623,15 @@ export default class AssetPanelInfo extends Vue {
         }
     }
 
-    setAssetCode() {
-        if (this.asset.PRODUCT.ASSET_CD !== '') {
-            const root_node = this.treeHier03[0];
-            this.findTreeNode(
-                'assetCode',
-                root_node,
-                `pac_${this.asset.PRODUCT.ASSET_CD}`
-            );
+    updateAsset() {
+        if (this.is_interface && this.productInterfaceID === -1) {
+            this.$toast.add({
+                severity: 'warn',
+                summary: '인터페이스 설정 안내',
+                detail: `사용 가능한 인터페이스를 지정해주세요`,
+                life: 2000
+            });
         }
-    }
-
-    isDiffAssetData(source: any, target: any): boolean {
-        let is_diff = false;
-
-        for (const key of Object.keys(target)) {
-            // by shkoh 20220525: typename은 작업과정에서 변경이 발생함으로 해당 부분에 대한 구분은 제외함
-            if (key === '__typename') {
-                continue;
-            }
-
-            if (target[key] instanceof Object) {
-                // by shkoh 20220525: DB에서 INTERFACE는 null이 가능하나, frontend 부분에서는 INTERFACE.PROD_INTF_ID가 -1의 여부로 판단
-                if (key === 'INTERFACE' && source[key] === null) {
-                    is_diff = target[key].PROD_INTF_ID !== -1;
-                } else {
-                    is_diff = this.isDiffAssetData(source[key], target[key]);
-                }
-
-                if (is_diff) break;
-            } else if (source[key] !== target[key]) {
-                is_diff = true;
-                break;
-            }
-        }
-
-        return is_diff;
     }
 
     validateAssetName(input: InputEvent) {
@@ -753,30 +652,6 @@ export default class AssetPanelInfo extends Vue {
         } else {
             this.invalidMessage.SERIAL = undefined;
         }
-    }
-
-    showTreePanel(event: Event, mode: string) {
-        this.$refs.treePanel.toggle(event);
-        this.overlayTreePanelMode = mode;
-    }
-
-    showInterfaceSettingPanel(event: Event) {
-        this.$refs.intfPanel.toggle(event);
-    }
-
-    onSelectOverlayTreePanel(select_node: any) {
-        const [code, id] = select_node.key.split('_');
-
-        if (this.overlayTreePanelMode === 'custom') {
-            this.asset.CUST_HIER_ID_C = Number(id);
-        } else if (this.overlayTreePanelMode === 'position') {
-            this.asset.CUST_HIER_ID_P = Number(id);
-        }
-
-        this.setTreeLabel(this.overlayTreePanelMode);
-
-        this.$refs.treePanel.hide();
-        this.overlayTreePanelMode = '';
     }
 
     setTreeLabel(type: string) {
@@ -840,6 +715,37 @@ export default class AssetPanelInfo extends Vue {
         }
     }
 
+    setAssetCode() {
+        if (this.asset.PRODUCT.ASSET_CD !== '') {
+            const root_node = this.treeHier03[0];
+            this.findTreeNode(
+                'assetCode',
+                root_node,
+                `pac_${this.asset.PRODUCT.ASSET_CD}`
+            );
+        }
+    }
+
+    showTreePanel(event: Event, mode: string) {
+        this.$refs.treePanel.toggle(event);
+        this.overlayTreePanelMode = mode;
+    }
+
+    onSelectOverlayTreePanel(select_node: any) {
+        const [code, id] = select_node.key.split('_');
+
+        if (this.overlayTreePanelMode === 'custom') {
+            this.asset.CUST_HIER_ID_C = Number(id);
+        } else if (this.overlayTreePanelMode === 'position') {
+            this.asset.CUST_HIER_ID_P = Number(id);
+        }
+
+        this.setTreeLabel(this.overlayTreePanelMode);
+
+        this.$refs.treePanel.hide();
+        this.overlayTreePanelMode = '';
+    }
+
     loadManualFile() {
         this.$apollo
             .query({
@@ -865,40 +771,6 @@ export default class AssetPanelInfo extends Vue {
                     detail: error.message,
                     life: 2000
                 });
-            });
-    }
-
-    loadImageFile() {
-        this.$apollo
-            .query({
-                query: gql`
-                query {
-                    PdFile(ID: ${this.asset.PRODUCT.IMAGE_FILE_ID}) {
-                        FILE_NAME
-                        MIMETYPE
-                        DATA
-                    }
-                }
-            `
-            })
-            .then(({ data }) => {
-                const _image_file = data.PdFile;
-
-                this.$nextTick(() => {
-                    this.image_file = `data:${_image_file.MIMETYPE};base64,${_image_file.DATA}`;
-                });
-            })
-            .catch((error) => {
-                console.error(error);
-
-                this.$toast.add({
-                    severity: 'error',
-                    summary: '파일 불러오기 실패',
-                    detail: error.message,
-                    life: 2000
-                });
-
-                this.$nuxt.$loading.finish();
             });
     }
 
@@ -958,18 +830,47 @@ export default class AssetPanelInfo extends Vue {
             });
     }
 
-    changeInterface() {
-        this.$nuxt.$loading.start();
-
+    loadImageFile() {
         this.$apollo
-            .mutate({
-                mutation: gql``
+            .query({
+                query: gql`
+                query {
+                    PdFile(ID: ${this.asset.PRODUCT.IMAGE_FILE_ID}) {
+                        FILE_NAME
+                        MIMETYPE
+                        DATA
+                    }
+                }
+            `
             })
-            .then(() => {})
-            .catch(() => {})
-            .finally(() => {
+            .then(({ data }) => {
+                const _image_file = data.PdFile;
+
+                this.$nextTick(() => {
+                    this.image_file = `data:${_image_file.MIMETYPE};base64,${_image_file.DATA}`;
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '파일 불러오기 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+
                 this.$nuxt.$loading.finish();
             });
+    }
+
+    changeInterface() {
+        this.$toast.add({
+            severity: 'warn',
+            summary: '인터페이스 변경',
+            detail: '미구현 중입니다. 자산 내역 정리 후 구현 예정입니다',
+            life: 2000
+        });
     }
 
     changeProductImage() {
@@ -981,62 +882,39 @@ export default class AssetPanelInfo extends Vue {
         });
     }
 
-    applyAssetInterface() {
-        let _header = ``;
-        let _message = ``;
+    isDiffAssetData(source: any, target: any): boolean {
+        let is_diff = false;
 
-        const dst_intf_name = this.productInterfaces.find(
-            (pi: any) => pi.PD_INTF_ID === this.asset.INTERFACE.PROD_INTF_ID
-        ).INTERFACE.NAME;
-
-        switch (this.status_asset_interface) {
-            case 1: {
-                _header = `[${this.asset.NAME}] 인터페이스 추가`;
-                _message = `${dst_intf_name} 인터페이스를 추가합니다\n진행하시겠습니까?`;
-                break;
+        for (const key of Object.keys(source)) {
+            if (key === '__typename') {
+                continue;
             }
-            case 2: {
-                const src_intf_name = this.productInterfaces.find(
-                    (pi: any) =>
-                        pi.PD_INTF_ID === this.dbAsset?.INTERFACE.PROD_INTF_ID
-                ).INTERFACE.NAME;
 
-                _header = `[${this.asset.NAME}] 인터페이스 변경`;
-                _message = `[${src_intf_name}] --> [${dst_intf_name}] 인터페이스 변경\n\n자산의 인터페이스 변경은 자산과의 원할한 정보수집을 위하여\n관련 수집항목, 제어, 통신정보 등 모든 정보가 삭제 후 새로 설정됩니다\n그래도 진행하시겠습니까?`;
-                break;
+            if (source[key] === null && target[key] !== null) {
+                is_diff = true;
+            } else if (source[key] !== null && target[key] === null) {
+                is_diff = true;
             }
-            case 3: {
-                _header = `[${this.asset.NAME}] 인터페이스 제거`;
-                _message = `자산의 인터페이스를 삭제합니다\n자산의 통신, 수집항목, 제어 등의 기능을 사용하지 않습니다`;
+
+            if (is_diff) break;
+
+            if (source[key] instanceof Object) {
+                is_diff = this.isDiffAssetData(source[key], target[key]);
+
+                if (is_diff) break;
+            } else if (source[key] !== target[key]) {
+                is_diff = true;
                 break;
             }
         }
 
-        this.$confirmDialog.require({
-            group: 'deleteConfirmDialog',
-            header: _header,
-            message: _message,
-            position: 'top',
-            icon: 'pi pi-exclamation-triangle',
-            acceptClass: 'p-button-danger',
-            blockScroll: false,
-            accept: () => {
-                this.changeInterface();
-            }
-        });
+        return is_diff;
     }
 
-    get is_valid(): boolean {
-        let is_valid = true;
-
-        for (const value of Object.values(this.invalidMessage)) {
-            if (value) {
-                is_valid = false;
-                break;
-            }
-        }
-
-        return is_valid;
+    get overlayTreeToRender(): Array<any> {
+        return this.overlayTreePanelMode === 'custom'
+            ? this.treeHier01
+            : this.treeHier02;
     }
 
     get is_cus_tree(): boolean {
@@ -1047,71 +925,54 @@ export default class AssetPanelInfo extends Vue {
         return this.$store.state.sessionStorage.ui.is_pos_tree;
     }
 
-    get overlayTreeToRender(): Array<any> {
-        return this.overlayTreePanelMode === 'custom'
-            ? this.treeHier01
-            : this.treeHier02;
-    }
-
     get productName(): string {
         return this.asset?.PRODUCT?.NAME === ''
-            ? ' - '
+            ? ''
             : `${this.asset.PRODUCT.MANUFACTURER.NAME} | ${this.asset.PRODUCT.NAME}`;
     }
 
     get is_interface(): boolean {
-        return this.asset.IS_USE_INTF === 1;
+        return this.asset.INTERFACE !== null;
     }
 
-    set is_interface(is: boolean) {
-        this.asset.IS_USE_INTF = is ? 1 : 0;
-    }
+    set is_interface(_val: boolean) {
+        if (_val) {
+            this.asset.INTERFACE = Object.create(null);
 
-    get is_interface_label(): string {
-        return `인터페이스 ${this.is_interface ? '사용' : '사용안함'}`;
+            if (this.asset.INTERFACE) {
+                this.$set(this.asset.INTERFACE, 'ID', this.asset.ID);
+                this.$set(this.asset.INTERFACE, 'PROD_INTF_ID', -1);
+            }
+        } else {
+            this.asset.INTERFACE = null;
+        }
     }
 
     get productInterfaceID(): number {
-        return this.asset.INTERFACE?.PROD_INTF_ID ?? -1;
+        return this.asset?.INTERFACE?.PROD_INTF_ID ?? -1;
     }
 
-    set productInterfaceID(value: number) {
-        this.asset.INTERFACE.PROD_INTF_ID = value;
+    set productInterfaceID(_new_prod_intf_id: number) {
+        if (this.asset.INTERFACE?.PROD_INTF_ID) {
+            this.asset.INTERFACE.PROD_INTF_ID = _new_prod_intf_id;
+        }
     }
 
     get productInfo(): Array<any> {
-        let info: Array<any> = [];
+        let infos: Array<any> = [];
 
         if (
             this.asset.PRODUCT.INFO !== null &&
             this.asset.PRODUCT.INFO.length > 0
         ) {
-            info = JSON.parse(this.asset.PRODUCT.INFO);
+            infos = JSON.parse(this.asset.PRODUCT.INFO);
         }
 
-        return info;
+        return infos;
     }
 
     get hasManual(): boolean {
         return !!this.asset.PRODUCT?.MANUAL_FILE_ID ?? false;
-    }
-
-    // by shkoh 20220526: 자산의 인터페이스의 상태, 0: 변화없음, 1: 추가, 2: 변경, 3: 삭제
-    get status_asset_interface(): number {
-        let status = 0;
-
-        if (this.dbAsset?.IS_USE_INTF === 0 && this.asset.IS_USE_INTF) {
-            status = this.productInterfaceID === -1 ? 0 : 1;
-        } else if (
-            this.asset.IS_USE_INTF &&
-            this.productInterfaceID !== this.dbAsset?.INTERFACE.PROD_INTF_ID
-        ) {
-            status = 2;
-        } else if (this.dbAsset?.IS_USE_INTF && this.asset.IS_USE_INTF === 0) {
-            status = 3;
-        }
-
-        return status;
     }
 }
 </script>
@@ -1142,19 +1003,8 @@ export default class AssetPanelInfo extends Vue {
 
         .i-product-image {
             max-width: 100%;
-            max-height: 25vh;
+            max-height: 30vh;
             border-radius: 3px;
-        }
-    }
-}
-
-#i-setting-intf-panel::v-deep {
-    box-shadow: none;
-    border: 1px solid var(--surface-border);
-
-    .p-card-body {
-        .p-card-content {
-            padding: 0;
         }
     }
 }

@@ -35,14 +35,15 @@
                 :styles="{
                     'flex-grow': 1,
                     'flex-basis': '50px',
-                    'flex-flow': 'column',
+                    'flex-flow': 'column'
                 }"
             >
                 <template #body="slotProps">
                     <Avatar
                         :class="
                             lvlStatus(
-                                slotProps.data.INTERFACE
+                                slotProps.data.IS_USE_INTF &&
+                                    slotProps.data.INTERFACE
                                     ? slotProps.data.INTERFACE.CURR_LEVEL
                                     : undefined
                             )
@@ -50,7 +51,10 @@
                     >
                         <span>{{ slotProps.index + 1 }}</span>
                         <Badge
-                            v-if="slotProps.data.INTERFACE"
+                            v-if="
+                                slotProps.data.IS_USE_INTF &&
+                                slotProps.data.INTERFACE
+                            "
                             :class="
                                 commStatus(slotProps.data.INTERFACE.CURR_STATUS)
                             "
@@ -71,11 +75,11 @@
 </template>
 
 <script lang="ts">
+import { setInterval, clearInterval } from 'timers';
 import Vue from 'vue';
 import gql from 'graphql-tag';
-import Component from '@/plugins/nuxt-class-component';
-import { setInterval, clearInterval } from 'timers';
 import { FilterMatchMode } from 'primevue/api';
+import Component from '@/plugins/nuxt-class-component';
 
 let timerId: NodeJS.Timeout;
 
@@ -83,7 +87,7 @@ let timerId: NodeJS.Timeout;
     props: {
         treeType: String,
         treeKeys: Array,
-        selectedAsset: Object,
+        selectedAsset: Object
     },
     apollo: {
         assetList: {
@@ -93,6 +97,7 @@ let timerId: NodeJS.Timeout;
                         ID
                         PRODUCT_ID
                         NAME
+                        IS_USE_INTF
                         INTERFACE {
                             CURR_STATUS
                             CURR_LEVEL
@@ -103,7 +108,7 @@ let timerId: NodeJS.Timeout;
             variables() {
                 return {
                     TYPE: this.$props.treeType ?? '',
-                    KEYS: this.$props.treeKeys ?? [],
+                    KEYS: this.$props.treeKeys ?? []
                 };
             },
             update: ({ Assets }) => Assets,
@@ -117,8 +122,8 @@ let timerId: NodeJS.Timeout;
                         this.apolloFetch(Assets);
                     }
                 }
-            },
-        },
+            }
+        }
     },
     watch: {
         treeType(_new_tree_type) {
@@ -128,15 +133,15 @@ let timerId: NodeJS.Timeout;
             deep: true,
             handler(_new_tree_keys) {
                 this.reloadAssetList();
-            },
-        },
-    },
+            }
+        }
+    }
 })
 export default class AssetTable extends Vue {
     assetList: Array<any> = [];
 
     assetFilterData: any = {
-        NAME: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        NAME: { value: null, matchMode: FilterMatchMode.CONTAINS }
     };
 
     mounted() {
@@ -176,8 +181,8 @@ export default class AssetTable extends Vue {
                 'i-lvl02': lvl === 2,
                 'i-lvl03': lvl === 3,
                 'i-lvl04': lvl === 4,
-                'i-lvl05': lvl === 5,
-            },
+                'i-lvl05': lvl === 5
+            }
         ];
     }
 
@@ -188,8 +193,8 @@ export default class AssetTable extends Vue {
                 'i-comm00': status === 0,
                 'i-comm01': status === 1,
                 'i-comm04': status === 4,
-                'i-comm05': status === 5,
-            },
+                'i-comm05': status === 5
+            }
         ];
     }
 
@@ -219,10 +224,9 @@ export default class AssetTable extends Vue {
             top: 0;
             right: 0;
             transform-origin: 100% 0;
-            transform: translate(40%, -20%);
-            width: 0.6rem;
-            height: 0.6rem;
-            border: 0.1rem solid #888888;
+            transform: translate(40%, -40%);
+            width: 0.8rem;
+            height: 0.8rem;
         }
 
         .i-comm00 {
@@ -231,7 +235,7 @@ export default class AssetTable extends Vue {
 
         .i-comm01 {
             animation: blink;
-            animation-duration: 2s;
+            animation-duration: 1.5s;
             animation-iteration-count: infinite;
             background-color: var(--comm01-color);
         }
@@ -242,6 +246,7 @@ export default class AssetTable extends Vue {
 
         .i-comm05 {
             background-color: var(--comm05-color);
+            border: 1px solid var(--surface-border);
         }
     }
 
@@ -257,6 +262,7 @@ export default class AssetTable extends Vue {
 
     .i-lvl01 {
         background-color: var(--warning);
+        color: var(--text-alert-warning-color);
     }
 
     .i-lvl02 {
