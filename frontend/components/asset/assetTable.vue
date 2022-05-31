@@ -42,8 +42,7 @@
                     <Avatar
                         :class="
                             lvlStatus(
-                                slotProps.data.IS_USE_INTF &&
-                                    slotProps.data.INTERFACE
+                                is_used_interface(slotProps.data)
                                     ? slotProps.data.INTERFACE.CURR_LEVEL
                                     : undefined
                             )
@@ -51,10 +50,7 @@
                     >
                         <span>{{ slotProps.index + 1 }}</span>
                         <Badge
-                            v-if="
-                                slotProps.data.IS_USE_INTF &&
-                                slotProps.data.INTERFACE
-                            "
+                            v-if="is_used_interface(slotProps.data)"
                             :class="
                                 commStatus(slotProps.data.INTERFACE.CURR_STATUS)
                             "
@@ -101,6 +97,7 @@ let timerId: NodeJS.Timeout;
                         INTERFACE {
                             CURR_STATUS
                             CURR_LEVEL
+                            IS_USE
                         }
                     }
                 }
@@ -169,6 +166,10 @@ export default class AssetTable extends Vue {
         data.forEach((datum: any) => {
             this.assetList.push({ ...datum });
         });
+    }
+
+    is_used_interface({ IS_USE_INTF, INTERFACE }: any): boolean {
+        return IS_USE_INTF === 1 && INTERFACE && INTERFACE.IS_USE === 1;
     }
 
     lvlStatus(lvl: undefined | number): Array<object | string> {

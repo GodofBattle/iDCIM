@@ -253,7 +253,6 @@
 </template>
 
 <script lang="ts">
-import { stat } from 'fs';
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
@@ -961,12 +960,44 @@ export default class AssetPanelInfo extends Vue {
     changeInterface() {
         this.$nuxt.$loading.start();
 
+        let action: string = '';
+        switch (this.status_asset_interface) {
+            case 1:
+                action = 'USED';
+                break;
+            case 2:
+                action = 'NOT_USED';
+                break;
+            case 3:
+                action = 'UPDATE';
+                break;
+        }
+
         this.$apollo
             .mutate({
-                mutation: gql``
+                mutation: gql`
+                    mutation {
+                        SetAssetInterface(
+                            ACTION: ${action}
+                            ID: ${this.asset.ID}
+                            PROD_INTF_ID: ${this.asset.INTERFACE.PROD_INTF_ID}
+                        )
+                    }
+                `
             })
-            .then(() => {})
-            .catch(() => {})
+            .then(({ data: { SetAssetInterface } }) => {
+                console.info(SetAssetInterface);
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '자산 인터페이스 설정 실패',
+                    detail: error.graphQLErrors[0].message,
+                    life: 2000
+                });
+            })
             .finally(() => {
                 this.$nuxt.$loading.finish();
             });
@@ -991,11 +1022,16 @@ export default class AssetPanelInfo extends Vue {
 
         switch (this.status_asset_interface) {
             case 1: {
-                _header = `[${this.asset.NAME}] 인터페이스 추가`;
-                _message = `${dst_intf_name} 인터페이스를 추가합니다\n진행하시겠습니까?`;
+                _header = `[${this.asset.NAME}] 인터페이스 설정`;
+                _message = `${dst_intf_name} 인터페이스를 사용 가능하도록 설정합니다\n진행하시겠습니까?`;
                 break;
             }
             case 2: {
+                _header = `[${this.asset.NAME}] 인터페이스 제거`;
+                _message = `자산의 인터페이스를 사용하지 않도록 설정합니다\n자산의 통신, 수집항목, 제어 등의 기능을 사용하지 않습니다`;
+                break;
+            }
+            case 3: {
                 const src_intf_name = this.productInterfaces.find(
                     (pi: any) =>
                         pi.PD_INTF_ID === this.dbAsset?.INTERFACE.PROD_INTF_ID
@@ -1003,11 +1039,6 @@ export default class AssetPanelInfo extends Vue {
 
                 _header = `[${this.asset.NAME}] 인터페이스 변경`;
                 _message = `[${src_intf_name}] --> [${dst_intf_name}] 인터페이스 변경\n\n자산의 인터페이스 변경은 자산과의 원할한 정보수집을 위하여\n관련 수집항목, 제어, 통신정보 등 모든 정보가 삭제 후 새로 설정됩니다\n그래도 진행하시겠습니까?`;
-                break;
-            }
-            case 3: {
-                _header = `[${this.asset.NAME}] 인터페이스 제거`;
-                _message = `자산의 인터페이스를 삭제합니다\n자산의 통신, 수집항목, 제어 등의 기능을 사용하지 않습니다`;
                 break;
             }
         }
@@ -1096,18 +1127,18 @@ export default class AssetPanelInfo extends Vue {
         return !!this.asset.PRODUCT?.MANUAL_FILE_ID ?? false;
     }
 
-    // by shkoh 20220526: 자산의 인터페이스의 상태, 0: 변화없음, 1: 추가, 2: 변경, 3: 삭제
+    // by shkoh 20220526: 자산의 인터페이스의 상태, 0: 변화없음, 1: 사용, 2: 사용안함, 3: 변경
     get status_asset_interface(): number {
         let status = 0;
 
         if (this.dbAsset?.IS_USE_INTF === 0 && this.asset.IS_USE_INTF) {
             status = this.productInterfaceID === -1 ? 0 : 1;
+        } else if (this.dbAsset?.IS_USE_INTF && this.asset.IS_USE_INTF === 0) {
+            status = 2;
         } else if (
             this.asset.IS_USE_INTF &&
             this.productInterfaceID !== this.dbAsset?.INTERFACE.PROD_INTF_ID
         ) {
-            status = 2;
-        } else if (this.dbAsset?.IS_USE_INTF && this.asset.IS_USE_INTF === 0) {
             status = 3;
         }
 
