@@ -58,9 +58,10 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
+import Component from '@/plugins/nuxt-class-component';
 import { eventBus } from '@/plugins/vueEventBus';
 
-export default Vue.extend({
+@Component<ProductTree>({
     apollo: {
         manufacturers: {
             query: gql`
@@ -96,77 +97,80 @@ export default Vue.extend({
             update({ Manufacturers }) {
                 // by shkoh 20210902: Tree에 제조사와 제품 [추가] 버튼을 넣음
                 this.insertAddButtons(Manufacturers);
-
                 return Manufacturers;
-            },
-        },
-    },
-    data: () => ({
-        manufacturers: [] as Array<any>,
-        showAddManufacturerDialog: false,
-        showAddProductDialog: false,
-        manufacturerId: -1,
-        manufacturerName: '',
-    }),
+            }
+        }
+    }
+})
+export default class ProductTree extends Vue {
+    manufacturers: Array<any> = [];
+    showAddManufacturerDialog: boolean = false;
+    showAddProductDialog: boolean = false;
+    manufacturerId: number = -1;
+    manufacturerName: string = '';
+
     mounted() {
         eventBus.$on('refreshProductTree', () => {
             this.treeRefresh();
         });
-    },
+    }
+
     beforeDestroy() {
         eventBus.$off('refreshProductTree');
-    },
-    methods: {
-        addManufacturer() {
-            this.showAddManufacturerDialog = true;
-        },
-        addProduct(node: any) {
-            this.showAddProductDialog = true;
-            this.manufacturerId = Number(node.pId);
-            this.manufacturerName = node.pName;
-        },
-        treeRefresh() {
-            this.$apollo.queries.manufacturers.refresh();
-        },
-        onSelect(node: any) {
-            this.$emit('select', { type: node.type, id: Number(node.key) });
-        },
-        insertAddButtons(data: Array<any>) {
-            // by shkoh 20210902: API 서버로부터 받은 데이터에서 제조사인 경우에 하위 노드에 [제품 추가] 버튼 생성
-            data.forEach((datum) => {
-                if (datum.type === 'Manufacturer') {
-                    if (
-                        !datum.children.some(
-                            (p: any) => p.type === 'addProduct'
-                        )
-                    ) {
-                        datum.children.push({
-                            type: 'addProduct',
-                            selectable: false,
-                            pId: datum.key,
-                            pName: datum.label,
-                        });
-                    }
-                }
-            });
+    }
 
-            // by shkoh 20210902: API 서버로부터 받은 데이터에서 마지막에 [제조사 추가] 버튼 생성
-            if (!data.some((datum: any) => datum.type === 'addManufacturer')) {
-                data.push({
-                    type: 'addManufacturer',
-                    selectable: false,
-                });
+    addManufacturer() {
+        this.showAddManufacturerDialog = true;
+    }
+
+    addProduct(node: any) {
+        this.showAddProductDialog = true;
+        this.manufacturerId = Number(node.pId);
+        this.manufacturerName = node.pName;
+    }
+
+    treeRefresh() {
+        this.$apollo.queries.manufacturers.refresh();
+    }
+
+    onSelect(node: any) {
+        this.$emit('select', { type: node.type, id: Number(node.key) });
+    }
+
+    insertAddButtons(data: Array<any>) {
+        // by shkoh 20210902: API 서버로부터 받은 데이터에서 제조사인 경우에 하위 노드에 [제품 추가] 버튼 생성
+        data.forEach((datum) => {
+            if (datum.type === 'Manufacturer') {
+                if (!datum.children.some((p: any) => p.type === 'addProduct')) {
+                    datum.children.push({
+                        type: 'addProduct',
+                        selectable: false,
+                        pId: datum.key,
+                        pName: datum.label
+                    });
+                }
             }
-        },
-    },
-});
+        });
+
+        // by shkoh 20210902: API 서버로부터 받은 데이터에서 마지막에 [제조사 추가] 버튼 생성
+        if (!data.some((datum: any) => datum.type === 'addManufacturer')) {
+            data.push({
+                type: 'addManufacturer',
+                selectable: false
+            });
+        }
+    }
+}
 </script>
 
 <style lang="scss" scoped>
-#product-tree::v-deep .p-tree-container {
-    height: calc(
-        100vh - 20px - var(--header-height) - var(--tree-searching-height) -
-            var(--content-padding) * 3
-    );
+#product-tree::v-deep {
+    .p-tree {
+        height: 100%;
+    }
+
+    .p-tree-container {
+        height: calc(100% - 2rem);
+    }
 }
 </style>

@@ -129,7 +129,7 @@ export class PredefinedProductResolver {
         try {
             await publish();
 
-            if (!MANUFACTURER_ID) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            if (MANUFACTURER_ID === undefined || MANUFACTURER_ID === null) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
             if (!ASSET_CD) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
 
             const result = await getRepository(pd_product).insert({ MANUFACTURER_ID, ASSET_CD, NAME, MODEL_NAME, REMARK });
@@ -147,6 +147,19 @@ export class PredefinedProductResolver {
 
         try {
             return (await getRepository(pd_product).findOne({ where: { ID: product_id } }));
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => [pd_product], { nullable: true })
+    async VirtualProducts(@Ctx() ctx: any): Promise<pd_product[]> | null {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return (await getRepository(pd_product).find({ where: { MANUFACTURER_ID: 0 }, order: { NAME: 'ASC' } }));
         } catch (err) {
             throw new SchemaError(err.message);
         }
@@ -214,8 +227,13 @@ export class PredefinedProductResolver {
                 if (value !== undefined) update_data[key] = value;
             }
 
-            const result = await getRepository(pd_product).update({ ID: ID }, update_data);
-            return result.affected > 0 ? true : false;
+            let result = 0;
+            if(Object.keys(update_data).length > 0) {
+                const update_result = await getRepository(pd_product).update({ ID: ID }, update_data);
+                result += update_result.affected;
+            }
+
+            return result > 0 ? true : false;
         } catch (err) {
             throw new SchemaError(err.message);
         }

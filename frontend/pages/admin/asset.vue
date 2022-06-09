@@ -56,7 +56,6 @@ export default class AdminAsset extends Vue {
     }
 
     onSelectTreeNode({ type, treeKeys }: any) {
-        console.info(type, treeKeys);
         this.treeType = type;
         this.treeKeys = treeKeys;
     }

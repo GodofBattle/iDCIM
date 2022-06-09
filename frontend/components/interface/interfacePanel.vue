@@ -38,7 +38,7 @@
                     ></interface-panel-info>
                 </ScrollPanel>
             </TabPanel>
-            <TabPanel :disabled="isDisabledComm">
+            <TabPanel :disabled="isDisabledComm || isVirtualInterface">
                 <template #header>
                     <i class="pi pi-wifi p-mr-2"></i>
                     <span>통신방법</span>
@@ -53,7 +53,7 @@
                     </interface-panel-comm>
                 </div>
             </TabPanel>
-            <TabPanel>
+            <TabPanel :disabled="isVirtualInterface">
                 <template #header>
                     <i class="pi pi-list p-mr-2"></i>
                     <span>수집항목</span>
@@ -68,7 +68,7 @@
                     </interface-panel-sensor>
                 </div>
             </TabPanel>
-            <TabPanel>
+            <TabPanel :disabled="isVirtualInterface">
                 <template #header>
                     <i class="pi pi-sliders-v p-mr-2"></i>
                     <span>제어항목</span>
@@ -145,6 +145,17 @@ export default class InterfacePanel extends Vue {
             this.interfaceTabIndex = 0;
 
         return !hasComm;
+    }
+
+    get isVirtualInterface(): boolean {
+        // by shkoh 20220609: 가상 인터페이스인지 확인
+        const is_virtual = this.interfaceData.INTF_CD === 'INTF04';
+
+        // by shkoh 20220609: 가상 인터페이스일 때, 비활성화되는 탭(통신방법, 수집항목, 제어항목)인 경우에는 [기본정보] 탱으로 이동한다
+        if (is_virtual && this.interfaceTabIndex !== 0) {
+            this.interfaceTabIndex = 0;
+        }
+        return is_virtual;
     }
 
     get showApplyButton(): boolean {

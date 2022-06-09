@@ -5,6 +5,7 @@
             :filter="true"
             selection-mode="single"
             :selection-keys.sync="selectionKeys"
+            :expanded-keys.sync="expandedKeys"
             @node-select="onSelect"
         >
             <template #AssetCode="slotProps">
@@ -59,16 +60,20 @@ import { eventBus } from '@/plugins/vueEventBus';
     props: {
         isEditing: {
             type: Boolean,
-            default: true,
+            default: true
         },
         showOnlyParents: {
             type: Boolean,
-            default: false,
+            default: false
         },
         initSelectKeys: {
             type: Number,
-            default: -1,
+            default: -1
         },
+        filterCode: {
+            type: String,
+            default: ''
+        }
     },
     watch: {
         initSelectKeys(_new_value) {
@@ -77,13 +82,13 @@ import { eventBus } from '@/plugins/vueEventBus';
             } else {
                 this.selectionKeys = { key: _new_value.toString() };
             }
-        },
+        }
     },
     apollo: {
         interfaces: {
             query: gql`
-                query {
-                    PredefinedInterfaces {
+                query PredefinedInterfaces($CODE: String) {
+                    PredefinedInterfaces(CODE: $CODE) {
                         CODE
                         NAME
                         ALIAS
@@ -103,8 +108,13 @@ import { eventBus } from '@/plugins/vueEventBus';
                     }
                 }
             `,
-            variables: {
-                AssetSelectable: false,
+            variables() {
+                return {
+                    CODE:
+                        this.$props.filterCode.length > 0
+                            ? this.$props.filterCode
+                            : null
+                };
             },
             fetchResults: true,
             fetchPolicy: 'no-cache',
@@ -114,8 +124,25 @@ import { eventBus } from '@/plugins/vueEventBus';
                 if (this.isEditing) this.insertAddButtons(PredefinedInterfaces);
                 return PredefinedInterfaces;
             },
-        },
-    },
+            result({ loading, data }) {
+                if (!loading) {
+                    // by shoh 20220609: 필터기능이 활성화 됐을 경우에
+                    if (this.$props.filterCode.length > 0) {
+                        Object.defineProperty(
+                            this.expandedKeys,
+                            this.$props.filterCode,
+                            {
+                                value: true,
+                                configurable: true,
+                                enumerable: true,
+                                writable: true
+                            }
+                        );
+                    }
+                }
+            }
+        }
+    }
 })
 export default class InterfaceTree extends Vue {
     interfaces: Array<any> = [];
@@ -125,6 +152,7 @@ export default class InterfaceTree extends Vue {
     assetCodeNameToAdding = '';
 
     selectionKeys: object = {};
+    expandedKeys: object = {};
 
     mounted() {
         this.assetCodeToAdding = '';
@@ -149,7 +177,7 @@ export default class InterfaceTree extends Vue {
                 type: node.type,
                 id: Number(node.key),
                 name: node.label,
-                asset_cd: node.ASSET_CD,
+                asset_cd: node.ASSET_CD
             });
         }
     }
@@ -168,7 +196,7 @@ export default class InterfaceTree extends Vue {
                         type: 'addInterface',
                         selectable: false,
                         pId: datum.key,
-                        pName: datum.label,
+                        pName: datum.label
                     });
                 }
             }

@@ -7,10 +7,6 @@
             <div class="p-ml-auto">
                 <Button
                     class="p-button-rounded p-button-text p-mr-1"
-                    icon="pi pi-globe"
-                ></Button>
-                <Button
-                    class="p-button-rounded p-button-text p-mr-1"
                     icon="pi pi-save"
                     :disabled="applyButtonDisabled"
                     @click="updateAsset"
@@ -75,12 +71,27 @@ type TabItem = {
     [index: string]: string | boolean;
     header: string;
     disabled: boolean;
+    unvisible: boolean;
+    is_interface: boolean;
     type: string;
 };
 
 @Component<AssetPanel>({
     props: {
         item: Object
+    },
+    watch: {
+        item(_item) {
+            const { IS_USE_INTF, INTERFACE } = _item;
+            const is_used =
+                IS_USE_INTF === 1 && INTERFACE && INTERFACE.IS_USE === 1;
+
+            this.assetTabList.forEach((item: TabItem) => {
+                if (item.is_interface) {
+                    this.$set(item, 'unvisible', !is_used);
+                }
+            });
+        }
     }
 })
 export default class AssetPanel extends Vue {
@@ -89,16 +100,76 @@ export default class AssetPanel extends Vue {
     };
 
     assetTabList: Array<TabItem> = [
-        { header: '기본정보', disabled: false, type: 'ASSETCONTENT01' },
-        { header: '관리정보', disabled: false, type: 'ASSETCONTENT02' },
-        { header: '인터페이스', disabled: false, type: 'ASSETCONTENT03' },
-        { header: '통신정보', disabled: false, type: 'ASSETCONTENT04' },
-        { header: '수집항목', disabled: false, type: 'ASSETCONTENT05' },
-        { header: '제어항목', disabled: false, type: 'ASSETCONTENT06' },
-        { header: '통신로그', disabled: false, type: 'ASSETCONTENT07' },
-        { header: '알람정보', disabled: false, type: 'ASSETCONTENT08' },
-        { header: '작업이력', disabled: false, type: 'ASSETCONTENT09' },
-        { header: '담당자 알림정보', disabled: false, type: 'ASSETCONTENT10' }
+        {
+            header: '기본정보',
+            disabled: false,
+            unvisible: false,
+            is_interface: false,
+            type: 'ASSETCONTENT01'
+        },
+        {
+            header: '관리정보',
+            disabled: false,
+            unvisible: false,
+            is_interface: false,
+            type: 'ASSETCONTENT02'
+        },
+        {
+            header: '인터페이스',
+            disabled: true,
+            unvisible: false,
+            is_interface: true,
+            type: 'ASSETCONTENT03'
+        },
+        {
+            header: '통신정보',
+            disabled: false,
+            unvisible: false,
+            is_interface: true,
+            type: 'ASSETCONTENT04'
+        },
+        {
+            header: '수집항목',
+            disabled: false,
+            unvisible: false,
+            is_interface: true,
+            type: 'ASSETCONTENT05'
+        },
+        {
+            header: '제어항목',
+            disabled: false,
+            unvisible: false,
+            is_interface: true,
+            type: 'ASSETCONTENT06'
+        },
+        {
+            header: '통신로그',
+            disabled: false,
+            unvisible: false,
+            is_interface: true,
+            type: 'ASSETCONTENT07'
+        },
+        {
+            header: '알람정보',
+            disabled: false,
+            unvisible: false,
+            is_interface: true,
+            type: 'ASSETCONTENT08'
+        },
+        {
+            header: '작업이력',
+            disabled: false,
+            unvisible: false,
+            is_interface: false,
+            type: 'ASSETCONTENT09'
+        },
+        {
+            header: '담당자 알림정보',
+            disabled: false,
+            unvisible: false,
+            is_interface: false,
+            type: 'ASSETCONTENT10'
+        }
     ];
 
     tabIndex: number = 0;

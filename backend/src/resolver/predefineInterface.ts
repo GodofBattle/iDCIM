@@ -15,13 +15,21 @@ import streamToBuffer from '../utils/streamToBuffer';
 @Resolver()
 export class PredefinedInterfaceResolver {
     @Query(() => [pd_asset_code])
-    async PredefinedInterfaces(@Ctx() ctx: any) {
+    async PredefinedInterfaces(
+        @Arg('CODE', () => String, { nullable: true }) code: string,
+        @Ctx() ctx: any
+    ) {
         if (!ctx.isAuth) {
             throw new AuthenticationError('인증되지 않은 접근입니다');
         }
 
         try {
-            const result = await getRepository(pd_asset_code).find({ order: { CODE: 'ASC' } });
+            let result = [];
+            if(code) {
+                result = await getRepository(pd_asset_code).find({ where: { CODE: code },  order: { CODE: 'ASC' } });
+            } else {
+                result = await getRepository(pd_asset_code).find({ order: { CODE: 'ASC' } });
+            }
             return result;
         } catch (err) {
             throw new SchemaError(err.message);

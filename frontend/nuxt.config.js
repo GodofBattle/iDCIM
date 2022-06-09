@@ -214,6 +214,14 @@ export default {
                         }
                     },
                     {
+                        path: '/virtualProduct',
+                        name: 'virtualProduct',
+                        component: 'pages/icomer/virtualProduct.vue',
+                        meta: {
+                            title: '가상제품'
+                        }
+                    },
+                    {
                         path: '/interface',
                         name: 'interface',
                         component: 'pages/icomer/interface.vue',

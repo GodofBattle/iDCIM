@@ -4,8 +4,8 @@
         <div class="p-d-flex i-interface-content">
             <div class="p-col-fixed" style="width: var(--tree-width)">
                 <interface-tree
-                    @select="onSelectTreeNode"
                     :style="{ height: '100%' }"
+                    @select="onSelectTreeNode"
                 ></interface-tree>
             </div>
             <div class="p-col">
@@ -30,9 +30,9 @@ import Component from '@/plugins/nuxt-class-component';
     props: {
         title: {
             type: String,
-            default: '인터페이스',
-        },
-    },
+            default: '인터페이스'
+        }
+    }
 })
 export default class IcomerInterface extends Vue {
     id = -1;

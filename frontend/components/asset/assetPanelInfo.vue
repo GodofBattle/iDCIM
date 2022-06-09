@@ -986,7 +986,9 @@ export default class AssetPanelInfo extends Vue {
                 `
             })
             .then(({ data: { SetAssetInterface } }) => {
-                console.info(SetAssetInterface);
+                if (SetAssetInterface) {
+                    this.$apollo.queries.asset.refresh();
+                }
             })
             .catch((error) => {
                 console.error(error);

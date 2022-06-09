@@ -28,7 +28,8 @@
                         :class="[
                             {
                                 'p-highlight': d_activeIndex === i,
-                                'p-disabled': isTabDisabled(tab)
+                                'p-disabled': isTabDisabled(tab),
+                                'i-unvisible': isTabUnvisible(tab)
                             }
                         ]"
                     >
@@ -75,6 +76,7 @@ type TabItem = {
     [index: string]: string | boolean;
     header: string;
     disabled: boolean;
+    unvisible: boolean;
 };
 
 @Component<TabHeaderList>({
@@ -130,6 +132,10 @@ export default class TabHeaderList extends Vue {
 
     isTabDisabled(tab: TabItem) {
         return tab.disabled;
+    }
+
+    isTabUnvisible(tab: TabItem) {
+        return tab.unvisible === true;
     }
 
     onTabClick(event: MouseEvent | KeyboardEvent, i: number) {
@@ -190,7 +196,9 @@ export default class TabHeaderList extends Vue {
         const width = DomHandler.getWidth(content);
 
         this.backwardIsDisabled = scrollLeft === 0;
-        this.forwardIsDisabled = scrollLeft === scrollWidth - width;
+
+        const scroll_width = scrollWidth - width;
+        this.forwardIsDisabled = scrollLeft >= scroll_width;
     }
 
     getVisibleButtonWidths() {
@@ -264,6 +272,10 @@ export default class TabHeaderList extends Vue {
         li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
             border-color: var(--primary-color);
         }
+    }
+
+    .i-unvisible {
+        display: none;
     }
 }
 </style>

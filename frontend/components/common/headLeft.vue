@@ -22,8 +22,8 @@ let timerId: NodeJS.Timeout;
 
 @Component<HeadLeft>({
     props: {
-        items: Array,
-    },
+        items: Array
+    }
 })
 export default class HeadLeft extends Vue {
     nowTime = new String('0000/00/00 00:00:00');

@@ -7,33 +7,38 @@
     >
         <template v-for="(item, i) of model">
             <li
+                v-if="visible(item) && !item.separator"
                 :key="label(item) + i.toString()"
                 :class="getItemClass(item)"
                 :style="item.style"
-                v-if="visible(item) && !item.separator"
                 role="none"
                 @mouseenter="onItemMouseEnter($event, item)"
             >
                 <nuxt-link
                     v-if="item.to && !disabled(item)"
+                    v-slot="{ href, isActive, isExactActive, navigate }"
                     :to="item.to"
                     custom
-                    v-slot="{ href, isActive, isExactActive, navigate }"
                 >
                     <a
+                        v-ripple
                         :href="href"
                         :class="linkClass(item, { isActive, isExactActive })"
-                        v-ripple
                         role="menuitem"
                         @click="onItemClick($event, item, navigate)"
                         @keydown="onItemKeyDown($event, item)"
                     >
                         <span :class="['p-menuitem-icon', item.icon]"></span>
                         <span class="p-menuitem-text">{{ label(item) }}</span>
+                        <span
+                            v-if="item.items"
+                            class="p-submenu-icon pi pi-angle-right"
+                        ></span>
                     </a>
                 </nuxt-link>
                 <a
                     v-else
+                    v-ripple
                     :href="item.url"
                     :class="linkClass(item)"
                     :target="item.target"
@@ -41,32 +46,31 @@
                     :aria-expanded="item === activeItem"
                     role="menuitem"
                     :tabindex="disabled(item) ? null : '0'"
-                    v-ripple
                     @click="onItemClick($event, item)"
                     @keydown="onItemKeyDown($event, item)"
                 >
                     <span :class="['p-menuitem-icon', item.icon]"></span>
                     <span class="p-menuitem-text">{{ label(item) }}</span>
                     <span
-                        class="p-submenu-icon pi pi-angle-right"
                         v-if="item.items"
+                        class="p-submenu-icon pi pi-angle-right"
                     ></span>
                 </a>
                 <i-menu-sub
-                    :model="item.items"
                     v-if="visible(item) && item.items"
                     :key="label(item) + '_sub_'"
-                    :parentActive="item === activeItem"
+                    :model="item.items"
+                    :parent-active="item === activeItem"
                     :exact="exact"
                     @leaf-click="onLeafClick"
                     @keydown-item="onChildItemKeyDown"
                 />
             </li>
             <li
-                :class="['p-menu-separator', item.class]"
-                :style="item.style"
                 v-if="visible(item) && item.separator"
                 :key="'separator' + i.toString()"
+                :class="['p-menu-separator', item.class]"
+                :style="item.style"
                 role="separator"
             ></li>
         </template>
@@ -78,38 +82,53 @@ import Ripple from 'primevue/ripple/Ripple';
 import DomHandler from '@/plugins/primevue.DomHandler';
 
 export default {
-    name: 'i-menu-sub',
+    name: 'IMenuSub',
+    directives: {
+        ripple: Ripple
+    },
     props: {
         root: {
             type: Boolean,
-            default: false,
+            default: false
         },
         model: {
             type: Array,
-            default: null,
+            default: null
         },
         template: {
             type: Function,
-            default: null,
+            default: null
         },
         exact: {
             type: Boolean,
-            default: true,
+            default: true
         },
         parentActive: {
             type: Boolean,
-            default: false,
+            default: false
         },
         popup: {
             type: Boolean,
-            default: false,
-        },
+            default: false
+        }
     },
     documentClickListener: null,
     data() {
         return {
-            activeItem: null,
+            activeItem: null
         };
+    },
+    computed: {
+        containerClass() {
+            return { 'p-submenu-list': !this.root };
+        }
+    },
+    watch: {
+        parentActive(newValue) {
+            if (!newValue) {
+                this.activeItem = null;
+            }
+        }
     },
     updated() {
         if (this.root && this.activeItem) {
@@ -128,8 +147,8 @@ export default {
                 'p-menuitem',
                 item.class,
                 {
-                    'p-menuitem-active': this.activeItem === item,
-                },
+                    'p-menuitem-active': this.activeItem === item
+                }
             ];
         },
         visible(item) {
@@ -149,8 +168,8 @@ export default {
                     'p-disabled': this.disabled(item),
                     'router-link-active': routerProps && routerProps.isActive,
                     'router-link-active-exact':
-                        this.exact && routerProps && routerProps.isExactActive,
-                },
+                        this.exact && routerProps && routerProps.isExactActive
+                }
             ];
         },
         onItemMouseEnter(event, item) {
@@ -161,6 +180,8 @@ export default {
 
             if (this.root) {
                 if (this.activeItem || this.popup) {
+                    this.activeItem = item;
+                } else if (item.items) {
                     this.activeItem = item;
                 }
             } else {
@@ -180,7 +201,7 @@ export default {
             if (item.command) {
                 item.command({
                     originalEvent: event,
-                    item: item,
+                    item
                 });
             }
 
@@ -199,7 +220,7 @@ export default {
             this.$emit('leaf-click');
         },
         onItemKeyDown(event, item) {
-            let listItem = event.currentTarget.parentElement;
+            const listItem = event.currentTarget.parentElement;
 
             switch (event.which) {
                 case 40: {
@@ -246,7 +267,7 @@ export default {
             }
         },
         findNextItem(item) {
-            let nextItem = item.nextElementSibling;
+            const nextItem = item.nextElementSibling;
             if (nextItem) {
                 return DomHandler.hasClass(nextItem, 'p-disabled') ||
                     !DomHandler.hasClass(nextItem, 'p-menuitem')
@@ -257,7 +278,7 @@ export default {
             }
         },
         findPrevItem(item) {
-            let prevItem = item.previousElementSibling;
+            const prevItem = item.previousElementSibling;
             if (prevItem) {
                 return DomHandler.hasClass(prevItem, 'p-disabled') ||
                     !DomHandler.hasClass(prevItem, 'p-menuitem')
@@ -287,25 +308,13 @@ export default {
                 );
                 this.documentClickListener = null;
             }
-        },
-    },
-    computed: {
-        containerClass() {
-            return { 'p-submenu-list': !this.root };
-        },
-    },
-    watch: {
-        parentActive(newValue) {
-            if (!newValue) {
-                this.activeItem = null;
-            }
-        },
-    },
-    directives: {
-        ripple: Ripple,
-    },
+        }
+    }
 };
 </script>
 
 <style scoped>
+.p-tieredmenu .p-submenu-list {
+    z-index: 9999;
+}
 </style>

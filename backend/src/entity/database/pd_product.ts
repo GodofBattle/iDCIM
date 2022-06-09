@@ -62,7 +62,7 @@ export class pd_product {
 
 @ArgsType()
 export class pd_product_args {
-    @Field(() => Int!, { nullable: false })
+    @Field(() => Int!, { nullable: true })
     MANUFACTURER_ID: number;
 
     @Field(() => String!, { nullable: true })
