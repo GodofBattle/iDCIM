@@ -256,6 +256,7 @@
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
+import { eventBus } from '@/plugins/vueEventBus';
 
 type ASSET_INTERFACE = {
     [index: string]: string | number;
@@ -540,16 +541,11 @@ type ASSET = {
             deep: true,
             handler(_asset: ASSET) {
                 if (this.dbAsset) {
+                    // by shkoh 202206010: 데이터변경 여부 체크, 데이터의 유효성 체크를 하여 상단의 [저장] 버튼을 활성화함
                     const diff =
                         this.dbAsset === null
                             ? false
                             : this.isDiffAssetData(this.dbAsset, _asset);
-
-                    console.info(
-                        !this.is_valid,
-                        !diff,
-                        !this.is_valid || !diff
-                    );
 
                     this.$emit(
                         'update:applyButtonDisabled',
@@ -613,6 +609,32 @@ export default class AssetPanelInfo extends Vue {
     manual_file_name: string = '';
     image_file: any = '';
 
+    resetAsset() {
+        this.asset = {
+            ID: -1,
+            PRODUCT_ID: -1,
+            NAME: '',
+            SERIAL: '',
+            CUST_HIER_ID_P: null,
+            CUST_HIER_ID_C: null,
+            IS_USE_INTF: 0,
+            PRODUCT: {
+                ASSET_CD: '',
+                NAME: '',
+                MANUAL_FILE_ID: null,
+                IMAGE_FILE_ID: null,
+                INFO: '',
+                MANUFACTURER: {
+                    NAME: ''
+                }
+            },
+            INTERFACE: {
+                ID: -1,
+                PROD_INTF_ID: -1
+            }
+        };
+    }
+
     updateAsset() {
         if (this.is_interface && this.productInterfaceID === -1) {
             this.$toast.add({
@@ -640,9 +662,62 @@ export default class AssetPanelInfo extends Vue {
                 }
             }
         );
+
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation UpdateAsset(
+                        $ID: ID!
+                        $NAME: String
+                        $SERIAL: String
+                        $CUST_HIER_ID_P: Int
+                        $CUST_HIER_ID_C: Int
+                    ) {
+                        UpdateAsset(
+                            ID: $ID
+                            NAME: $NAME
+                            SERIAL: $SERIAL
+                            CUST_HIER_ID_P: $CUST_HIER_ID_P
+                            CUST_HIER_ID_C: $CUST_HIER_ID_C
+                        )
+                    }
+                `,
+                variables
+            })
+            .then(() => {
+                eventBus.$emit('refreshAssetTable');
+
+                this.refreshAsset();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '자산 변경 완료',
+                    detail: `${
+                        this.dbAsset ? this.dbAsset.NAME : ''
+                    } 자산 기본정보 변경`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '자산 기본정보 적용 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
     }
 
     apolloFetch(data: ASSET) {
+        this.resetAsset();
+
         for (const [key, value] of Object.entries(data)) {
             if (key === 'PRODUCT') {
                 this.$apollo.queries.treeHier03.refresh();
@@ -987,7 +1062,7 @@ export default class AssetPanelInfo extends Vue {
             })
             .then(({ data: { SetAssetInterface } }) => {
                 if (SetAssetInterface) {
-                    this.$apollo.queries.asset.refresh();
+                    this.refreshAsset();
                 }
             })
             .catch((error) => {
@@ -1057,6 +1132,10 @@ export default class AssetPanelInfo extends Vue {
                 this.changeInterface();
             }
         });
+    }
+
+    refreshAsset() {
+        this.$apollo.queries.dbAsset.refresh();
     }
 
     get is_valid(): boolean {

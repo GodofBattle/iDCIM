@@ -76,6 +76,7 @@ import Vue from 'vue';
 import gql from 'graphql-tag';
 import { FilterMatchMode } from 'primevue/api';
 import Component from '@/plugins/nuxt-class-component';
+import { eventBus } from '@/plugins/vueEventBus';
 
 let timerId: NodeJS.Timeout;
 
@@ -98,6 +99,9 @@ let timerId: NodeJS.Timeout;
                             CURR_STATUS
                             CURR_LEVEL
                             IS_USE
+                        }
+                        PRODUCT {
+                            MANUFACTURER_ID
                         }
                     }
                 }
@@ -145,10 +149,20 @@ export default class AssetTable extends Vue {
         timerId = setInterval(() => {
             this.$apollo.queries.assetList.refetch();
         }, 10000);
+
+        eventBus.$on('refreshAssetTable', () => {
+            this.$apollo.queries.assetList.refetch().then(() => {
+                this.selectedRow = this.assetList.find(
+                    (asset: any) => asset.ID === this.selectedRow.ID
+                );
+            });
+        });
     }
 
     beforeDestory() {
         clearInterval(timerId);
+
+        eventBus.$off('refreshAssetTable');
     }
 
     reloadAssetList() {

@@ -27,7 +27,8 @@
                 ></asset-table>
             </div>
             <div class="p-col" :style="{ width: '30vw' }">
-                <asset-panel :item="selectedAsset"></asset-panel>
+                <div v-if="isVirtualAsset">Virtual</div>
+                <asset-panel v-else :item.sync="selectedAsset"></asset-panel>
             </div>
         </div>
     </div>
@@ -58,6 +59,15 @@ export default class AdminAsset extends Vue {
     onSelectTreeNode({ type, treeKeys }: any) {
         this.treeType = type;
         this.treeKeys = treeKeys;
+    }
+
+    get isVirtualAsset(): boolean {
+        if (this.selectedAsset) {
+            const { PRODUCT } = this.selectedAsset;
+            return PRODUCT && PRODUCT.MANUFACTURER_ID === 0;
+        } else {
+            return false;
+        }
     }
 }
 </script>

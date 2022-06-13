@@ -1,8 +1,8 @@
-import { AuthenticationError, SchemaError } from "apollo-server-express";
-import { Arg, Ctx, ID, Int, Mutation, Query, Resolver, Subscription } from "type-graphql";
+import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
+import { Arg, Args, Ctx, ID, Int, Mutation, Publisher, PubSub, Query, Resolver, Subscription } from "type-graphql";
 import { getRepository, In, Raw } from "typeorm";
 
-import { ac_asset } from "../entity/database/ac_asset";
+import { ac_asset, ac_asset_args } from "../entity/database/ac_asset";
 import { ac_user } from "../entity/database/ac_user";
 import { cn_ctrl_cmd } from "../entity/database/cn_ctrl_cmd";
 import { cn_interface } from "../entity/database/cn_interface";
@@ -35,15 +35,15 @@ export class AssetResolver {
         try {
             let result: any;
             if (keys.length === 0) {
-                result = await getRepository(ac_asset).find({ relations: ['INTERFACE'] });
+                result = await getRepository(ac_asset).find({ relations: ['INTERFACE', 'PRODUCT'] });
             } else {
                 switch (type) {
                     case 'HIER01': {
-                        result = await getRepository(ac_asset).find({ where: { CUST_HIER_ID_C: In(keys) }, relations: ['INTERFACE'] });
+                        result = await getRepository(ac_asset).find({ where: { CUST_HIER_ID_C: In(keys) }, relations: ['INTERFACE', 'PRODUCT'] });
                         break;
                     }
                     case 'HIER02': {
-                        result = await getRepository(ac_asset).find({ where: { CUST_HIER_ID_P: In(keys) }, relations: ['INTERFACE'] });
+                        result = await getRepository(ac_asset).find({ where: { CUST_HIER_ID_P: In(keys) }, relations: ['INTERFACE', 'PRODUCT'] });
                         break;
                     }
                     case 'HIER03': {
@@ -82,6 +82,7 @@ export class AssetResolver {
 
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
+                            .leftJoinAndSelect('asset.PRODUCT', 'product')
                             .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where(query_where)
                             .getMany();
@@ -100,6 +101,7 @@ export class AssetResolver {
 
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
+                            .leftJoinAndSelect('asset.PRODUCT', 'product')
                             .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where(query_where)
                             .getMany();
@@ -133,6 +135,7 @@ export class AssetResolver {
 
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
+                            .leftJoinAndSelect('asset.PRODUCT', 'product')
                             .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where(query_where)
                             .getMany();
@@ -153,6 +156,7 @@ export class AssetResolver {
                         const product_id = keys[0];
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
+                            .leftJoinAndSelect('asset.PRODUCT', 'product')
                             .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where(`asset.PRODUCT_ID = ${product_id}`)
                             .getMany();
@@ -178,6 +182,34 @@ export class AssetResolver {
 
         try {
             return await getRepository(ac_asset).findOne({ where: { ID: id }, relations: ['PRODUCT', 'INTERFACE', 'PRODUCT.MANUFACTURER'] });
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async UpdateAsset(
+        @Arg('ID', () => ID) id: number,
+        @Args() { NAME, SERIAL, CUST_HIER_ID_C, CUST_HIER_ID_P }: ac_asset_args,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if(!id) throw new UserInputError('전달한 인자의 데이터가 잘못됐꺼나 형식이 틀렸습니다');
+
+            const update_data = {};
+            for(const [key, value] of Object.entries({ NAME, SERIAL, CUST_HIER_ID_C, CUST_HIER_ID_P })) {
+                if(value !== undefined) update_data[key] = value;
+            }
+
+            const result = await getRepository(ac_asset).update({ ID: id }, update_data);
+            return result.affected > 0 ? true : false;
         } catch (err) {
             throw new SchemaError(err.message);
         }

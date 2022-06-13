@@ -1,4 +1,4 @@
-import { Field, ID, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, ID, Int, ObjectType } from "type-graphql";
 import { TypeormLoader } from "type-graphql-dataloader";
 import { Column, Entity, JoinColumn, JoinTable, ManyToOne, OneToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
@@ -95,4 +95,43 @@ export class ac_asset {
     @OneToOne(() => cn_interface, (intf: cn_interface) => intf.ASSET, { primary: true, cascade: false, createForeignKeyConstraints: false })
     @JoinColumn({ name: 'ID', referencedColumnName: 'ID' })
     INTERFACE?: cn_interface;
+}
+
+@ArgsType()
+export class ac_asset_args {
+    @Field(() => String, { nullable: true })
+    NAME: string;
+
+    @Field(() => Int, { nullable: true })
+    CUST_HIER_ID_P: number;
+
+    @Field(() => Int, { nullable: true })
+    CUST_HIER_ID_C: number;
+
+    @Field(() => String, { nullable: true })
+    SERIAL: string;
+
+    @Field(() => String, { nullable: true })
+    ETC_INFO: string;
+
+    @Field(() => Int, { nullable: true })
+    OP_ID_M: number;
+
+    @Field(() => Int, { nullable: true })
+    OP_ID_S: number;
+
+    @Field(() => nullableDate, { nullable: true })
+    INSTALL_DT: Date;
+
+    @Field(() => Int, { nullable: true })
+    MA_USER_ID: number;
+
+    @Field(() => nullableDate, { nullable: true })
+    MA_START_DT: Date;
+
+    @Field(() => String, { nullable: true })
+    INSPECT_INFO: string;
+
+    @Field(() => Int, { nullable: true })
+    IMAGE_FILE_ID: number;
 }

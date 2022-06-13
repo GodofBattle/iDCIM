@@ -29,7 +29,7 @@
             <asset-panel-info
                 v-if="tabIndex === 0"
                 ref="assetPanelInfo"
-                :asset-item="item"
+                :asset-item.sync="item"
                 :apply-button-disabled.sync="applyButtonDisabled"
             ></asset-panel-info>
             <div v-else-if="tabIndex === 1">
@@ -82,6 +82,8 @@ type TabItem = {
     },
     watch: {
         item(_item) {
+            if (_item === undefined || _item === null) return;
+
             const { IS_USE_INTF, INTERFACE } = _item;
             const is_used =
                 IS_USE_INTF === 1 && INTERFACE && INTERFACE.IS_USE === 1;
@@ -105,6 +107,7 @@ export default class AssetPanel extends Vue {
             disabled: false,
             unvisible: false,
             is_interface: false,
+            is_virtual: false,
             type: 'ASSETCONTENT01'
         },
         {
@@ -112,6 +115,7 @@ export default class AssetPanel extends Vue {
             disabled: false,
             unvisible: false,
             is_interface: false,
+            is_virtual: false,
             type: 'ASSETCONTENT02'
         },
         {
@@ -119,6 +123,7 @@ export default class AssetPanel extends Vue {
             disabled: true,
             unvisible: false,
             is_interface: true,
+            is_virtual: false,
             type: 'ASSETCONTENT03'
         },
         {
@@ -126,6 +131,7 @@ export default class AssetPanel extends Vue {
             disabled: false,
             unvisible: false,
             is_interface: true,
+            is_virtual: false,
             type: 'ASSETCONTENT04'
         },
         {
@@ -133,6 +139,7 @@ export default class AssetPanel extends Vue {
             disabled: false,
             unvisible: false,
             is_interface: true,
+            is_virtual: false,
             type: 'ASSETCONTENT05'
         },
         {
@@ -140,6 +147,7 @@ export default class AssetPanel extends Vue {
             disabled: false,
             unvisible: false,
             is_interface: true,
+            is_virtual: false,
             type: 'ASSETCONTENT06'
         },
         {
@@ -147,6 +155,7 @@ export default class AssetPanel extends Vue {
             disabled: false,
             unvisible: false,
             is_interface: true,
+            is_virtual: false,
             type: 'ASSETCONTENT07'
         },
         {
@@ -154,6 +163,7 @@ export default class AssetPanel extends Vue {
             disabled: false,
             unvisible: false,
             is_interface: true,
+            is_virtual: false,
             type: 'ASSETCONTENT08'
         },
         {
@@ -161,6 +171,7 @@ export default class AssetPanel extends Vue {
             disabled: false,
             unvisible: false,
             is_interface: false,
+            is_virtual: false,
             type: 'ASSETCONTENT09'
         },
         {
@@ -168,6 +179,7 @@ export default class AssetPanel extends Vue {
             disabled: false,
             unvisible: false,
             is_interface: false,
+            is_vitual: false,
             type: 'ASSETCONTENT10'
         }
     ];
