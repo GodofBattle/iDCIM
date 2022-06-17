@@ -2,14 +2,10 @@
     <div id="i-asset-panel-info">
         <div class="p-col p-fluid p-input-filled">
             <div class="p-field p-grid">
-                <label
-                    for="name"
-                    class="p-col-fixed p-my-2"
-                    :style="{ 'flex-basis': '80px' }"
-                >
+                <label for="name" class="p-col-fixed p-my-2 i-form-label">
                     자산명
                 </label>
-                <div class="p-col-fixed" :style="{ 'flex-basis': '30%' }">
+                <div class="p-col-3 i-form-value">
                     <InputText
                         id="name"
                         v-model="asset.NAME"
@@ -28,14 +24,10 @@
                 </div>
             </div>
             <div class="p-field p-grid">
-                <label
-                    for="serial"
-                    class="p-col-fixed p-my-2"
-                    :style="{ 'flex-basis': '80px' }"
-                >
+                <label for="serial" class="p-col-fixed p-my-2 i-form-label">
                     시리얼정보
                 </label>
-                <div class="p-col-fixed" :style="{ 'flex-basis': '30%' }">
+                <div class="p-col-3 i-form-value">
                     <InputText
                         id="serial"
                         v-model="asset.SERIAL"
@@ -56,12 +48,11 @@
             <div v-if="is_cus_tree" class="p-field p-grid">
                 <label
                     for="custom-tree"
-                    class="p-col-fixed p-my-2"
-                    :style="{ 'flex-basis': '80px' }"
+                    class="p-col-fixed p-my-2 i-form-label"
                 >
                     기본트리 설정
                 </label>
-                <div class="p-col">
+                <div class="p-col i-form-value">
                     <Button
                         class="p-button-text p-button-info"
                         :label="customTreeLabel"
@@ -73,12 +64,11 @@
             <div v-if="is_pos_tree" class="p-field p-grid">
                 <label
                     for="position-tree"
-                    class="p-col-fixed p-my-2"
-                    :style="{ 'flex-basis': '80px' }"
+                    class="p-col-fixed p-my-2 i-form-label"
                 >
                     위치설정
                 </label>
-                <div class="p-col">
+                <div class="p-col i-form-value">
                     <Button
                         class="p-button-text p-button-info"
                         :label="positionTreeLabel"
@@ -1235,6 +1225,18 @@ export default class AssetPanelInfo extends Vue {
         color: var(--primary-color-text);
         border-radius: var(--border-radius);
         width: 5vw;
+    }
+
+    .i-form-label {
+        flex-basis: 100px;
+        border-radius: 3px;
+        background-color: var(--primary-color);
+        color: var(--primary-color-text);
+        padding: 0.5rem;
+    }
+
+    .i-form-value {
+        align-self: center;
     }
 
     .i-model-key {

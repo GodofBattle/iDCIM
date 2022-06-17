@@ -120,7 +120,7 @@ export default {
         background: 'white'
     },
 
-    // by shkoh 20210709: primevue2
+    // by shkoh 20210709: primevue
     primevue: {
         // theme: 'vela-blue',
         // theme: 'saga-blue',
@@ -137,6 +137,7 @@ export default {
             'Badge',
             'BadgeDirective',
             'Button',
+            'Calendar',
             'Card',
             'Checkbox',
             'Chip',
@@ -173,7 +174,7 @@ export default {
             'Tree',
             'TreeTable'
         ],
-        directives: ['Tooltip', 'BadgeDirective',]
+        directives: ['Tooltip', 'BadgeDirective']
     },
 
     // by shkoh 20210709: DCIM route

@@ -31,10 +31,13 @@
                 ref="assetPanelInfo"
                 :asset-item.sync="item"
                 :apply-button-disabled.sync="applyButtonDisabled"
-            ></asset-panel-info>
-            <div v-else-if="tabIndex === 1">
-                <h1>{{ assetTabList[tabIndex].header }}</h1>
-            </div>
+            />
+            <asset-panel-manager
+                v-else-if="tabIndex === 1"
+                ref="assetPanelManager"
+                :asset-item="item"
+                :apply-button-disabled.sync="applyButtonDisabled"
+            />
             <div v-else-if="tabIndex === 2">
                 <h1>인터페이스</h1>
             </div>
@@ -99,6 +102,7 @@ type TabItem = {
 export default class AssetPanel extends Vue {
     $refs!: {
         assetPanelInfo: any;
+        assetPanelManager: any;
     };
 
     assetTabList: Array<TabItem> = [
