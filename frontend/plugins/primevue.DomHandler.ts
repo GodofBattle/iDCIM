@@ -168,8 +168,27 @@ const DomHandler = {
         }
     },
 
-    find: (element: HTMLElement, selector: string) => {
-        return element.querySelectorAll(selector);
+    index: (element: HTMLElement) => {
+        const children = element.parentNode?.childNodes;
+        
+        let num = 0;
+
+        if(children) {
+            for(let i = 0; i < children?.length; i++) {
+                if(children[i] === element) return num;
+                if(children[i].nodeType === 1) num++;
+            }
+        }
+
+        return -1;
+    },
+
+    find: (element: HTMLElement, selector: string): NodeListOf<HTMLElement> => {
+        return element.querySelectorAll(selector) as NodeListOf<HTMLElement>;
+    },
+
+    findSingle: (element: HTMLElement, selector: string): HTMLElement => {
+        return element.querySelector(selector) as HTMLElement;
     },
 
     getFocusableElements: (element: HTMLElement) => {
@@ -213,6 +232,64 @@ const DomHandler = {
         element.style.visibility = 'visible';
 
         return dimensions;
+    },
+
+    getParents(...element: any): any {
+        const ele: HTMLElement = arguments[0] !== undefined ? arguments[0] : null;
+        const parents: any = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+        return ele['parentNode'] === null ? parents : this.getParents(ele.parentNode, parents.concat([ele.parentNode]));
+    },
+
+    getScrollableParents(element: Element) {
+        const scrollableParents: Array<HTMLElement> = [];
+        
+        if(element) {
+            const parents = this.getParents(element);
+            const overflowRegex = /(auto|scroll)/;
+
+            const overflowCheck = (node: Element) => {
+                const styleDeclaration = window['getComputedStyle'](node, null);
+                return overflowRegex.test(styleDeclaration.getPropertyValue('overflow')) || overflowRegex.test(styleDeclaration.getPropertyValue('overflowX')) || overflowRegex.test(styleDeclaration.getPropertyValue('overflowY'));
+            }
+
+            const _iterator = _createForOfIteratorHelper(parents, null);
+            let _step;
+
+            try {
+                for(_iterator.s(); !(_step = _iterator.n()).done;) {
+                    const parent = _step.value;
+                    const scrollSelectors = parent.nodeType === 1 && parent.dataset['scrollselectors'];
+
+                    if(scrollSelectors) {
+                        const selectors = scrollSelectors.split(',');
+
+                        const _iterator2 = _createForOfIteratorHelper(selectors, null);
+                        let _step2;
+
+                        try {
+                            for(_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+                                const selector = _step2.value;
+                                const el: Element | null = this.findSingle(parent, selector);
+
+                                if(el && overflowCheck(el)) {
+                                    scrollableParents.push(el as HTMLElement);
+                                }
+                            }
+                        } catch(err) {
+                            _iterator2.e(err);
+                        } finally {
+                            _iterator2.f();
+                        }
+                    }
+                }
+            } catch(err) {
+                _iterator.e(err);
+            } finally {
+                _iterator.f();
+            }
+        }
+
+        return scrollableParents;
     },
 
     getViewport: () => {
@@ -265,6 +342,21 @@ const DomHandler = {
                     document.body.scrollLeft ||
                     0)
         };
+    },
+
+    getOuterWidth: (element: HTMLElement, margin = false) => {
+        if(element) {
+            let width = element.offsetWidth;
+
+            if(margin) {
+                const style = getComputedStyle(element);
+                width += parseFloat(style.marginLeft) + parseFloat(style.marginRight);
+            }
+
+            return width;
+        } else {
+            return 0;
+        }
     },
 
     getOuterHeight: (element: HTMLElement, margin = false) => {

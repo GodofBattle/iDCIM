@@ -34,7 +34,11 @@
                     자산도입일
                 </label>
                 <div class="p-col-4 i-form-value">
-                    <i-calendar class="p-ml-2" :show-icon="true" />
+                    <i-calendar
+                        v-model="calendar_date"
+                        class="p-ml-2"
+                        :show-icon="true"
+                    />
                 </div>
             </div>
         </div>
@@ -53,7 +57,9 @@ import Component from '@/plugins/nuxt-class-component';
         applyButtonDisabled: Boolean
     }
 })
-export default class AssetPanelManager extends Vue {}
+export default class AssetPanelManager extends Vue {
+    calendar_date: Date = new Date();
+}
 </script>
 
 <style lang="scss" scoped>
