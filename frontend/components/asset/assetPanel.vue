@@ -35,7 +35,7 @@
             <asset-panel-manager
                 v-else-if="tabIndex === 1"
                 ref="assetPanelManager"
-                :asset-item="item"
+                :asset-item.sync="item"
                 :apply-button-disabled.sync="applyButtonDisabled"
             />
             <div v-else-if="tabIndex === 2">
@@ -196,6 +196,10 @@ export default class AssetPanel extends Vue {
         switch (this.tabIndex) {
             case 0: {
                 this.$refs.assetPanelInfo.updateAsset();
+                break;
+            }
+            case 1: {
+                this.$refs.assetPanelManager.updateAsset();
                 break;
             }
         }

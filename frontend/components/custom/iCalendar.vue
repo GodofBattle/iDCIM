@@ -35,6 +35,7 @@
                 :class="panelStyleClass"
                 :role="inline ? null : 'dialog'"
                 :aria-labelledby="ariaLabelledBy"
+                :style="panelStyle"
             >
                 <template v-if="!timeOnly">
                     <div class="p-datepicker-group-container">
@@ -412,16 +413,18 @@ import UniqueComponentId from '@/plugins/primevue.UniqueComponentId';
 import ConnectedOverlayScrollHandler from '@/plugins/primevue.ConnectedOverlayScrollHandler';
 
 type LocaleSettings = {
-    firstDayOfWeek?: number;
-    dayNames: string[];
-    dayNamesShort: string[];
-    dayNamesMin: string[];
-    monthNames: string[];
-    monthNamesShort: string[];
+    [index: string]: number | string | Array<string>;
+    firstDayOfWeek: number;
+    dayNames: Array<string>;
+    dayNamesShort: Array<string>;
+    dayNamesMin: Array<string>;
+    monthNames: Array<string>;
+    monthNamesShort: Array<string>;
     today: string;
     clear: string;
     dateFormat: string;
-    weekHeader?: string;
+    weekHeader: string;
+    yearName: string;
 };
 
 @Component<ICalendar>({
@@ -481,55 +484,7 @@ type LocaleSettings = {
         },
         locale: {
             type: Object,
-            default: () => {
-                return {
-                    firstDayOfWeek: 0,
-                    dayNames: [
-                        '일요일',
-                        '월요일',
-                        '화요일',
-                        '수요일',
-                        '목요일',
-                        '금요일',
-                        '토요일'
-                    ],
-                    dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
-                    dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
-                    monthNames: [
-                        '1월',
-                        '2월',
-                        '3월',
-                        '4월',
-                        '5월',
-                        '6월',
-                        '7월',
-                        '8월',
-                        '9월',
-                        '10월',
-                        '11월',
-                        '12월'
-                    ],
-                    monthNamesShort: [
-                        '1',
-                        '2',
-                        '3',
-                        '4',
-                        '5',
-                        '6',
-                        '7',
-                        '8',
-                        '9',
-                        '10',
-                        '11',
-                        '12'
-                    ],
-                    today: '금일',
-                    clear: '닫기',
-                    dateFormat: 'yy년 mm월 dd일',
-                    weekHeader: '주',
-                    yearName: '년'
-                } as LocaleSettings;
-            }
+            default: null
         },
         manualInput: {
             type: Boolean,
@@ -553,6 +508,10 @@ type LocaleSettings = {
         },
         panelClass: {
             type: String,
+            default: null
+        },
+        panelStyle: {
+            type: Object,
             default: null
         },
         responsiveOptions: Array,
@@ -644,6 +603,17 @@ type LocaleSettings = {
                     setTimeout(this.updateFocus, 0);
                 }
             }
+        },
+        locale(_locale) {
+            for (const [key, value] of Object.entries(_locale)) {
+                if (Object.keys(this.d_locale).includes(key)) {
+                    if (Array.isArray(value)) {
+                        this.d_locale[key] = value;
+                    } else if (typeof value === 'string') {
+                        this.d_locale[key] = value;
+                    }
+                }
+            }
         }
     }
 })
@@ -651,6 +621,54 @@ export default class ICalendar extends Vue {
     $refs: {
         input: any;
         overlay: any;
+    };
+
+    d_locale: LocaleSettings = {
+        firstDayOfWeek: 0,
+        dayNames: [
+            '일요일',
+            '월요일',
+            '화요일',
+            '수요일',
+            '목요일',
+            '금요일',
+            '토요일'
+        ],
+        dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
+        dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+        monthNames: [
+            '1월',
+            '2월',
+            '3월',
+            '4월',
+            '5월',
+            '6월',
+            '7월',
+            '8월',
+            '9월',
+            '10월',
+            '11월',
+            '12월'
+        ],
+        monthNamesShort: [
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            '10',
+            '11',
+            '12'
+        ],
+        today: '오늘',
+        clear: '지우기',
+        dateFormat: 'yy년 mm월 dd일',
+        weekHeader: '주',
+        yearName: '년'
     };
 
     focus: boolean = false;
@@ -1116,8 +1134,8 @@ export default class ICalendar extends Vue {
                             output += formatName(
                                 'D',
                                 date.getDay(),
-                                this.$props.locale.dayNamesShort,
-                                this.$props.locale.dayNames
+                                this.d_locale.dayNamesShort,
+                                this.d_locale.dayNames
                             );
                             break;
                         case 'o':
@@ -1146,8 +1164,8 @@ export default class ICalendar extends Vue {
                             output += formatName(
                                 'M',
                                 date.getMonth(),
-                                this.$props.locale.monthNamesShort,
-                                this.$props.locale.monthNames
+                                this.d_locale.monthNamesShort,
+                                this.d_locale.monthNames
                             );
                             break;
                         case 'y':
@@ -1275,7 +1293,7 @@ export default class ICalendar extends Vue {
     }
 
     getMonthName(index: number): string {
-        return this.$props.locale.monthNames[index];
+        return this.d_locale.monthNames[index];
     }
 
     getNextMonthAndYear(month: number, year: number) {
@@ -1331,7 +1349,7 @@ export default class ICalendar extends Vue {
     }
 
     getYearName(year: number): string {
-        const year_name = this.$props.locale.yearName;
+        const year_name = this.d_locale.yearName;
         return year_name.length > 0 ? `${year}${year_name}` : year.toString();
     }
 
@@ -2449,8 +2467,8 @@ export default class ICalendar extends Vue {
                     case 'D':
                         getName(
                             'D',
-                            this.$props.locale.dayNamesShort,
-                            this.$props.locale.dayNames
+                            this.d_locale.dayNamesShort,
+                            this.d_locale.dayNames
                         );
                         break;
                     case 'o':
@@ -2462,8 +2480,8 @@ export default class ICalendar extends Vue {
                     case 'M':
                         month = getName(
                             'M',
-                            this.$props.locale.monthNamesShort,
-                            this.$props.locale.monthNames
+                            this.d_locale.monthNamesShort,
+                            this.d_locale.monthNames
                         );
                         break;
                     case 'y':
@@ -3034,7 +3052,7 @@ export default class ICalendar extends Vue {
     }
 
     get clearLabel(): string {
-        return this.$props.locale.clear;
+        return this.d_locale.clear;
     }
 
     get containerClass(): Array<string | object> {
@@ -3051,7 +3069,7 @@ export default class ICalendar extends Vue {
     }
 
     get datePattern(): string {
-        return this.$props.dateFormat || this.$props.locale.dateFormat;
+        return this.$props.dateFormat || this.d_locale.dateFormat;
     }
 
     get formattedCurrentHour(): string {
@@ -3133,7 +3151,7 @@ export default class ICalendar extends Vue {
     get monthPickerValues(): Array<string> {
         const monthPickerValues: Array<string> = [];
         for (let i = 0; i <= 11; i++) {
-            monthPickerValues.push(this.$props.locale.monthNames[i]);
+            monthPickerValues.push(this.d_locale.monthNames[i]);
         }
 
         return monthPickerValues;
@@ -3289,8 +3307,8 @@ export default class ICalendar extends Vue {
     }
 
     get sundayIndex(): number {
-        return this.$props.locale.firstDayOfWeek > 0
-            ? 7 - this.$props.locale.firstDayOfWeek
+        return this.d_locale.firstDayOfWeek > 0
+            ? 7 - this.d_locale.firstDayOfWeek
             : 0;
     }
 
@@ -3312,7 +3330,7 @@ export default class ICalendar extends Vue {
     }
 
     get todayLabel(): string {
-        return this.$props.locale.today;
+        return this.d_locale.today;
     }
 
     get viewDate(): Date {
@@ -3330,9 +3348,9 @@ export default class ICalendar extends Vue {
 
     get weekDays(): Array<string> {
         const weekDays: Array<string> = [];
-        let dayIndex = this.$props.locale.firstDayOfWeek;
+        let dayIndex = this.d_locale.firstDayOfWeek;
         for (let i = 0; i < 7; i++) {
-            weekDays.push(this.$props.locale.dayNamesMin[dayIndex]);
+            weekDays.push(this.d_locale.dayNamesMin[dayIndex]);
             dayIndex = dayIndex === 6 ? 0 : ++dayIndex;
         }
 
@@ -3340,7 +3358,7 @@ export default class ICalendar extends Vue {
     }
 
     get weekHeaderLabel(): string {
-        return this.$props.locale.weekHeader;
+        return this.d_locale.weekHeader;
     }
 
     get yearPickerValues(): Array<number> {
@@ -3356,3 +3374,9 @@ export default class ICalendar extends Vue {
     }
 }
 </script>
+
+<style lang="scss" scoped>
+.p-datepicker table td.p-datepicker-other-month {
+    color: var(--gray-400);
+}
+</style>

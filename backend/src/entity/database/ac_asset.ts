@@ -47,20 +47,20 @@ export class ac_asset {
     OP_ID_S?: number;
 
     @Field(() => nullableDate, { nullable: true })
-    @Column({ type: 'datetime', nullable: true, default: null, comment: '설치일' })
-    INSTALL_DT?: Date;
+    @Column({ type: 'date', nullable: true, default: null, comment: '설치일' })
+    INSTALL_DATE?: Date;
 
     @Field(() => Int, { nullable: true })
     @Column({ type: 'int', nullable: true, default: null, comment: '유지보수 담당자 아이디(ac_asset_operator.TYPE : O' })
     MA_USER_ID?: number;
 
     @Field(() => nullableDate, { nullable: true })
-    @Column({ type: 'datetime', nullable: true, default: null, comment: '유지보수_시작일시' })
-    MA_START_DT?: Date;
+    @Column({ type: 'date', nullable: true, default: null, comment: '유지보수_시작일시' })
+    MA_START_DATE?: Date;
 
     @Field(() => nullableDate, { nullable: true })
-    @Column({ type: 'datetime', nullable: true, default: null, comment: '유지보수_종료일시' })
-    MA_END_DT?: Date;
+    @Column({ type: 'date', nullable: true, default: null, comment: '유지보수_종료일시' })
+    MA_END_DATE?: Date;
 
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 32, nullable: true, default: null, comment: '정기점검정보(ex:매달 25일)' })
@@ -121,13 +121,16 @@ export class ac_asset_args {
     OP_ID_S: number;
 
     @Field(() => nullableDate, { nullable: true })
-    INSTALL_DT: Date;
+    INSTALL_DATE: Date;
 
     @Field(() => Int, { nullable: true })
     MA_USER_ID: number;
 
     @Field(() => nullableDate, { nullable: true })
-    MA_START_DT: Date;
+    MA_START_DATE: Date;
+
+    @Field(() => nullableDate, { nullable: true })
+    MA_END_DATE: Date;
 
     @Field(() => String, { nullable: true })
     INSPECT_INFO: string;

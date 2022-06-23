@@ -190,7 +190,7 @@ export class AssetResolver {
     @Mutation(() => Boolean)
     async UpdateAsset(
         @Arg('ID', () => ID) id: number,
-        @Args() { NAME, SERIAL, CUST_HIER_ID_C, CUST_HIER_ID_P }: ac_asset_args,
+        @Args() { NAME, SERIAL, CUST_HIER_ID_C, CUST_HIER_ID_P, OP_ID_M, OP_ID_S, INSTALL_DATE, MA_USER_ID, MA_START_DATE, MA_END_DATE, INSPECT_INFO }: ac_asset_args,
         @Ctx() ctx: any,
         @PubSub('REFRESHTOKEN') publish: Publisher<void>
     ) {
@@ -204,9 +204,11 @@ export class AssetResolver {
             if(!id) throw new UserInputError('전달한 인자의 데이터가 잘못됐꺼나 형식이 틀렸습니다');
 
             const update_data = {};
-            for(const [key, value] of Object.entries({ NAME, SERIAL, CUST_HIER_ID_C, CUST_HIER_ID_P })) {
+            for(const [key, value] of Object.entries({ NAME, SERIAL, CUST_HIER_ID_C, CUST_HIER_ID_P, OP_ID_M, OP_ID_S, INSTALL_DATE, MA_USER_ID, MA_START_DATE, MA_END_DATE, INSPECT_INFO })) {
                 if(value !== undefined) update_data[key] = value;
             }
+
+            console.info(update_data);
 
             const result = await getRepository(ac_asset).update({ ID: id }, update_data);
             return result.affected > 0 ? true : false;

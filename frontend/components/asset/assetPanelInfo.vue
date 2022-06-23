@@ -17,7 +17,7 @@
                     >
                     </InputText>
                 </div>
-                <div class="p-col p-my-2">
+                <div class="p-col p-my-2" :style="{ 'align-self': 'center' }">
                     <small id="name-help" class="p-error">
                         {{ invalidMessage.NAME }}
                     </small>
@@ -39,7 +39,7 @@
                     >
                     </InputText>
                 </div>
-                <div class="p-col p-my-2">
+                <div class="p-col p-my-2" :style="{ 'align-self': 'center' }">
                     <small id="serial-help" class="p-error">
                         {{ invalidMessage.SERIAL }}
                     </small>
@@ -600,29 +600,24 @@ export default class AssetPanelInfo extends Vue {
     image_file: any = '';
 
     resetAsset() {
-        this.asset = {
-            ID: -1,
-            PRODUCT_ID: -1,
-            NAME: '',
-            SERIAL: '',
-            CUST_HIER_ID_P: null,
-            CUST_HIER_ID_C: null,
-            IS_USE_INTF: 0,
-            PRODUCT: {
-                ASSET_CD: '',
-                NAME: '',
-                MANUAL_FILE_ID: null,
-                IMAGE_FILE_ID: null,
-                INFO: '',
-                MANUFACTURER: {
-                    NAME: ''
-                }
-            },
-            INTERFACE: {
-                ID: -1,
-                PROD_INTF_ID: -1
-            }
-        };
+        this.asset.ID = -1;
+        this.asset.PRODUCT_ID = -1;
+        this.asset.NAME = '';
+        this.asset.SERIAL = '';
+        this.asset.CUST_HIER_ID_P = null;
+        this.asset.CUST_HIER_ID_C = null;
+        this.asset.IS_USE_INTF = 0;
+        this.asset.PRODUCT.ASSET_CD = '';
+        this.asset.PRODUCT.NAME = '';
+        this.asset.PRODUCT.MANUAL_FILE_ID = null;
+        this.asset.PRODUCT.IMAGE_FILE_ID = null;
+        this.asset.PRODUCT.INFO = '';
+        this.asset.PRODUCT.MANUFACTURER.NAME = '';
+        this.asset.INTERFACE.ID = -1;
+        this.asset.INTERFACE.PROD_INTF_ID = -1;
+
+        this.invalidMessage.NAME = undefined;
+        this.invalidMessage.SERIAL = undefined;
     }
 
     updateAsset() {
@@ -813,7 +808,7 @@ export default class AssetPanelInfo extends Vue {
     validateAssetSerial(input: InputEvent) {
         const _input = input.toString();
         if (_input.length > 64) {
-            this.invalidMessage.SERIAL = '시리얼은 64자 이하입니다';
+            this.invalidMessage.SERIAL = '시리얼정보는 64자 이하입니다';
         } else {
             this.invalidMessage.SERIAL = undefined;
         }

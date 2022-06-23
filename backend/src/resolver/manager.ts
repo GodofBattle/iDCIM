@@ -1,6 +1,6 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
 import { Arg, Args, Ctx, ID, Mutation, Publisher, PubSub, Query, Resolver } from "type-graphql";
-import { getRepository } from "typeorm";
+import { getRepository, In } from "typeorm";
 
 import { ac_asset_operator, ac_asset_operator_args } from "../entity/database/ac_asset_operator";
 import { ac_company, ac_company_args } from "../entity/database/ac_company";
@@ -10,7 +10,7 @@ import { ac_user } from "../entity/database/ac_user";
 export class ManagerResolver {
     @Query(() => [ac_company])
     async Companies(
-        @Arg('TYPE', () => String!) type: string,
+        @Arg('TYPE', () => String, { nullable: true }) type: string,
         @Ctx() ctx: any
     ): Promise<ac_company[]> {
         if (!ctx.isAuth) {
@@ -18,7 +18,12 @@ export class ManagerResolver {
         }
 
         try {
-            const result = await getRepository(ac_company).find({ where: { TYPE: type }, order: { NAME: 'ASC' } });
+            let result: Array<ac_company>;
+            if(type && type.length > 0) {
+                result = await getRepository(ac_company).find({ where: { TYPE: type }, order: { NAME: 'ASC' } });
+            } else {
+                result = await getRepository(ac_company).find({ order: { NAME: 'ASC' } });
+            }
             return result;
         } catch (err) {
             throw new SchemaError(err.message);
@@ -133,6 +138,22 @@ export class ManagerResolver {
 
             const result = await getRepository(ac_company).delete(id);
             return result.affected > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => [ac_company], { nullable: true })
+    async CustomerCompanies(
+        @Ctx() ctx: any
+    ): Promise<Array<ac_company>> | undefined {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            const results = await getRepository(ac_company).find({ where: { TYPE: In(['C', 'P']) }, join: { alias: 'c', leftJoinAndSelect: { OPERATORS: 'c.OPERATORS' } } });
+            return results;
         } catch (err) {
             throw new SchemaError(err.message);
         }
