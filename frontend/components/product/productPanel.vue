@@ -16,7 +16,7 @@
                     icon="pi pi-trash"
                     label="삭제"
                     class="p-button-danger"
-                    @class="deleteProduct"
+                    @click="deleteProduct"
                 />
             </div>
         </div>
@@ -26,17 +26,9 @@
                 <div class="p-fluid p-col-3 p-input-filled p-mr-6">
                     <div class="p-field p-px-1">
                         <label for="asset-cd">자산분류</label>
-                        <Dropdown
-                            id="asset-cd"
-                            v-model="productData.ASSET_CD"
-                            :options="assetCodeList"
-                            option-label="NAME"
-                            option-value="CODE"
-                            placeholder="자산유형을 선택하세요"
-                            :filter="true"
-                            filter-placeholder="검색"
-                            empty-filter-message="해당 유형의 자산은 존재하지 않습니다"
-                            append-to="body"
+                        <InputText
+                            v-model="getAssetCodeName"
+                            :disabled="true"
                         />
                     </div>
                     <div class="p-field p-px-1">
@@ -98,9 +90,7 @@
                                             :show-cancel-button="true"
                                             :disabled="
                                                 isShowManualButton &&
-                                                (src_manual_file_blob ===
-                                                    null ||
-                                                    manual_file_blob === null)
+                                                manual_file_blob === null
                                             "
                                             @clear="manualFileClear"
                                             @uploader="manualFileUpload"
@@ -365,8 +355,6 @@ type Product = {
     IMAGE_FILE_ID: number | null;
     INFO: string;
     REMARK: string;
-    IMAGE_FILE_NAME: string;
-    MANUAL_FILE_NAME: string;
 };
 
 @Component<ProductPanel>({
@@ -436,13 +424,15 @@ type Product = {
                     }
                 }
             `,
-            fetchPolicy: 'cache-and-network',
-            manual: true,
+            prefetch: true,
+            manual: false,
             update: ({ ProductInterfaces }) => ProductInterfaces,
+            skip() {
+                return this.$props.productId < 0;
+            },
             variables(): any {
                 return {
-                    PRODUCT_ID:
-                        this.$props.productId < 0 ? -1 : this.$props.productId
+                    PRODUCT_ID: this.$props.productId
                 };
             },
             result({ loading, data }) {
@@ -545,9 +535,7 @@ export default class ProductPanel extends Vue {
         MANUAL_FILE_ID: null,
         IMAGE_FILE_ID: null,
         INFO: '',
-        REMARK: '',
-        IMAGE_FILE_NAME: '',
-        MANUAL_FILE_NAME: ''
+        REMARK: ''
     };
 
     productData: Product = {
@@ -558,9 +546,7 @@ export default class ProductPanel extends Vue {
         MANUAL_FILE_ID: null,
         IMAGE_FILE_ID: null,
         INFO: '',
-        REMARK: '',
-        IMAGE_FILE_NAME: '',
-        MANUAL_FILE_NAME: ''
+        REMARK: ''
     };
 
     invalidMessage = {
@@ -586,6 +572,13 @@ export default class ProductPanel extends Vue {
     hasImage: boolean = false;
     isShowManualButton: boolean = true;
 
+    productDataRefresh() {
+        this.resetData();
+
+        this.$apollo.queries.dbProductData.refresh();
+        this.$apollo.queries.dbProductInterfaces.refresh();
+    }
+
     resetData() {
         this.productData.MANUFACTURER_ID = -1;
         this.productData.ASSET_CD = '';
@@ -595,8 +588,6 @@ export default class ProductPanel extends Vue {
         this.productData.IMAGE_FILE_ID = null;
         this.productData.INFO = '[]';
         this.productData.REMARK = '';
-        this.productData.MANUAL_FILE_NAME = '';
-        this.productData.IMAGE_FILE_NAME = '';
 
         this.invalidMessage.NAME = undefined;
         this.invalidMessage.MODEL_NAME = undefined;
@@ -613,10 +604,7 @@ export default class ProductPanel extends Vue {
         this.src_image_file_blob = null;
         this.manual_file_blob = null;
         this.image_file_blob = null;
-    }
 
-    resetProductInterface() {
-        this.dbProductInterfaces.splice(0, this.dbProductInterfaces.length);
         this.productInterfaces.splice(0, this.productInterfaces.length);
     }
 
@@ -640,8 +628,6 @@ export default class ProductPanel extends Vue {
     }
 
     apolloFetchProductInterfaces(data: Array<PRODUCTINTERFACE>) {
-        this.resetProductInterface();
-
         data.forEach((d: PRODUCTINTERFACE) => {
             this.productInterfaces.push({
                 ID: d.ID,
@@ -655,9 +641,208 @@ export default class ProductPanel extends Vue {
         });
     }
 
-    updateProduct() {}
+    updateProduct() {
+        if (!this.validationCheck) {
+            this.$toast.add({
+                severity: 'warn',
+                summary: '제품 유효성 실패',
+                detail: '제품 내용을 확인하세요',
+                life: 2000
+            });
 
-    deleteProduct() {}
+            return;
+        }
+
+        const variables = {
+            ID: this.$props.productId,
+            MANUFACTURER_ID: this.productData.MANUFACTURER_ID
+        };
+
+        ['ASSET_CD', 'NAME', 'MODEL_NAME', 'INFO', 'REMARK'].forEach(
+            (key: string) => {
+                if (this.dbProductData[key] !== this.productData[key]) {
+                    this.$set(variables, key, this.productData[key]);
+                }
+            }
+        );
+
+        if (this.isChangeManualFile) {
+            this.$set(variables, 'MANUAL_FILE', this.manual_file_blob);
+        }
+
+        if (this.hasManual && this.productData.MANUAL_FILE_ID !== null) {
+            this.$set(
+                variables,
+                'MANUAL_FILE_ID',
+                this.productData.MANUAL_FILE_ID
+            );
+        } else {
+            this.$set(variables, 'MANUAL_FILE_ID', null);
+        }
+
+        if (this.isChangeImageFile) {
+            this.$set(variables, 'IMAGE_FILE', this.image_file_blob);
+        }
+
+        if (this.hasImage && this.productData.IMAGE_FILE_ID !== null) {
+            this.$set(
+                variables,
+                'IMAGE_FILE_ID',
+                this.productData.IMAGE_FILE_ID
+            );
+        } else {
+            this.$set(variables, 'IMAGE_FILE_ID', null);
+        }
+
+        // const insert_product_interfaces = this.productInterfaces
+        //     .filter((intf: PRODUCTINTERFACE) => intf.PD_INTF_ID !== null)
+        //     .map((intf: PRODUCTINTERFACE) => {
+        //         return {
+        //             ID: intf.ID,
+        //             PD_INTF_ID: intf.PD_INTF_ID
+        //         };
+        //     });
+        const insert_product_interfaces: Array<object> = [];
+        for (const src_intf of Object.values(this.dbProductInterfaces)) {
+            const is = this.productInterfaces.find(
+                (intf) => intf.PD_INTF_ID === src_intf.PD_INTF_ID
+            );
+
+            if (is === undefined) {
+                insert_product_interfaces.push({
+                    ID: src_intf.ID,
+                    PD_INTF_ID: null
+                });
+            }
+        }
+
+        for (const intf of Object.values(this.productInterfaces)) {
+            const is = this.dbProductInterfaces.find(
+                (src_intf) => src_intf.PD_INTF_ID === intf.PD_INTF_ID
+            );
+
+            if (is === undefined) {
+                insert_product_interfaces.push({
+                    ID: -1,
+                    PD_INTF_ID: intf.PD_INTF_ID
+                });
+            }
+        }
+
+        this.$set(variables, 'INPUT', insert_product_interfaces);
+
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation (
+                        $ID: ID!
+                        $MANUFACTURER_ID: Int!
+                        $ASSET_CD: String
+                        $NAME: String
+                        $MODEL_NAME: String
+                        $INFO: String
+                        $IMAGE_FILE_ID: Int
+                        $MANUAL_FILE_ID: Int
+                        $REMARK: String
+                        $IMAGE_FILE: Upload
+                        $MANUAL_FILE: Upload
+                        $INPUT: [pd_prod_intf_input!]
+                    ) {
+                        UpdateProduct(
+                            ID: $ID
+                            MANUFACTURER_ID: $MANUFACTURER_ID
+                            ASSET_CD: $ASSET_CD
+                            NAME: $NAME
+                            MODEL_NAME: $MODEL_NAME
+                            INFO: $INFO
+                            IMAGE_FILE_ID: $IMAGE_FILE_ID
+                            MANUAL_FILE_ID: $MANUAL_FILE_ID
+                            REMARK: $REMARK
+                            IMAGE_FILE: $IMAGE_FILE
+                            MANUAL_FILE: $MANUAL_FILE
+                        )
+
+                        UpdateProductInterfaces(PRODUCT_ID: $ID, INPUT: $INPUT)
+                    }
+                `,
+                variables
+            })
+            .then(() => {
+                eventBus.$emit('refreshProductTree');
+
+                this.productDataRefresh();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '제품 변경 완료',
+                    detail: `${this.productData.NAME} 제품 변경`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '제품 변경 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                // by shkoh 20210927: product panel 데이터 업데이트 loading 페이지 종료
+                // by shkoh 20210927: update의 성공여부와 관계없이 무조건 종료함
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    deleteProduct() {
+        this.$confirmDialog.require({
+            group: 'deleteConfirmDialog',
+            message: `[${this.productName}] 제품을 삭제하시겠습니까?\n사이트에서 해당 제품이 등록되어 있다면 삭제가 불가합니다.(미구현)`,
+            header: `제품 ${this.productName} 삭제`,
+            position: 'top',
+            icon: 'pi pi-exclamation-triangle',
+            acceptClass: 'p-button-danger',
+            blockScroll: false,
+            accept: () => {
+                this.delete();
+            }
+        });
+    }
+
+    delete() {
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation {
+                        DeleteProduct(ID: ${Number(this.$props.productId)})
+                    }
+                `
+            })
+            .then(() => {
+                this.$toast.add({
+                    severity: 'success',
+                    summary: `${this.productName} 삭제 완료`,
+                    life: 1500
+                });
+
+                eventBus.$emit('refreshProductTree');
+                this.$emit('reset');
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '제품 삭제 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            });
+    }
 
     validateName(input: InputEvent) {
         const _input = input.toString();
@@ -933,10 +1118,24 @@ export default class ProductPanel extends Vue {
         );
     }
 
-    deleteProductInterface(idx: number, intf: PRODUCTINTERFACE) {
+    async deleteProductInterface(idx: number, intf: PRODUCTINTERFACE) {
         const { ID, PD_INTF_ID } = intf;
-        if (ID === null && PD_INTF_ID === null) {
+
+        if ((ID === null && PD_INTF_ID === null) || ID === -1) {
             this.productInterfaces.splice(idx, 1);
+        } else if (ID !== null) {
+            const count = await this.countOfInterfaces(ID);
+
+            if (count === 0) {
+                this.productInterfaces.splice(idx, 1);
+            } else {
+                this.$toast.add({
+                    severity: 'warn',
+                    summary: '인터페이스 사용 중',
+                    detail: `${intf.INTERFACE.NAME} 인터페이스는 등록 자산으로 사용 중입니다. 삭제할 수 없습니다`,
+                    life: 2000
+                });
+            }
         }
     }
 
@@ -965,8 +1164,7 @@ export default class ProductPanel extends Vue {
         this.productInterfaces.push(add_data);
     }
 
-    onSelectInterfaceTree(node: any) {
-        console.info(node);
+    async onSelectInterfaceTree(node: any) {
         const { id, name, asset_cd } = node;
 
         const has_prod_intf = this.productInterfaces.some(
@@ -987,18 +1185,53 @@ export default class ProductPanel extends Vue {
 
             if (intf) {
                 // by shkoh 20220628: prod_intf의 ID가 null인 경우(신규)와 null이 아닌 경우(기존에 등록)로 구분지어서 구현
-                if (intf.ID === null) {
+                if (intf.ID === null || intf.ID === -1) {
                     intf.ID = -1;
                     intf.PD_INTF_ID = id;
                     intf.INTERFACE.ASSET_CD = asset_cd;
                     intf.INTERFACE.NAME = name;
-                } else if (intf.ID !== null) {
-                    console.info(intf.ID);
+                } else if (intf.ID !== -1) {
+                    const count = await this.countOfInterfaces(intf.ID);
+
+                    if (count === 0) {
+                        intf.ID = -1;
+                        intf.PD_INTF_ID = id;
+                        intf.INTERFACE.ASSET_CD = asset_cd;
+                        intf.INTERFACE.NAME = name;
+                    } else {
+                        this.$toast.add({
+                            severity: 'warn',
+                            summary: '인터페이스 사용 중',
+                            detail: `${intf.INTERFACE.NAME} 인터페이스는 등록 자산으로 사용 중입니다. 변경할 수 없습니다`,
+                            life: 2000
+                        });
+                    }
                 }
             }
 
             this.$refs.interfaceTreePanel.hide();
         }
+    }
+
+    countOfInterfaces(prod_intf_id: number) {
+        return new Promise((resolve, reject) => {
+            this.$nuxt.$loading.start();
+
+            this.$apollo
+                .query({
+                    query: gql`
+                    query {
+                        CountOfInterfaces(PROD_INTF_ID: ${prod_intf_id})
+                    }
+                `
+                })
+                .then(({ data: { CountOfInterfaces } }) => {
+                    resolve(CountOfInterfaces);
+                })
+                .finally(() => {
+                    this.$nuxt.$loading.finish();
+                });
+        });
     }
 
     get productName(): string {
@@ -1029,7 +1262,31 @@ export default class ProductPanel extends Vue {
             is_disabled = false;
         }
 
-        console.info(is_disabled);
+        if (is_disabled) {
+            // by shkoh 20220630: 사용 가능한 인터페이스의 변경 사항을 체크함
+            if (
+                this.dbProductInterfaces.length !==
+                this.productInterfaces.filter(
+                    (intf: PRODUCTINTERFACE) => intf.PD_INTF_ID !== null
+                ).length
+            ) {
+                is_disabled = false;
+            } else {
+                for (const [idx, intf] of Object.entries(
+                    this.dbProductInterfaces
+                )) {
+                    const is = this.productInterfaces.find(
+                        (i: PRODUCTINTERFACE) =>
+                            i.PD_INTF_ID === intf.PD_INTF_ID
+                    );
+
+                    if (is === undefined) {
+                        is_disabled = false;
+                        break;
+                    }
+                }
+            }
+        }
 
         return is_disabled;
     }
@@ -1070,6 +1327,25 @@ export default class ProductPanel extends Vue {
         }
 
         return is_change;
+    }
+
+    get validationCheck(): boolean {
+        let is_valid = true;
+        for (const valid of Object.values(this.invalidMessage)) {
+            if (valid) {
+                is_valid = false;
+                break;
+            }
+        }
+
+        return is_valid;
+    }
+
+    get getAssetCodeName(): string {
+        const asset_code = this.assetCodeList.find(
+            (code: any) => code.CODE === this.productData.ASSET_CD
+        );
+        return asset_code ? asset_code.NAME : '';
     }
 }
 </script>

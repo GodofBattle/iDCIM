@@ -1,4 +1,4 @@
-import { Field, ID, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, ID, InputType, Int, ObjectType } from "type-graphql";
 import { TypeormLoader } from "type-graphql-dataloader";
 import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
 
@@ -29,4 +29,13 @@ export class pd_prod_intf {
     @JoinColumn({ name: 'PD_INTF_ID', referencedColumnName: 'ID' })
     @TypeormLoader(() => pd_interface, (prod_intf: pd_prod_intf) => prod_intf.PD_INTF_ID, { selfKey: false })
     INTERFACE?: pd_interface;
-}   
+}
+
+@InputType()
+export class pd_prod_intf_input {
+    @Field(() => ID, { nullable: true })
+    ID: number;
+
+    @Field(() => Int, { nullable: true })
+    PD_INTF_ID: number;
+}
