@@ -328,7 +328,11 @@ export default {
                 this.$emit('before-upload', { xhr, formData });
 
                 for (const file of this.files) {
-                    formData.append(this.name, file, file.name);
+                    formData.append(
+                        this.name.normalize('NFC'),
+                        file,
+                        file.name
+                    );
                 }
 
                 xhr.upload.addEventListener('progress', (event) => {
@@ -443,8 +447,10 @@ export default {
             if (this.files && this.files.length) {
                 for (const sFile of this.files) {
                     if (
-                        sFile.name + sFile.type + sFile.size ===
-                        file.name + file.type + file.size
+                        sFile.name.normalize('NFC') +
+                            sFile.type +
+                            sFile.size ===
+                        file.name.normalize('NFC') + file.type + file.size
                     )
                         return true;
                 }
@@ -456,7 +462,7 @@ export default {
             if (this.accept && !this.isFileTypeValid(file)) {
                 this.messages.push(
                     this.invalidFileTypeMessage
-                        .replace('{0}', file.name)
+                        .replace('{0}', file.name.normalize('NFC'))
                         .replace('{1}', this.accept)
                 );
                 return false;
@@ -465,7 +471,7 @@ export default {
             if (this.maxFileSize && file.size > this.maxFileSize) {
                 this.messages.push(
                     this.invalidFileTypeMessage
-                        .replace('{0}', file.name)
+                        .replace('{0}', file.name.normalize('NFC'))
                         .replace('{1}', this.formatSize(this.maxFileSize))
                 );
                 return false;
@@ -498,7 +504,7 @@ export default {
             return fileType.substring(0, fileType.indexOf('/'));
         },
         getFileExtension(file) {
-            return '.' + file.name.split('.').pop();
+            return '.' + file.name.normalize('NFC').split('.').pop();
         },
         isImage(file) {
             return /^image\//.test(file.type);

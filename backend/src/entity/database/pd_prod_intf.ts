@@ -28,5 +28,5 @@ export class pd_prod_intf {
     @OneToOne(() => pd_interface, { createForeignKeyConstraints: false, cascade: true })
     @JoinColumn({ name: 'PD_INTF_ID', referencedColumnName: 'ID' })
     @TypeormLoader(() => pd_interface, (prod_intf: pd_prod_intf) => prod_intf.PD_INTF_ID, { selfKey: false })
-    INTERFACE: pd_interface;
+    INTERFACE?: pd_interface;
 }   

@@ -316,13 +316,14 @@ export class PredefinedProductResolver {
             if (!productId) throw new UserInputError('전달한 인자의 데이터가 존재하지 않습니다');
 
             let is_result: number = 0;
-            const delete_result = await getRepository(pd_prod_intf).delete({ PRODUCT_ID: productId });
-            is_result = delete_result.affected;
+            
+            // const delete_result = await getRepository(pd_prod_intf).delete({ PRODUCT_ID: productId });
+            // is_result = delete_result.affected;
 
-            input.forEach(async (pd_intf_id: number) => {
-                const result = await getRepository(pd_prod_intf).insert({ PRODUCT_ID: productId, PD_INTF_ID: pd_intf_id });
-                is_result += result.identifiers.length;
-            });
+            // input.forEach(async (pd_intf_id: number) => {
+            //     const result = await getRepository(pd_prod_intf).insert({ PRODUCT_ID: productId, PD_INTF_ID: pd_intf_id });
+            //     is_result += result.identifiers.length;
+            // });
 
             return is_result > 0 ? true : false;
         } catch (err) {

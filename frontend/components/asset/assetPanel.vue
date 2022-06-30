@@ -38,9 +38,12 @@
                 :asset-item.sync="item"
                 :apply-button-disabled.sync="applyButtonDisabled"
             />
-            <div v-else-if="tabIndex === 2">
-                <h1>인터페이스</h1>
-            </div>
+            <asset-panel-interface
+                v-else-if="tabIndex === 2"
+                ref="assetPanelInterface"
+                :asset-item.sync="item"
+                :apply-button-disabled.sync="applyButtonDisabled"
+            />
             <div v-else-if="tabIndex === 3">
                 <h1>통신정보</h1>
             </div>
@@ -96,6 +99,10 @@ type TabItem = {
                     this.$set(item, 'unvisible', !is_used);
                 }
             });
+
+            if (this.assetTabList[this.tabIndex].is_interface !== is_used) {
+                this.tabIndex = 0;
+            }
         }
     }
 })
@@ -124,7 +131,7 @@ export default class AssetPanel extends Vue {
         },
         {
             header: '인터페이스',
-            disabled: true,
+            disabled: false,
             unvisible: false,
             is_interface: true,
             is_virtual: false,

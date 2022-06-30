@@ -1,5 +1,5 @@
 import { AuthenticationError, SchemaError } from "apollo-server-express";
-import { Ctx, Mutation, Resolver, PubSub, Publisher, Arg, Query } from "type-graphql";
+import { Ctx, Mutation, Resolver, PubSub, Publisher, Arg, Query, Int } from "type-graphql";
 import { GraphQLUpload, Upload, FileUpload } from 'graphql-upload';
 import { getRepository } from "typeorm";
 
@@ -28,13 +28,17 @@ export class FileResolver extends Upload {
         }
     }
 
-    @Query(() => DataBaseFile)
-    async PdFile(@Arg('ID', { nullable: true }) ID: number, @Ctx() ctx: any) {
+    @Query(() => DataBaseFile, { nullable: true })
+    async PdFile(@Arg('ID', () => Int, { nullable: true }) ID: number, @Ctx() ctx: any) {
         if (!ctx.isAuth) {
             throw new AuthenticationError('인증되지 않은 접근입니다');
         }
 
         try {
+            if(ID === undefined) {
+                return null;
+            }
+
             // by shkoh 20210914: Database에 저장된 blob 형식의 파일을 base64의 형태로 변경하여 클라이언트로 전달
             const result = await getRepository(pd_file).findOne(ID);
 

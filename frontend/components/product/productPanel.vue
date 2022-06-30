@@ -1,7 +1,7 @@
 <template>
-    <div v-if="productId > 0" id="productPanel">
+    <div id="productPanel">
         <div class="p-d-flex p-mx-2">
-            <div class="p-as-center i-title p-text-bold">
+            <div class="p-as-center p-text-bold i-title">
                 {{ productName }}
             </div>
             <div class="p-ml-auto">
@@ -11,25 +11,24 @@
                     class="p-mr-2"
                     :disabled="applyButtonDisabled"
                     @click="updateProduct"
-                ></Button>
+                />
                 <Button
                     icon="pi pi-trash"
                     label="삭제"
                     class="p-button-danger"
-                    @click="deleteProduct"
-                >
-                </Button>
+                    @class="deleteProduct"
+                />
             </div>
         </div>
         <Divider />
-        <ScrollPanel class="i-product-scrollpanel">
+        <i-scroll-panel class="i-product-scrollpanel">
             <div class="p-grid">
-                <div class="p-col-3 p-fluid p-input-filled p-mr-6">
-                    <div class="p-field">
-                        <label for="asset_cd">자산분류</label>
+                <div class="p-fluid p-col-3 p-input-filled p-mr-6">
+                    <div class="p-field p-px-1">
+                        <label for="asset-cd">자산분류</label>
                         <Dropdown
-                            id="asset-code"
-                            v-model="newProductData.ASSET_CD"
+                            id="asset-cd"
+                            v-model="productData.ASSET_CD"
                             :options="assetCodeList"
                             option-label="NAME"
                             option-value="CODE"
@@ -38,55 +37,55 @@
                             filter-placeholder="검색"
                             empty-filter-message="해당 유형의 자산은 존재하지 않습니다"
                             append-to="body"
-                        ></Dropdown>
+                        />
                     </div>
-                    <div class="p-field">
+                    <div class="p-field p-px-1">
                         <label for="name">제품명</label>
                         <InputText
                             id="name"
-                            v-model="newProductData.NAME"
+                            v-model="productData.NAME"
                             type="text"
                             aria-describedby="name-help"
                             autocomplete="off"
                             :class="{ 'p-invalid': invalidMessage.NAME }"
                             @input="validateName"
-                        ></InputText>
+                        />
                         <small id="name-help" class="p-error">
                             {{ invalidMessage.NAME }}
                         </small>
                     </div>
-                    <div class="p-field">
+                    <div class="p-field p-px-1">
                         <label for="model-name">모델명</label>
                         <InputText
                             id="model-name"
-                            v-model="newProductData.MODEL_NAME"
+                            v-model="productData.MODEL_NAME"
                             type="text"
                             aria-describedby="model-name-help"
                             autocomplete="off"
                             :class="{ 'p-invalid': invalidMessage.MODEL_NAME }"
                             @input="validateModelName"
-                        ></InputText>
+                        />
                         <small id="model-name-help" class="p-error">
                             {{ invalidMessage.MODEL_NAME }}
                         </small>
                     </div>
-
                     <Divider />
-
-                    <div class="p-field">
+                    <div class="p-field p-px-1 i-loading-panel">
                         <div class="p-field-check">
                             <Checkbox
                                 id="manual-file"
-                                v-model="chkManualFileField"
+                                v-model="hasManual"
                                 class="p-mr-1"
                                 :binary="true"
-                            >
-                            </Checkbox>
+                                @input="onInputManual"
+                            />
                             <label for="manual-file">제품 매뉴얼</label>
-
-                            <div v-if="chkManualFileField" class="p-mt-2">
+                            <div v-if="hasManual" class="p-mt-2">
                                 <div class="p-d-flex">
-                                    <div class="p-mr-1" style="width: 100%">
+                                    <div
+                                        class="p-mr-1"
+                                        :style="{ width: '100%' }"
+                                    >
                                         <i-file-upload
                                             ref="manualFileUploader"
                                             name="MANUAL_FILE"
@@ -97,38 +96,47 @@
                                             :max-file-size="100 * 1024 * 1024"
                                             :auto="true"
                                             :show-cancel-button="true"
-                                            @uploader="manualFileUpload"
+                                            :disabled="
+                                                isShowManualButton &&
+                                                (src_manual_file_blob ===
+                                                    null ||
+                                                    manual_file_blob === null)
+                                            "
                                             @clear="manualFileClear"
+                                            @uploader="manualFileUpload"
                                         />
                                     </div>
                                 </div>
                                 <Button
-                                    v-if="manual_file_name.length > 0"
+                                    ref="manualFileDownButton"
                                     class="p-mt-2 p-text-left p-button-sm p-button-outlined p-button-secondary"
-                                    :label="manual_file_name"
-                                    icon="pi pi-download"
-                                    @click="manualFileDownload"
+                                    :icon="manualIcon"
+                                    :label="manualFileName"
+                                    :style="{
+                                        width: '100%',
+                                        display: isShowManualButton
+                                            ? 'block'
+                                            : 'none'
+                                    }"
+                                    :disabled="manual_file_blob === null"
+                                    @click="onDownloadManualFile"
                                 ></Button>
                             </div>
                         </div>
                     </div>
-
                     <Divider />
-
-                    <div class="p-field">
+                    <div class="p-field p-px-1">
                         <div class="p-field-check">
                             <Checkbox
                                 id="image-file"
-                                v-model="chkImageFileField"
+                                v-model="hasImage"
                                 class="p-mr-1"
                                 :binary="true"
-                            ></Checkbox>
+                                @input="onInputImage"
+                            />
                             <label for="image-file">제품 이미지</label>
-                        </div>
-
-                        <div v-if="chkImageFileField" class="p-mt-2">
-                            <div class="p-d-flex">
-                                <div class="p-mr-1" style="width: 100%">
+                            <div v-if="hasImage" class="p-mt-2">
+                                <div class="p-mr-1" :style="{ width: '100%' }">
                                     <i-file-upload
                                         ref="imageFileUploader"
                                         name="IMAGE_FILE"
@@ -143,24 +151,29 @@
                                         @clear="imageFileClear"
                                     />
                                 </div>
+                                <img
+                                    class="p-mt-2 product-image"
+                                    :src="image_file"
+                                    :style="{
+                                        display:
+                                            image_file === null
+                                                ? 'none'
+                                                : 'block'
+                                    }"
+                                />
                             </div>
-                            <img
-                                class="p-mt-2 product-image"
-                                :src="image_file"
-                            />
                         </div>
                     </div>
-
                     <Divider />
-
-                    <div class="p-field">
+                    <div class="p-field p-px-1">
                         <label for="remark">설명</label>
                         <Textarea
                             id="remark"
-                            v-model="newProductData.REMARK"
+                            v-model="productData.REMARK"
                             :auto-resize="false"
+                            aria-describedby="remark-help"
                             rows="6"
-                            style="resize: none"
+                            :style="{ resize: 'none' }"
                             :class="{ 'p-invalid': invalidMessage.REMARK }"
                             @input="validateRemark"
                         />
@@ -169,10 +182,11 @@
                         </small>
                     </div>
                 </div>
-                <div class="p-col-3 p-fluid p-input-filled p-mr-6">
+                <div class="p-fluid p-col-3 p-input-filled p-mr-6">
                     <div class="p-field">
                         <label for="info">부가정보(스펙)</label>
                         <DataTable
+                            id="i-product-info"
                             :value="productInfo"
                             class="p-datatable-sm"
                             edit-mode="cell"
@@ -223,7 +237,10 @@
                                         icon="pi pi-times"
                                         class="p-button-rounded p-button-danger p-button-text"
                                         @click="
-                                            deleteProductInfo(slotProps.index)
+                                            deleteProductInfo(
+                                                $event,
+                                                slotProps.index
+                                            )
                                         "
                                     ></Button>
                                 </template>
@@ -241,12 +258,13 @@
                         ></Button>
                     </div>
                 </div>
-                <div class="p-col-3 p-fluid p-input-filled">
+                <div class="p-fluid p-col-3 p-input-filled">
                     <div class="p-field">
-                        <label for="intf">사용 가능한 인터페이스</label>
+                        <label for="intf">사용 가능 인터페이스</label>
                         <DataTable
-                            :value="productInterfaces"
+                            id="i-product-interface"
                             class="p-datatable-sm"
+                            :value="productInterfaces"
                         >
                             <Column field="ID">
                                 <template #body="slotProps">
@@ -265,7 +283,7 @@
                                         @click="
                                             showInterfaceTreePanel(
                                                 $event,
-                                                slotProps.data
+                                                slotProps.index
                                             )
                                         "
                                     ></Button>
@@ -278,7 +296,8 @@
                                         class="p-button-rounded p-button-danger p-button-text"
                                         @click="
                                             deleteProductInterface(
-                                                slotProps.index
+                                                slotProps.index,
+                                                slotProps.data
                                             )
                                         "
                                     ></Button>
@@ -298,8 +317,8 @@
                     </div>
                 </div>
             </div>
-        </ScrollPanel>
-        <OverlayPanel
+        </i-scroll-panel>
+        <i-overlay-panel
             ref="interfaceTreePanel"
             :show-close-icon="true"
             append-to="body"
@@ -308,12 +327,11 @@
             <interface-tree
                 :is-editing="false"
                 :show-only-parents="true"
-                :init-select-keys="selectedKeyToInterfaceTree"
-                :filter-code="newProductData.ASSET_CD"
+                :filter-code="productData.ASSET_CD"
                 :style="{ height: 'calc(42vh - 2rem)' }"
                 @select="onSelectInterfaceTree"
             ></interface-tree>
-        </OverlayPanel>
+        </i-overlay-panel>
     </div>
 </template>
 
@@ -323,45 +341,40 @@ import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 import { eventBus } from '@/plugins/vueEventBus';
 
+type INTERFACE = {
+    [index: string]: string | null;
+    ASSET_CD: string | null;
+    NAME: string | null;
+};
+
+type PRODUCTINTERFACE = {
+    [index: string]: number | INTERFACE | null;
+    ID: number | null;
+    PRODUCT_ID: number | null;
+    PD_INTF_ID: number | null;
+    INTERFACE: INTERFACE;
+};
+
 type Product = {
-    [index: string]: string | number | undefined | null;
+    [index: string]: string | number | null;
     MANUFACTURER_ID: number;
     ASSET_CD: string;
     NAME: string;
     MODEL_NAME: string;
-    MANUAL_FILE_ID: number | undefined | null;
-    IMAGE_FILE_ID: number | undefined | null;
+    MANUAL_FILE_ID: number | null;
+    IMAGE_FILE_ID: number | null;
     INFO: string;
     REMARK: string;
-    IMAGE_FILE: any;
-    MANUAL_FILE: any;
+    IMAGE_FILE_NAME: string;
+    MANUAL_FILE_NAME: string;
 };
 
 @Component<ProductPanel>({
     props: {
         productId: Number
     },
-    watch: {
-        productInfo(_info: any[]) {
-            this.parseProductInfo(_info);
-        },
-        chkImageFileField(_is_show) {
-            if (_is_show) {
-                this.loadImageFile();
-            } else {
-                this.newProductData.IMAGE_FILE_ID = null;
-            }
-        },
-        chkManualFileField(_is_show) {
-            if (_is_show) {
-                this.loadManualFile();
-            } else {
-                this.newProductData.MANUAL_FILE_ID = null;
-            }
-        }
-    },
     apollo: {
-        productData: {
+        dbProductData: {
             query: gql`
                 query Product($ID: ID!) {
                     Product(ID: $ID) {
@@ -377,53 +390,23 @@ type Product = {
                     }
                 }
             `,
-            prefetch: false,
-            update: ({ Product }: any) => {
-                if (Product.INFO === null) Product.INFO = '';
-
+            update: ({ Product }) => {
+                if (Product.INFO === null) Product.INFO = '[]';
                 return Product;
             },
+            skip() {
+                return this.$props.productId < 0;
+            },
             variables(): any {
                 return {
-                    ID: this.productId < 0 ? -1 : this.productId
+                    ID: this.$props.productId
                 };
             },
-            result({ data, loading }: any) {
+            result({ loading, data }) {
                 if (!loading) {
                     const { Product } = data;
-
                     if (Product) {
                         this.apolloFetch(Product);
-                    }
-                }
-            }
-        },
-        dbProductInterfaces: {
-            query: gql`
-                query ProductInterfaces($PRODUCT_ID: Int!) {
-                    ProductInterfaces(PRODUCT_ID: $PRODUCT_ID) {
-                        ID
-                        PRODUCT_ID
-                        PD_INTF_ID
-                        INTERFACE {
-                            ASSET_CD
-                            NAME
-                        }
-                    }
-                }
-            `,
-            prefetch: false,
-            update: ({ ProductInterfaces }: any) => ProductInterfaces,
-            variables(): any {
-                return {
-                    PRODUCT_ID: this.productId < 0 ? -1 : this.productId
-                };
-            },
-            result({ data, loading }: any) {
-                if (!loading) {
-                    const { ProductInterfaces } = data;
-                    if (ProductInterfaces) {
-                        this.apolloFetchProductInterfaces(ProductInterfaces);
                     }
                 }
             }
@@ -438,6 +421,111 @@ type Product = {
                 }
             `,
             update: ({ PredefinedAssetCodes }: any) => PredefinedAssetCodes
+        },
+        dbProductInterfaces: {
+            query: gql`
+                query ProducInterfaces($PRODUCT_ID: Int!) {
+                    ProductInterfaces(PRODUCT_ID: $PRODUCT_ID) {
+                        ID
+                        PRODUCT_ID
+                        PD_INTF_ID
+                        INTERFACE {
+                            ASSET_CD
+                            NAME
+                        }
+                    }
+                }
+            `,
+            fetchPolicy: 'cache-and-network',
+            manual: true,
+            update: ({ ProductInterfaces }) => ProductInterfaces,
+            variables(): any {
+                return {
+                    PRODUCT_ID:
+                        this.$props.productId < 0 ? -1 : this.$props.productId
+                };
+            },
+            result({ loading, data }) {
+                if (!loading) {
+                    const { ProductInterfaces } = data;
+                    if (ProductInterfaces) {
+                        this.apolloFetchProductInterfaces(ProductInterfaces);
+                    }
+                }
+            }
+        },
+        manualFile: {
+            query: gql`
+                query PdFile($ID: Int) {
+                    PdFile(ID: $ID) {
+                        FILE_NAME
+                        MIMETYPE
+                        DATA
+                    }
+                }
+            `,
+            update: ({ PdFile }) => PdFile,
+            prefetch: false,
+            manual: true,
+            skip() {
+                return (
+                    this.productData.MANUAL_FILE_ID === null ||
+                    this.productData.MANUAL_FILE_ID === -1
+                );
+            },
+            variables(): any {
+                return {
+                    ID: this.productData.MANUAL_FILE_ID
+                };
+            },
+            result({ loading, data }) {
+                if (!loading) {
+                    const { PdFile } = data;
+
+                    if (PdFile) {
+                        this.setManualFile(PdFile);
+                    }
+                }
+            }
+        },
+        imageFile: {
+            query: gql`
+                query PdFile($ID: Int) {
+                    PdFile(ID: $ID) {
+                        FILE_NAME
+                        MIMETYPE
+                        DATA
+                    }
+                }
+            `,
+            update: ({ PdFile }) => PdFile,
+            prefetch: false,
+            manual: true,
+            skip() {
+                return (
+                    this.productData.IMAGE_FILE_ID === null ||
+                    this.productData.IMAGE_FILE_ID === -1
+                );
+            },
+            variables() {
+                return {
+                    ID: this.productData.IMAGE_FILE_ID
+                };
+            },
+            result({ loading, data }) {
+                if (!loading) {
+                    const { PdFile } = data;
+                    if (PdFile) {
+                        this.setImageFile(PdFile);
+                    }
+                }
+            }
+        }
+    },
+    watch: {
+        productId() {
+            // by shkoh 20220630: 제품 ID가 변경될 때 해당 값들을 초기화함
+            this.resetData();
         }
     }
 })
@@ -446,6 +534,20 @@ export default class ProductPanel extends Vue {
         manualFileUploader: any;
         imageFileUploader: any;
         interfaceTreePanel: any;
+        manualFileDownButton: Vue;
+    };
+
+    dbProductData: Product = {
+        MANUFACTURER_ID: -1,
+        ASSET_CD: '',
+        NAME: '',
+        MODEL_NAME: '',
+        MANUAL_FILE_ID: null,
+        IMAGE_FILE_ID: null,
+        INFO: '',
+        REMARK: '',
+        IMAGE_FILE_NAME: '',
+        MANUAL_FILE_NAME: ''
     };
 
     productData: Product = {
@@ -453,25 +555,12 @@ export default class ProductPanel extends Vue {
         ASSET_CD: '',
         NAME: '',
         MODEL_NAME: '',
+        MANUAL_FILE_ID: null,
+        IMAGE_FILE_ID: null,
         INFO: '',
-        IMAGE_FILE_ID: undefined,
-        MANUAL_FILE_ID: undefined,
         REMARK: '',
-        IMAGE_FILE: undefined,
-        MANUAL_FILE: undefined
-    };
-
-    newProductData: Product = {
-        MANUFACTURER_ID: -1,
-        ASSET_CD: '',
-        NAME: '',
-        MODEL_NAME: '',
-        INFO: '',
-        IMAGE_FILE_ID: undefined,
-        MANUAL_FILE_ID: undefined,
-        REMARK: '',
-        IMAGE_FILE: undefined,
-        MANUAL_FILE: undefined
+        IMAGE_FILE_NAME: '',
+        MANUAL_FILE_NAME: ''
     };
 
     invalidMessage = {
@@ -480,428 +569,102 @@ export default class ProductPanel extends Vue {
         REMARK: undefined as String | undefined
     };
 
+    dbProductInterfaces: Array<PRODUCTINTERFACE> = [];
+    productInterfaces: Array<PRODUCTINTERFACE> = [];
+
     assetCodeList: Array<any> = [];
 
-    productInfo: Array<any> = [];
+    src_manual_file_blob: File | null = null;
+    manual_file_blob: File | null = null;
+    src_image_file_blob: File | null = null;
+    image_file_blob: File | null = null;
+    image_file: any = null;
 
-    dbProductInterfaces: Array<any> = [];
-    productInterfaces: Array<any> = [];
-    selectedInterface: any = {};
-    selectedInterfaceIndex: number = -1;
+    selectedProductInterfaceIndex: number = -1;
 
-    image_file = '';
-    image_file_blob: any = undefined;
-    chkImageFileField = false;
-    imageFileUploader = null;
+    hasManual: boolean = false;
+    hasImage: boolean = false;
+    isShowManualButton: boolean = true;
 
-    manual_file_name = '';
-    manual_file_blob: any = undefined;
-    chkManualFileField = false;
-    manualFileUploader = null;
+    resetData() {
+        this.productData.MANUFACTURER_ID = -1;
+        this.productData.ASSET_CD = '';
+        this.productData.NAME = '';
+        this.productData.MODEL_NAME = '';
+        this.productData.MANUAL_FILE_ID = null;
+        this.productData.IMAGE_FILE_ID = null;
+        this.productData.INFO = '[]';
+        this.productData.REMARK = '';
+        this.productData.MANUAL_FILE_NAME = '';
+        this.productData.IMAGE_FILE_NAME = '';
 
-    apolloFetch(product: any): void {
-        for (const key of Object.keys(this.newProductData)) {
-            this.newProductData[key] = product[key];
-        }
+        this.invalidMessage.NAME = undefined;
+        this.invalidMessage.MODEL_NAME = undefined;
+        this.invalidMessage.REMARK = undefined;
 
-        // by shkoh 20210910: Apollo Server로부터 값을 받아올 때 이미지 파일 소스도 초기화함
-        if (product.IMAGE_FILE_ID) {
-            // by shkoh 20210927: IMAGE_FILE_ID가 존재하는 경우에는 강제로 이미지를 로드한다
-            if (this.chkImageFileField) {
-                this.loadImageFile();
-            } else {
-                this.chkImageFileField = true;
-            }
-        } else {
-            this.chkImageFileField = false;
-            this.image_file = '';
-            this.image_file_blob = undefined;
-        }
+        this.manual_file_blob = null;
+        this.image_file_blob = null;
+        this.image_file = null;
 
-        if (product.MANUAL_FILE_ID) {
-            if (this.chkManualFileField) {
-                this.loadManualFile();
-            } else {
-                this.chkManualFileField = true;
-            }
-        } else {
-            this.chkManualFileField = false;
-            this.manual_file_name = '';
-            this.manual_file_blob = undefined;
-        }
-
-        this.parseInfoString(this.productData.INFO);
+        this.hasManual = false;
+        this.hasImage = false;
+        this.isShowManualButton = true;
+        this.src_manual_file_blob = null;
+        this.src_image_file_blob = null;
+        this.manual_file_blob = null;
+        this.image_file_blob = null;
     }
 
-    apolloFetchProductInterfaces(data: Array<any>): void {
+    resetProductInterface() {
+        this.dbProductInterfaces.splice(0, this.dbProductInterfaces.length);
         this.productInterfaces.splice(0, this.productInterfaces.length);
+    }
 
-        data.forEach((_datum: any) => {
+    apolloFetch(data: Product) {
+        for (const [key, value] of Object.entries(data)) {
+            this.productData[key] = value;
+
+            if (key === 'MANUAL_FILE_ID') {
+                this.hasManual = value !== null;
+
+                if (value === null) {
+                    this.src_manual_file_blob = null;
+                    this.manual_file_blob = null;
+                }
+            }
+
+            if (key === 'IMAGE_FILE_ID') {
+                this.hasImage = value !== null;
+            }
+        }
+    }
+
+    apolloFetchProductInterfaces(data: Array<PRODUCTINTERFACE>) {
+        this.resetProductInterface();
+
+        data.forEach((d: PRODUCTINTERFACE) => {
             this.productInterfaces.push({
-                ID: _datum.ID,
-                PRODUCT_ID: _datum.PRODUCT_ID,
-                PD_INTF_ID: _datum.PD_INTF_ID,
+                ID: d.ID,
+                PRODUCT_ID: d.PRODUCT_ID,
+                PD_INTF_ID: d.PD_INTF_ID,
                 INTERFACE: {
-                    ASSET_CD: _datum.INTERFACE.ASSET_CD,
-                    NAME: _datum.INTERFACE.NAME
+                    ASSET_CD: d.INTERFACE.ASSET_CD,
+                    NAME: d.INTERFACE.NAME
                 }
             });
         });
     }
 
-    parseProductInfo(info: any[]): void {
-        this.newProductData.INFO = info.length > 0 ? JSON.stringify(info) : '';
-    }
+    updateProduct() {}
 
-    parseInfoString(info: string): void {
-        try {
-            this.productInfo = JSON.parse(info);
-        } catch {
-            this.productInfo = [];
-        }
-    }
-
-    assetName(asset_code: string) {
-        const asset_code_item = this.assetCodeList.find(
-            (code: any) => code.CODE === asset_code
-        );
-        return asset_code_item ? asset_code_item.NAME : '';
-    }
-
-    productInterfaceClass(data: any) {
-        if (
-            data.INTERFACE.ASSET_CD === null ||
-            data.INTERFACE.ASSET_CD === this.newProductData.ASSET_CD
-        ) {
-            return ['p-button-text', 'p-button-info'];
-        } else {
-            return [
-                'p-button-outlined',
-                'p-button-danger',
-                'i-not-used-interface'
-            ];
-        }
-    }
-
-    productInterfaceLabel(data: any) {
-        if (data.ID === null) {
-            return '클릭하여 인터페이스 지정';
-        }
-
-        if (data.INTERFACE === null) {
-            return '';
-        }
-
-        const { ASSET_CD, NAME } = data.INTERFACE;
-        const label = `${this.assetName(ASSET_CD)}: ${NAME}`;
-        return label;
-    }
-
-    showInterfaceTreePanel(event: Event, intf_data: any) {
-        this.selectedInterface = intf_data;
-        this.$refs.interfaceTreePanel.toggle(event);
-    }
-
-    get productName(): string {
-        return this.productData ? this.productData.NAME : '';
-    }
-
-    get applyButtonDisabled(): Boolean {
-        let is_disabled = true;
-
-        // by shkoh 20210910: API로부터 받은 제품정보와 작성자가 수정했을 경우의 데이터를 비교
-        [
-            'MANUFACTURER_ID',
-            'ASSET_CD',
-            'NAME',
-            'MODEL_NAME',
-            'INFO',
-            'IMAGE_FILE_ID',
-            'MANUAL_FILE_ID',
-            'REMARK'
-        ].forEach((key) => {
-            if (this.productData[key] !== this.newProductData[key]) {
-                is_disabled = false;
-            }
-        });
-
-        if (
-            this.dbProductInterfaces.length !==
-            this.productInterfaces.filter((intf: any) => intf.ID !== null)
-                .length
-        ) {
-            // by shkoh 20220411: 사용 가능한 인터페이스의 전체 숫자가 변경된 경우
-            is_disabled = false;
-        } else {
-            for (const [idx, intf] of Object.entries(
-                this.dbProductInterfaces
-            )) {
-                if (
-                    intf.PD_INTF_ID !==
-                    this.productInterfaces[parseInt(idx)].PD_INTF_ID
-                ) {
-                    is_disabled = false;
-                    break;
-                }
-            }
-        }
-
-        return is_disabled;
-    }
-
-    get isChangedImageFile() {
-        return (
-            this.chkImageFileField &&
-            this.newProductData.IMAGE_FILE_ID === -1 &&
-            this.productData.IMAGE_FILE?.size !== this.image_file_blob?.size
-        );
-    }
-
-    // by shkoh 20210927: 기존에 등록된 제품이 클리어 되었는지 여부
-    get isClearImageFile() {
-        return (
-            !this.chkImageFileField ||
-            this.newProductData.IMAGE_FILE_ID === null
-        );
-    }
-
-    get isChangedManualFile() {
-        return (
-            this.chkManualFileField &&
-            this.newProductData.MANUAL_FILE_ID === -1 &&
-            this.productData.MANUAL_FILE?.size !== this.manual_file_blob?.size
-        );
-    }
-
-    get isClearManualFile() {
-        return (
-            !this.chkManualFileField ||
-            this.newProductData.MANUAL_FILE_ID === null
-        );
-    }
-
-    updateProduct() {
-        if (!this.validationCheck()) {
-            this.$toast.add({
-                severity: 'warn',
-                summary: '제품 유효성 실패',
-                detail: '제품 내용을 확인하세요',
-                life: 2000
-            });
-            return;
-        }
-
-        const variables = {
-            ID: this.$props.productId,
-            MANUFACTURER_ID: this.newProductData.MANUFACTURER_ID,
-            ASSET_CD: this.newProductData.ASSET_CD,
-            NAME: this.newProductData.NAME,
-            MODEL_NAME: this.newProductData.MODEL_NAME
-        };
-
-        ['INFO', 'REMARK'].forEach((key: string) => {
-            if (this.newProductData[key] !== this.productData[key]) {
-                Object.defineProperty(variables, key, {
-                    value: this.newProductData[key],
-                    configurable: true,
-                    enumerable: true,
-                    writable: true
-                });
-            }
-        });
-
-        if (this.isChangedImageFile) {
-            // by shkoh 20210927: 이미지 파일을 추가했거나 변경한 경우
-            Object.defineProperty(variables, 'IMAGE_FILE', {
-                value: this.image_file_blob,
-                configurable: true,
-                enumerable: true,
-                writable: true
-            });
-        }
-
-        // by shkoh 20210927: 이미지 파일을 삭제한 경우
-        Object.defineProperty(variables, 'IMAGE_FILE_ID', {
-            value: this.isClearImageFile
-                ? null
-                : this.productData.IMAGE_FILE_ID,
-            configurable: true,
-            enumerable: true,
-            writable: true
-        });
-
-        if (this.isChangedManualFile) {
-            Object.defineProperty(variables, 'MANUAL_FILE', {
-                value: this.manual_file_blob,
-                configurable: true,
-                enumerable: true,
-                writable: true
-            });
-        }
-
-        Object.defineProperty(variables, 'MANUAL_FILE_ID', {
-            value: this.isClearManualFile
-                ? null
-                : this.productData.MANUAL_FILE_ID,
-            configurable: true,
-            enumerable: true,
-            writable: true
-        });
-
-        const insert_product_interfaces = this.productInterfaces
-            .filter((intf: any) => intf.ID !== null)
-            .map((intf: any) => {
-                return intf.PD_INTF_ID;
-            });
-
-        Object.defineProperty(variables, 'INPUT', {
-            value: insert_product_interfaces,
-            configurable: true,
-            enumerable: true,
-            writable: true
-        });
-
-        // by shkoh 20210927: product panel 데이터 업데이트 loading 페이지 시작
-        this.$nuxt.$loading.start();
-
-        this.$apollo
-            .mutate({
-                mutation: gql`
-                    mutation (
-                        $ID: ID!
-                        $MANUFACTURER_ID: Int!
-                        $ASSET_CD: String!
-                        $NAME: String!
-                        $MODEL_NAME: String!
-                        $INFO: String
-                        $IMAGE_FILE_ID: Int
-                        $MANUAL_FILE_ID: Int
-                        $REMARK: String
-                        $IMAGE_FILE: Upload
-                        $MANUAL_FILE: Upload
-                        $INPUT: [Int!]
-                    ) {
-                        UpdateProduct(
-                            ID: $ID
-                            MANUFACTURER_ID: $MANUFACTURER_ID
-                            ASSET_CD: $ASSET_CD
-                            NAME: $NAME
-                            MODEL_NAME: $MODEL_NAME
-                            INFO: $INFO
-                            IMAGE_FILE_ID: $IMAGE_FILE_ID
-                            MANUAL_FILE_ID: $MANUAL_FILE_ID
-                            REMARK: $REMARK
-                            IMAGE_FILE: $IMAGE_FILE
-                            MANUAL_FILE: $MANUAL_FILE
-                        )
-
-                        UpdateProductInterfaces(PRODUCT_ID: $ID, INPUT: $INPUT)
-                    }
-                `,
-                variables
-            })
-            .then(() => {
-                eventBus.$emit('refreshProductTree');
-                this.productDataRefresh();
-
-                this.$toast.add({
-                    severity: 'info',
-                    summary: '제품 변경 완료',
-                    detail: `${this.newProductData.NAME} 제품 변경`,
-                    life: 2000
-                });
-            })
-            .catch((error) => {
-                console.error(error);
-
-                this.$toast.add({
-                    severity: 'error',
-                    summary: '제품 변경 실패',
-                    detail: error.message,
-                    life: 2000
-                });
-            })
-            .finally(() => {
-                // by shkoh 20210927: product panel 데이터 업데이트 loading 페이지 종료
-                // by shkoh 20210927: update의 성공여부와 관계없이 무조건 종료함
-                this.$nuxt.$loading.finish();
-            });
-    }
-
-    deleteProduct() {
-        // by shkoh 20210928: 삭제하기 전에 데이터 갱신
-        this.productDataRefresh();
-
-        this.$confirmDialog.require({
-            group: 'deleteConfirmDialog',
-            message: `[${this.productName}] 제품을 삭제하시겠습니까?\n사이트에서 해당 제품이 등록되어 있다면 삭제가 불가합니다.(미구현)`,
-            header: `제품 ${this.productName} 삭제`,
-            position: 'top',
-            icon: 'pi pi-exclamation-triangle',
-            acceptClass: 'p-button-danger',
-            blockScroll: false,
-            accept: () => {
-                this.delete();
-            }
-        });
-    }
-
-    delete() {
-        this.$apollo
-            .mutate({
-                mutation: gql`
-                    mutation {
-                        DeleteProduct(ID: ${Number(this.$props.productId)})
-                    }
-                `
-            })
-            .then(() => {
-                this.$toast.add({
-                    severity: 'success',
-                    summary: `${this.productName} 삭제 완료`,
-                    life: 1500
-                });
-
-                eventBus.$emit('refreshProductTree');
-                this.$emit('reset');
-            })
-            .catch((error) => {
-                console.error(error);
-                this.$toast.add({
-                    severity: 'error',
-                    summary: '제품 삭제 실패',
-                    detail: error.message,
-                    life: 2000
-                });
-            });
-    }
-
-    validationCheck() {
-        let is_valid = true;
-        for (const valid of Object.values(this.invalidMessage)) {
-            if (valid) {
-                is_valid = false;
-                break;
-            }
-        }
-
-        if (is_valid) {
-            // by shkoh 20220609: 사용가능 인터페이스와 자산분류 코드와 불일치하는 항목이 단 하나라도 존재하는 경우에는 적용 불가능
-            is_valid = !this.productInterfaces.some(
-                (intf: any) =>
-                    intf.INTERFACE.ASSET_CD !== this.newProductData.ASSET_CD
-            );
-        }
-
-        return is_valid;
-    }
+    deleteProduct() {}
 
     validateName(input: InputEvent) {
         const _input = input.toString();
         if (_input.length > 64) {
             this.invalidMessage.NAME = '제품명은 64자 이하입니다';
         } else if (_input.length < 2) {
-            this.invalidMessage.NAME = '제품명은 1자 이상입니다';
+            this.invalidMessage.NAME = '제품명을 한글자 이상 입력하세요';
         } else {
             this.invalidMessage.NAME = undefined;
         }
@@ -912,7 +675,7 @@ export default class ProductPanel extends Vue {
         if (_input.length > 32) {
             this.invalidMessage.MODEL_NAME = '모델명은 32자 이하입니다';
         } else if (_input.length < 2) {
-            this.invalidMessage.MODEL_NAME = '모델명은 1자 이상입니다';
+            this.invalidMessage.MODEL_NAME = '모델명을 한글자 이상 입력하세요';
         } else {
             this.invalidMessage.MODEL_NAME = undefined;
         }
@@ -927,16 +690,269 @@ export default class ProductPanel extends Vue {
         }
     }
 
-    addProductInfo() {
-        this.productInfo.push({ key: 'key', value: 'value' });
+    setManualFile(file: any) {
+        const buf = Buffer.from(file.DATA, 'base64');
+        this.src_manual_file_blob = new File(
+            [buf.buffer],
+            file.FILE_NAME.normalize('NFC'),
+            { type: file.MIMETYPE }
+        );
+
+        this.$refs.manualFileUploader.forceInsertFile(
+            this.src_manual_file_blob
+        );
     }
 
-    deleteProductInfo(idx: number) {
-        this.productInfo.splice(idx, 1);
+    manualFileUpload(event: any) {
+        this.manual_file_blob = event.files[0];
+        this.isShowManualButton = true;
+
+        if (
+            this.src_manual_file_blob?.size !== this.manual_file_blob?.size &&
+            this.src_manual_file_blob?.name !== this.manual_file_blob?.name
+        ) {
+            this.productData.MANUAL_FILE_ID = -1;
+        } else {
+            this.productData.MANUAL_FILE_ID = this.dbProductData.MANUAL_FILE_ID;
+        }
+    }
+
+    manualFileClear() {
+        this.isShowManualButton = false;
+        this.manual_file_blob = null;
+    }
+
+    onInputManual(is_checked: boolean) {
+        if (is_checked) {
+            const file_id = this.dbProductData.MANUAL_FILE_ID;
+
+            if (file_id === null) {
+                this.isShowManualButton = false;
+                this.manual_file_blob = null;
+            } else {
+                this.isShowManualButton = true;
+            }
+
+            this.productData.MANUAL_FILE_ID = file_id !== null ? file_id : -1;
+        } else {
+            this.manual_file_blob = null;
+            this.productData.MANUAL_FILE_ID = -1;
+        }
+    }
+
+    onDownloadManualFile(event: MouseEvent) {
+        event.preventDefault();
+
+        if (this.manual_file_blob) {
+            const reader = new FileReader();
+            reader.readAsDataURL(this.manual_file_blob);
+            reader.onloadend = (event: any) => {
+                if (this.manual_file_blob) {
+                    const link = document.createElement('a');
+                    link.download = this.manual_file_blob.name.normalize('NFC');
+                    link.href = event.target.result;
+
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            };
+        } else {
+            this.$toast.add({
+                severity: 'warn',
+                summary: '매뉴얼 파일 다운로드 실패',
+                detail: `매뉴얼 파일을 불러오지 못했습니다. 다시 시도해주세요`,
+                life: 2000
+            });
+        }
+    }
+
+    get manualFileName(): string {
+        return this.manual_file_blob ? this.manual_file_blob.name : '';
+    }
+
+    get manualIcon(): string {
+        return this.manual_file_blob
+            ? 'pi pi-download'
+            : 'pi pi-spin pi-spinner';
+    }
+
+    setImageFile(file: any) {
+        const buf = Buffer.from(file.DATA, 'base64');
+        this.src_image_file_blob = new File(
+            [buf.buffer],
+            file.FILE_NAME.normalize('NFC'),
+            { type: file.MIMETYPE }
+        );
+        this.$refs.imageFileUploader.forceInsertFile(this.src_image_file_blob);
+    }
+
+    imageFileUpload(event: any) {
+        this.image_file = event.files[0].objectURL;
+        this.image_file_blob = event.files[0];
+
+        if (
+            this.src_image_file_blob?.size !== this.image_file_blob?.size &&
+            this.src_image_file_blob?.name !== this.image_file_blob?.name
+        ) {
+            this.productData.IMAGE_FILE_ID = -1;
+        } else {
+            this.productData.IMAGE_FILE_ID = this.dbProductData.IMAGE_FILE_ID;
+        }
+    }
+
+    imageFileClear() {
+        this.image_file = null;
+        this.image_file_blob = null;
+    }
+
+    onInputImage(is_checked: boolean) {
+        if (is_checked) {
+            const file_id = this.dbProductData.IMAGE_FILE_ID;
+
+            if (file_id === null) {
+                this.image_file = null;
+                this.image_file_blob = null;
+            } else {
+                this.image_file = null;
+            }
+
+            this.productData.IMAGE_FILE_ID = file_id !== null ? file_id : -1;
+        } else {
+            this.image_file = null;
+            this.image_file_blob = null;
+            this.productData.IMAGE_FILE_ID = -1;
+        }
+    }
+
+    addProductInfo(event: MouseEvent) {
+        event.preventDefault();
+
+        try {
+            const info = JSON.parse(this.productData.INFO);
+            if (info.length === 50) {
+                this.$toast.add({
+                    severity: 'warn',
+                    summary: '부가정보(스펙) 추가 불가',
+                    detail: '부가정보(스펙)는 최대 50개까지 작성 가능합니다',
+                    life: 2000
+                });
+
+                return;
+            }
+
+            info.push({
+                key: 'key',
+                value: 'value'
+            });
+            this.productData.INFO = JSON.stringify(info);
+        } catch {
+            this.$toast.add({
+                severity: 'error',
+                summary: '부가정보(스펙) 데이터 추가 실패',
+                detail: '추가하는 과정에서 기존 데이터를 읽는데 문제가 발생했습니다. 다시 시도해보세요',
+                life: 2000
+            });
+        }
+    }
+
+    deleteProductInfo(event: MouseEvent, idx: number) {
+        event.preventDefault();
+
+        try {
+            const info = JSON.parse(this.productData.INFO);
+            info.splice(idx, 1);
+            this.productData.INFO = JSON.stringify(info);
+        } catch {
+            this.$toast.add({
+                severity: 'error',
+                summary: '부가정보(스펙) 데이터 삭제 실패',
+                detail: '삭제하는 과정에서 기존 데이터를 읽는데 문제가 발생했습니다. 다시 시도해보세요',
+                life: 2000
+            });
+        }
+    }
+
+    onRowReorder(event: any) {
+        const { value } = event;
+        this.productData.INFO = JSON.stringify(value);
+    }
+
+    onCellEditComplete(event: any) {
+        const { newValue, field, index } = event;
+
+        const info = JSON.parse(this.productData.INFO);
+        info[index][field] = newValue;
+        this.productData.INFO = JSON.stringify(info);
+    }
+
+    productInterfaceClass(data: PRODUCTINTERFACE) {
+        const { INTERFACE } = data;
+
+        if (this.productData.ASSET_CD === INTERFACE.ASSET_CD) {
+            return ['p-button-text', 'p-button-info'];
+        } else {
+            return ['p-button-text', 'p-button-warn'];
+        }
+    }
+
+    productInterfaceLabel(data: PRODUCTINTERFACE) {
+        const { ID, INTERFACE } = data;
+        if (ID === null) {
+            return '클릭하여 인터페이스 지정';
+        }
+
+        if (INTERFACE === null) {
+            return '';
+        }
+
+        const { ASSET_CD, NAME } = INTERFACE;
+        return `${this.assetName(ASSET_CD)}${NAME}`;
+    }
+
+    assetName(asset_code: string | null) {
+        if (asset_code === null) {
+            return '';
+        }
+
+        const code = this.assetCodeList.find(
+            (code: any) => code.CODE === asset_code
+        );
+        return code ? `${code.NAME} | ` : '';
+    }
+
+    showInterfaceTreePanel(event: PointerEvent, index: number) {
+        this.selectedProductInterfaceIndex = index;
+
+        setTimeout(
+            () => {
+                this.$refs.interfaceTreePanel.toggle(event);
+            },
+            10,
+            event as Event
+        );
+    }
+
+    deleteProductInterface(idx: number, intf: PRODUCTINTERFACE) {
+        const { ID, PD_INTF_ID } = intf;
+        if (ID === null && PD_INTF_ID === null) {
+            this.productInterfaces.splice(idx, 1);
+        }
     }
 
     addProductInterface() {
-        this.productInterfaces.push({
+        if (this.productInterfaces.length === 20) {
+            this.$toast.add({
+                severity: 'warn',
+                summary: '사용 가능 인터페이스 등록 불가',
+                detail: '사용 가능 인터페이스는 최대 20개까지 등록 가능합니다',
+                life: 2000
+            });
+
+            return;
+        }
+
+        const add_data: PRODUCTINTERFACE = {
             ID: null,
             PRODUCT_ID: null,
             PD_INTF_ID: null,
@@ -944,178 +960,20 @@ export default class ProductPanel extends Vue {
                 ASSET_CD: null,
                 NAME: null
             }
-        });
-    }
-
-    deleteProductInterface(idx: number) {
-        this.productInterfaces.splice(idx, 1);
-    }
-
-    onRowReorder(event: any) {
-        this.productInfo = event.value;
-    }
-
-    onCellEditComplete() {
-        this.parseProductInfo(this.productInfo);
-    }
-
-    imageFileUpload(event: any) {
-        this.image_file = event.files[0].objectURL;
-        this.image_file_blob = event.files[0];
-
-        // by shkoh 20210913: IMAGE가 변경되는 경우는 -1로 지정함
-        this.newProductData.IMAGE_FILE_ID =
-            this.productData.IMAGE_FILE?.size !== this.image_file_blob?.size
-                ? -1
-                : this.productData.IMAGE_FILE_ID;
-    }
-
-    imageFileClear() {
-        this.image_file = '';
-        this.image_file_blob = undefined;
-        this.newProductData.IMAGE_FILE_ID = null;
-    }
-
-    loadImageFile() {
-        if (this.productData.IMAGE_FILE_ID === null) return;
-
-        this.$apollo
-            .query({
-                query: gql`
-                query {
-                    PdFile(ID: ${this.productData.IMAGE_FILE_ID}) {
-                        FILE_NAME
-                        MIMETYPE
-                        DATA
-                    }
-                }
-            `
-            })
-            .then(({ data }) => {
-                const pd_file = data.PdFile;
-
-                // by shkoh 20210914: API 서버로부터 이미지가 존재할 경우에는 따로 로드하여 UI에 등록함
-                // by shkoh 20210914: iFileUpload Component에서 강제로 파일을 등록하는 절차를 수행함
-                // by shkoh 20210914: $refs로 접근하기 위해서는 $nextTick을 한 후에 수행
-                this.$nextTick(() => {
-                    const buf = Buffer.from(pd_file.DATA, 'base64');
-                    const previous_file = new File(
-                        [buf.buffer],
-                        pd_file.FILE_NAME,
-                        {
-                            type: pd_file.MIMETYPE
-                        }
-                    );
-
-                    this.productData.IMAGE_FILE = previous_file;
-
-                    this.$refs.imageFileUploader.forceInsertFile(previous_file);
-                });
-            })
-            .catch((error) => {
-                console.error(error);
-
-                this.$toast.add({
-                    severity: 'error',
-                    summary: '파일 로드 실패',
-                    detail: error.message,
-                    life: 2000
-                });
-            });
-    }
-
-    manualFileUpload(event: any) {
-        this.manual_file_name = event.files[0].name;
-        this.manual_file_blob = event.files[0];
-
-        this.newProductData.MANUAL_FILE_ID =
-            this.productData.MANUAL_FILE?.size !== this.manual_file_blob?.size
-                ? -1
-                : this.productData.MANUAL_FILE_ID;
-    }
-
-    manualFileClear() {
-        this.manual_file_name = '';
-        this.manual_file_blob = undefined;
-        this.newProductData.MANUAL_FILE_ID = null;
-    }
-
-    loadManualFile() {
-        if (this.productData.MANUAL_FILE_ID === null) return;
-
-        this.$apollo
-            .query({
-                query: gql`
-                query {
-                    PdFile(ID: ${this.productData.MANUAL_FILE_ID}) {
-                        FILE_NAME
-                        MIMETYPE
-                        DATA
-                    }
-                }
-            `
-            })
-            .then(({ data }) => {
-                const pd_file = data.PdFile;
-
-                // by shkoh 20210914: API 서버로부터 이미지가 존재할 경우에는 따로 로드하여 UI에 등록함
-                // by shkoh 20210914: iFileUpload Component에서 강제로 파일을 등록하는 절차를 수행함
-                // by shkoh 20210914: $refs로 접근하기 위해서는 $nextTick을 한 후에 수행
-                this.$nextTick(() => {
-                    const buf = Buffer.from(pd_file.DATA, 'base64');
-                    const previous_file = new File(
-                        [buf.buffer],
-                        pd_file.FILE_NAME,
-                        {
-                            type: pd_file.MIMETYPE
-                        }
-                    );
-
-                    this.productData.MANUAL_FILE = previous_file;
-
-                    this.$refs.manualFileUploader.forceInsertFile(
-                        previous_file
-                    );
-                });
-            })
-            .catch((error) => {
-                console.error(error);
-
-                this.$toast.add({
-                    severity: 'error',
-                    summary: '파일 로드 실패',
-                    detail: error.message,
-                    life: 2000
-                });
-            });
-    }
-
-    manualFileDownload() {
-        const reader = new FileReader();
-        reader.readAsDataURL(this.manual_file_blob);
-
-        reader.onloadend = (event: any) => {
-            const link = document.createElement('a');
-            link.download = this.manual_file_name.normalize('NFC');
-            link.href = event.target.result;
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         };
+
+        this.productInterfaces.push(add_data);
     }
 
-    productDataRefresh() {
-        this.$apollo.queries.productData.refresh();
-        this.$apollo.queries.dbProductInterfaces.refresh();
-    }
+    onSelectInterfaceTree(node: any) {
+        console.info(node);
+        const { id, name, asset_cd } = node;
 
-    onSelectInterfaceTree(selected_node: any) {
-        const { id, name, asset_cd } = selected_node;
+        const has_prod_intf = this.productInterfaces.some(
+            (intf: PRODUCTINTERFACE) => intf.PD_INTF_ID === id
+        );
 
-        if (
-            this.productInterfaces.some((intf: any) => intf.PD_INTF_ID === id)
-        ) {
+        if (has_prod_intf) {
             this.$toast.add({
                 severity: 'warn',
                 summary: '인터페이스 중복 선택',
@@ -1123,19 +981,95 @@ export default class ProductPanel extends Vue {
                 life: 2000
             });
         } else {
-            if (this.selectedInterface.ID === null) {
-                this.selectedInterface.ID = -1;
+            const intf = this.productInterfaces.at(
+                this.selectedProductInterfaceIndex
+            );
+
+            if (intf) {
+                // by shkoh 20220628: prod_intf의 ID가 null인 경우(신규)와 null이 아닌 경우(기존에 등록)로 구분지어서 구현
+                if (intf.ID === null) {
+                    intf.ID = -1;
+                    intf.PD_INTF_ID = id;
+                    intf.INTERFACE.ASSET_CD = asset_cd;
+                    intf.INTERFACE.NAME = name;
+                } else if (intf.ID !== null) {
+                    console.info(intf.ID);
+                }
             }
-            this.selectedInterface.PD_INTF_ID = id;
-            this.selectedInterface.INTERFACE.ASSET_CD = asset_cd;
-            this.selectedInterface.INTERFACE.NAME = name;
 
             this.$refs.interfaceTreePanel.hide();
         }
     }
 
-    get selectedKeyToInterfaceTree(): number {
-        return -1;
+    get productName(): string {
+        return this.dbProductData.NAME;
+    }
+
+    get applyButtonDisabled(): boolean {
+        let is_disabled = true;
+
+        [
+            'MANUFACTURER_ID',
+            'ASSET_CD',
+            'NAME',
+            'MODEL_NAME',
+            'INFO',
+            'REMARK'
+        ].forEach((key) => {
+            if (this.dbProductData[key] !== this.productData[key]) {
+                is_disabled = false;
+            }
+        });
+
+        if (is_disabled && this.isChangeManualFile) {
+            is_disabled = false;
+        }
+
+        if (is_disabled && this.isChangeImageFile) {
+            is_disabled = false;
+        }
+
+        console.info(is_disabled);
+
+        return is_disabled;
+    }
+
+    get productInfo(): Array<object> {
+        try {
+            return JSON.parse(this.productData.INFO);
+        } catch {
+            return [];
+        }
+    }
+
+    get isChangeManualFile(): boolean {
+        let is_change = false;
+
+        const src_size = this.src_manual_file_blob?.size;
+        const src_name = this.src_manual_file_blob?.name.normalize('NFC');
+        const dst_size = this.manual_file_blob?.size;
+        const dst_name = this.manual_file_blob?.name.normalize('NFC');
+
+        if (src_size !== dst_size || src_name !== dst_name) {
+            is_change = true;
+        }
+
+        return is_change;
+    }
+
+    get isChangeImageFile(): boolean {
+        let is_change = false;
+
+        const src_size = this.src_image_file_blob?.size;
+        const src_name = this.src_image_file_blob?.name.normalize('NFC');
+        const dst_size = this.image_file_blob?.size;
+        const dst_name = this.image_file_blob?.name.normalize('NFC');
+
+        if (src_size !== dst_size || src_name !== dst_name) {
+            is_change = true;
+        }
+
+        return is_change;
     }
 }
 </script>
@@ -1149,8 +1083,24 @@ export default class ProductPanel extends Vue {
     }
 
     .i-product-scrollpanel {
-        height: calc(100vh - 20px - var(--header-height) - 10px - 30px - 16px);
         padding: 0.4rem;
+        height: calc(100vh - 20px - var(--header-height) - 10px - 30px - 16px);
+    }
+
+    .i-loading-panel {
+        position: relative;
+
+        .i-loading-overlay {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .i-loading-icon {
+            font-size: 2rem;
+        }
     }
 
     .p-datatable.p-datatable-sm .p-datatable-thead > tr > th {
@@ -1165,6 +1115,10 @@ export default class ProductPanel extends Vue {
 
     .i-not-used-interface {
         text-decoration: line-through;
+    }
+
+    .i-hidden {
+        display: none;
     }
 }
 </style>

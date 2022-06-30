@@ -998,8 +998,6 @@ export default class AssetPanelInfo extends Vue {
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
-
-                        this.$nuxt.$loading.finish();
                     };
                 });
             })
@@ -1012,7 +1010,8 @@ export default class AssetPanelInfo extends Vue {
                     detail: error.message,
                     life: 2000
                 });
-
+            })
+            .finally(() => {
                 this.$nuxt.$loading.finish();
             });
     }

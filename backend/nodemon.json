@@ -5,6 +5,6 @@
     "watch": [
         "src"
     ],
-    "exec": "DOTENV_CONFIG_PATH=../.env ts-node -r dotenv/config src/index.ts",
+    "exec": "DOTENV_CONFIG_PATH=../.env NODE_OPTIONS='--trace-deprecation --abort-on-uncaught-exception' ts-node -r dotenv/config src/index.ts",
     "ext": "ts"
 }

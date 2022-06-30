@@ -326,6 +326,14 @@ const DomHandler = {
         return ++this.zindex;
     },
 
+    getHeight: (elemenet: HTMLElement) => {
+        let height = elemenet.offsetHeight;
+        const style = getComputedStyle(elemenet);
+        
+        height -= parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) + parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+        return height;
+    },
+
     getOffset: (element: HTMLElement) => {
         const rect = element.getBoundingClientRect();
         return {
@@ -393,6 +401,14 @@ const DomHandler = {
         width -= parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth);
 
         return width;
+    },
+
+    isAndroid() {
+        return /(android)/i.test(navigator.userAgent);
+    },
+
+    isIOS() {
+        return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any)['MSStream'];
     },
     
     relativePosition(element: HTMLElement, target: HTMLElement) {

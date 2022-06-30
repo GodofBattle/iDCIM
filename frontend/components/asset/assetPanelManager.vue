@@ -2,7 +2,7 @@
     <div id="i-asset-panel-manager">
         <div class="p-col p-fluid p-input-filled">
             <div class="p-field p-grid">
-                <label for="name" class="p-col-fixed p-my-2 i-form-label">
+                <label for="manager" class="p-col-fixed p-my-2 i-form-label">
                     자산담당자(정)
                 </label>
                 <div class="p-col-5 i-form-value">
@@ -25,7 +25,10 @@
                 </div>
             </div>
             <div class="p-field p-grid">
-                <label for="name" class="p-col-fixed p-my-2 i-form-label">
+                <label
+                    for="sub-manager"
+                    class="p-col-fixed p-my-2 i-form-label"
+                >
                     자산담당자(부)
                 </label>
                 <div class="p-col-5 i-form-value">
@@ -48,7 +51,10 @@
                 </div>
             </div>
             <div class="p-field p-grid">
-                <label for="name" class="p-col-fixed p-my-2 i-form-label">
+                <label
+                    for="install-date"
+                    class="p-col-fixed p-my-2 i-form-label"
+                >
                     자산도입일
                 </label>
                 <div class="p-col-2 i-form-value">
@@ -69,7 +75,7 @@
             <div class="p-col p-fluid p-input-filled">
                 <div class="p-field p-grid">
                     <label
-                        for="name"
+                        for="maintenance-user"
                         class="p-col-fixed p-my-2 i-form-maintenance-label"
                     >
                         유지보수 담당자
@@ -104,7 +110,7 @@
                 </div>
                 <div class="p-field p-grid">
                     <label
-                        for="name"
+                        for="maintenance-start-date"
                         class="p-col-fixed p-my-2 i-form-maintenance-label"
                     >
                         유지보수 시작일
@@ -138,7 +144,7 @@
                 </div>
                 <div class="p-field p-grid">
                     <label
-                        for="name"
+                        for="maintenance-end-date"
                         class="p-col-fixed p-my-2 i-form-maintenance-label"
                     >
                         유지보수 종료일
@@ -172,7 +178,7 @@
                 </div>
                 <div class="p-field p-grid">
                     <label
-                        for="name"
+                        for="inspectInfo"
                         class="p-col-fixed p-my-2 i-form-maintenance-label"
                     >
                         유지보수 점검
@@ -592,7 +598,7 @@ export default class AssetPanelManager extends Vue {
             const start_dt = date.getTime();
             const end_dt = this.asset.MA_END_DATE.getTime();
 
-            if (start_dt > end_dt) {
+            if (start_dt >= end_dt) {
                 this.invalidMessage.MA_START_DATE =
                     '유지보수 시작일이 종료일 이후로 설정되었습니다.';
             } else {
@@ -612,7 +618,7 @@ export default class AssetPanelManager extends Vue {
             const start_dt = this.asset.MA_START_DATE.getTime();
             const end_dt = date.getTime();
 
-            if (start_dt > end_dt) {
+            if (start_dt >= end_dt) {
                 this.invalidMessage.MA_END_DATE =
                     '유지보수 종료일이 시작일 이전으로 설정되었습니다.';
             } else {

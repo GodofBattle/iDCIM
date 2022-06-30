@@ -1,7 +1,8 @@
 import { Field, ID, Int, ObjectType } from "type-graphql";
-import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from "typeorm";
+import { Column, Entity, getRepository, JoinColumn, OneToOne, PrimaryColumn } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
 import { ac_asset } from "./ac_asset";
+import { pd_prod_intf } from "./pd_prod_intf";
 
 @ObjectType()
 @Entity({ synchronize: false })
@@ -77,4 +78,15 @@ export class cn_interface {
     @OneToOne(() => ac_asset, (asset: ac_asset) => asset.INTERFACE, { createForeignKeyConstraints: false })
     @JoinColumn({ name: 'ID', referencedColumnName: 'ID' })
     ASSET: ac_asset;
+
+    @Field(() => String, { nullable: true })
+    async PD_INTERFACE_NAME(): Promise<string> {
+        const prod_intf = await getRepository(pd_prod_intf)
+            .createQueryBuilder('prod')
+            .innerJoinAndSelect('prod.INTERFACE', 'intf', 'prod.PD_INTF_ID = intf.ID')
+            .where(`prod.ID = ${this.PROD_INTF_ID}`)
+            .getOne();
+
+        return prod_intf ? prod_intf.INTERFACE.NAME : '';
+    }
 }

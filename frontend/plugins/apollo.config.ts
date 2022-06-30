@@ -37,7 +37,7 @@ const configuer = ({ env, store, redirect }: Context) => {
         },
         apollo: {
             $query: {
-                fetchPolicy: 'network-only'
+                fetchPolicy: 'cache-and-network'
             },
             wsLinkOptions: {
                 reconnect: true

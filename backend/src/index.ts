@@ -24,6 +24,7 @@ import { TreeResolver } from './resolver/tree';
 import { AccountCustomResolver } from './resolver/accountCustom';
 import { ManagerResolver } from "./resolver/manager";
 import { AssetResolver } from './resolver/asset';
+import { InterfaceResolver } from './resolver/interface';
 
 import Auth from './utils/auth';
 
@@ -44,7 +45,8 @@ const schemas = buildSchemaSync({
         TreeResolver,
         AccountCustomResolver,
         ManagerResolver,
-        AssetResolver
+        AssetResolver,
+        InterfaceResolver
     ],
 });
 
