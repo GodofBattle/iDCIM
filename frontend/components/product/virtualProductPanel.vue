@@ -22,23 +22,15 @@
             </div>
         </div>
         <Divider />
-        <ScrollPanel class="i-product-scrollpanel">
+        <i-scroll-panel class="i-product-scrollpanel">
             <div class="p-grid">
                 <div class="p-col-3 p-fluid p-input-filled p-mr-6">
                     <div class="p-field">
                         <label for="asset_cd">자산분류</label>
-                        <Dropdown
-                            id="asset-code"
-                            v-model="virtualProductData.ASSET_CD"
-                            :options="assetCodeList"
-                            option-label="NAME"
-                            option-value="CODE"
-                            placeholder="자산유형을 선택하세요"
-                            :filter="true"
-                            filter-placeholder="검색"
-                            empty-filter-message="해당 유형의 자산은 존재하지 않습니다"
-                            append-to="body"
-                        ></Dropdown>
+                        <InputText
+                            v-model="getAssetCodeName"
+                            :disabled="true"
+                        />
                     </div>
                     <div class="p-field">
                         <label for="name">제품명</label>
@@ -96,7 +88,7 @@
                                         @click="
                                             showInterfaceTreePanel(
                                                 $event,
-                                                slotProps.data
+                                                slotProps.index
                                             )
                                         "
                                     ></Button>
@@ -109,7 +101,8 @@
                                         class="p-button-rounded p-button-danger p-button-text"
                                         @click="
                                             deleteProductInterface(
-                                                slotProps.index
+                                                slotProps.index,
+                                                slotProps.data
                                             )
                                         "
                                     ></Button>
@@ -129,8 +122,8 @@
                     </div>
                 </div>
             </div>
-        </ScrollPanel>
-        <OverlayPanel
+        </i-scroll-panel>
+        <i-overlay-panel
             ref="interfaceTreePanel"
             :show-close-icon="true"
             append-to="body"
@@ -139,22 +132,33 @@
             <interface-tree
                 :is-editing="false"
                 :show-only-parents="true"
-                :init-select-keys="selectedKeyToInterfaceTree"
                 :filter-code="virtualProductData.ASSET_CD"
                 :style="{ height: 'calc(42vh - 2rem)' }"
                 @select="onSelectInterfaceTree"
             ></interface-tree>
-        </OverlayPanel>
+        </i-overlay-panel>
     </div>
 </template>
 
 <script lang="ts">
-import { Domain } from 'domain';
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
-import { eventBus } from '~/plugins/vueEventBus';
-import DomHandler from '~/plugins/primevue.DomHandler';
+import { eventBus } from '@/plugins/vueEventBus';
+
+type INTERFACE = {
+    [index: string]: string | null;
+    ASSET_CD: string | null;
+    NAME: string | null;
+};
+
+type PRODUCTINTERFACE = {
+    [index: string]: number | INTERFACE | null;
+    ID: number | null;
+    PRODUCT_ID: number | null;
+    PD_INTF_ID: number | null;
+    INTERFACE: INTERFACE;
+};
 
 type vProduct = {
     [index: string]: string | number;
@@ -179,13 +183,15 @@ type vProduct = {
                     }
                 }
             `,
-            prefetch: false,
+            update: ({ Product }) => Product,
+            skip() {
+                return this.$props.productId < 0;
+            },
             variables() {
                 return {
-                    ID: this.$props.productId < 0 ? -1 : this.$props.productId
+                    ID: this.$props.productId
                 };
             },
-            update: ({ Product }) => Product,
             result({ loading, data }) {
                 if (!loading) {
                     const { Product } = data;
@@ -209,11 +215,14 @@ type vProduct = {
                     }
                 }
             `,
-            prefetch: false,
+            prefetch: true,
             update: ({ ProductInterfaces }: any) => ProductInterfaces,
+            skip() {
+                return this.$props.productId < 0;
+            },
             variables(): any {
                 return {
-                    PRODUCT_ID: this.productId < 0 ? -1 : this.productId
+                    PRODUCT_ID: this.$props.productId
                 };
             },
             result({ data, loading }: any) {
@@ -236,6 +245,11 @@ type vProduct = {
             `,
             update: ({ PredefinedAssetCodes }: any) => PredefinedAssetCodes
         }
+    },
+    watch: {
+        productId() {
+            this.resetData();
+        }
     }
 })
 export default class VirtualProductPanel extends Vue {
@@ -243,7 +257,11 @@ export default class VirtualProductPanel extends Vue {
         interfaceTreePanel: any;
     };
 
-    dbVirtualProductData: vProduct | null = null;
+    dbVirtualProductData: vProduct = {
+        ASSET_CD: '',
+        NAME: '',
+        REMARK: ''
+    };
 
     virtualProductData: vProduct = {
         ASSET_CD: '',
@@ -256,13 +274,32 @@ export default class VirtualProductPanel extends Vue {
         REMARK: undefined as string | undefined
     };
 
+    // by shkoh 20220609: 사용 가능 인터페이스 사용
+    dbProductInterfaces: Array<PRODUCTINTERFACE> = [];
+    productInterfaces: Array<PRODUCTINTERFACE> = [];
+
     assetCodeList: Array<any> = [];
 
-    // by shkoh 20220609: 사용 가능 인터페이스 사용
-    dbProductInterfaces: Array<any> = [];
-    productInterfaces: Array<any> = [];
-    selectedInterface: any = {};
-    selectedInterfaceIndex: number = -1;
+    selectedProductInterfaceIndex: number = -1;
+
+    virtualProductDataRefresh() {
+        this.resetData();
+        this.$apollo.queries.dbVirtualProductData.refresh();
+        this.$apollo.queries.dbProductInterfaces.refresh();
+    }
+
+    resetData() {
+        this.virtualProductData.ASSET_CD = '';
+        this.virtualProductData.NAME = '';
+        this.virtualProductData.REMARK = '';
+
+        this.invalidMessage.NAME = undefined;
+        this.invalidMessage.REMARK = undefined;
+
+        this.selectedProductInterfaceIndex = -1;
+
+        this.productInterfaces.splice(0, this.productInterfaces.length);
+    }
 
     apolloFetch(data: vProduct) {
         for (const [key, value] of Object.entries(data)) {
@@ -270,17 +307,15 @@ export default class VirtualProductPanel extends Vue {
         }
     }
 
-    apolloFetchProductInterfaces(data: Array<any>): void {
-        this.productInterfaces.splice(0, this.productInterfaces.length);
-
-        data.forEach((_datum: any) => {
+    apolloFetchProductInterfaces(data: Array<PRODUCTINTERFACE>): void {
+        data.forEach((d: PRODUCTINTERFACE) => {
             this.productInterfaces.push({
-                ID: _datum.ID,
-                PRODUCT_ID: _datum.PRODUCT_ID,
-                PD_INTF_ID: _datum.PD_INTF_ID,
+                ID: d.ID,
+                PRODUCT_ID: d.PRODUCT_ID,
+                PD_INTF_ID: d.PD_INTF_ID,
                 INTERFACE: {
-                    ASSET_CD: _datum.INTERFACE.ASSET_CD,
-                    NAME: _datum.INTERFACE.NAME
+                    ASSET_CD: d.INTERFACE.ASSET_CD,
+                    NAME: d.INTERFACE.NAME
                 }
             });
         });
@@ -303,30 +338,53 @@ export default class VirtualProductPanel extends Vue {
 
         ['ASSET_CD', 'NAME', 'REMARK'].forEach((key: string) => {
             if (
-                this.dbVirtualProductData &&
                 this.virtualProductData[key] !== this.dbVirtualProductData[key]
             ) {
-                Object.defineProperty(variables, key, {
-                    value: this.virtualProductData[key],
-                    configurable: true,
-                    enumerable: true,
-                    writable: true
-                });
+                this.$set(variables, key, this.virtualProductData[key]);
             }
         });
 
-        const insert_product_interfaces = this.productInterfaces
-            .filter((intf: any) => intf.ID !== null)
-            .map((intf: any) => {
-                return intf.PD_INTF_ID;
-            });
+        // const insert_product_interfaces = this.productInterfaces
+        //     .filter((intf: any) => intf.ID !== null)
+        //     .map((intf: any) => {
+        //         return intf.PD_INTF_ID;
+        //     });
 
-        Object.defineProperty(variables, 'INPUT', {
-            value: insert_product_interfaces,
-            configurable: true,
-            enumerable: true,
-            writable: true
-        });
+        // Object.defineProperty(variables, 'INPUT', {
+        //     value: insert_product_interfaces,
+        //     configurable: true,
+        //     enumerable: true,
+        //     writable: true
+        // });
+
+        const insert_product_interfaces: Array<any> = [];
+        for (const src_intf of Object.values(this.dbProductInterfaces)) {
+            const is = this.productInterfaces.find(
+                (intf) => intf.PD_INTF_ID === src_intf.PD_INTF_ID
+            );
+
+            if (is === undefined) {
+                insert_product_interfaces.push({
+                    ID: src_intf.ID,
+                    PD_INTF_ID: null
+                });
+            }
+        }
+
+        for (const intf of Object.values(this.productInterfaces)) {
+            const is = this.dbProductInterfaces.find(
+                (src_intf) => src_intf.PD_INTF_ID === intf.PD_INTF_ID
+            );
+
+            if (is === undefined) {
+                insert_product_interfaces.push({
+                    ID: -1,
+                    PD_INTF_ID: intf.PD_INTF_ID
+                });
+            }
+        }
+
+        this.$set(variables, 'INPUT', insert_product_interfaces);
 
         // by shkoh 20220609: virtual product panel 데이터 업데이트 시작 시, loading부터 시작
         this.$nuxt.$loading.start();
@@ -339,7 +397,7 @@ export default class VirtualProductPanel extends Vue {
                         $ASSET_CD: String
                         $NAME: String
                         $REMARK: String
-                        $INPUT: [Int!]
+                        $INPUT: [pd_prod_intf_input!]
                     ) {
                         UpdateProduct(
                             ID: $ID
@@ -381,9 +439,6 @@ export default class VirtualProductPanel extends Vue {
     }
 
     deleteProduct() {
-        // by shkoh 20220609: 삭제하기 전에 데이터 갱신
-        this.virtualProductDataRefresh();
-
         this.$confirmDialog.require({
             group: 'deleteConfirmDialog',
             message: `[${this.productName}] 제품을 삭제하시겠습니까?\n사이트에서 해당 제품이 등록되어 있다면 삭제가 불가합니다.(상세한 삭제 절차는 미구현)`,
@@ -419,6 +474,7 @@ export default class VirtualProductPanel extends Vue {
             })
             .catch((error) => {
                 console.error(error);
+
                 this.$toast.add({
                     severity: 'error',
                     summary: '제품 삭제 실패',
@@ -426,11 +482,6 @@ export default class VirtualProductPanel extends Vue {
                     life: 2000
                 });
             });
-    }
-
-    virtualProductDataRefresh() {
-        this.$apollo.queries.dbVirtualProductData.refresh();
-        this.$apollo.queries.dbProductInterfaces.refresh();
     }
 
     validateName(input: InputEvent) {
@@ -453,29 +504,27 @@ export default class VirtualProductPanel extends Vue {
         }
     }
 
-    assetName(asset_code: string) {
-        const asset_code_item = this.assetCodeList.find(
+    assetName(asset_code: string | null) {
+        if (asset_code === null) {
+            return '';
+        }
+
+        const code = this.assetCodeList.find(
             (code: any) => code.CODE === asset_code
         );
-        return asset_code_item ? asset_code_item.NAME : '';
+        return code ? `${code.NAME} | ` : '';
     }
 
-    productInterfaceClass(data: any) {
-        if (
-            data.INTERFACE.ASSET_CD === null ||
-            data.INTERFACE.ASSET_CD === this.virtualProductData.ASSET_CD
-        ) {
+    productInterfaceClass(data: PRODUCTINTERFACE) {
+        const { INTERFACE } = data;
+        if (this.virtualProductData.ASSET_CD === INTERFACE.ASSET_CD) {
             return ['p-button-text', 'p-button-info'];
         } else {
-            return [
-                'p-button-outlined',
-                'p-button-danger',
-                'i-not-used-interface'
-            ];
+            return ['p-button-text'];
         }
     }
 
-    productInterfaceLabel(data: any) {
+    productInterfaceLabel(data: PRODUCTINTERFACE) {
         if (data.ID === null) {
             return '클릭하여 인터페이스 지정';
         }
@@ -485,16 +534,33 @@ export default class VirtualProductPanel extends Vue {
         }
 
         const { ASSET_CD, NAME } = data.INTERFACE;
-        const label = `${this.assetName(ASSET_CD)}: ${NAME}`;
-        return label;
+        return `${this.assetName(ASSET_CD)}${NAME}`;
     }
 
-    showInterfaceTreePanel(event: Event, intf_data: any) {
-        this.selectedInterface = intf_data;
-        this.$refs.interfaceTreePanel.toggle(event);
+    showInterfaceTreePanel(event: PointerEvent, index: number) {
+        this.selectedProductInterfaceIndex = index;
+
+        setTimeout(
+            () => {
+                this.$refs.interfaceTreePanel.toggle(event);
+            },
+            10,
+            event as Event
+        );
     }
 
     addProductInterface() {
+        if (this.productInterfaces.length === 20) {
+            this.$toast.add({
+                severity: 'warn',
+                summary: '사용 가능 인터페이스 등록 불가',
+                detail: '사용 가능 인터페이스는 최대 20개까지 등록 가능합니다',
+                life: 2000
+            });
+
+            return;
+        }
+
         this.productInterfaces.push({
             ID: null,
             PRODUCT_ID: null,
@@ -506,16 +572,35 @@ export default class VirtualProductPanel extends Vue {
         });
     }
 
-    deleteProductInterface(idx: number) {
-        this.productInterfaces.splice(idx, 1);
+    async deleteProductInterface(idx: number, intf: PRODUCTINTERFACE) {
+        const { ID, PD_INTF_ID } = intf;
+
+        if ((ID === null && PD_INTF_ID === null) || ID === -1) {
+            this.productInterfaces.splice(idx, 1);
+        } else if (ID !== null) {
+            const count = await this.countOfInterfaces(ID);
+
+            if (count === 0) {
+                this.productInterfaces.splice(idx, 1);
+            } else {
+                this.$toast.add({
+                    severity: 'warn',
+                    summary: '인터페이스 사용 중',
+                    detail: `${intf.INTERFACE.NAME} 인터페이스는 등록 자산으로 사용 중입니다. 삭제할 수 없습니다`,
+                    life: 2000
+                });
+            }
+        }
     }
 
-    onSelectInterfaceTree(selected_node: any) {
-        const { id, name, asset_cd } = selected_node;
+    async onSelectInterfaceTree(node: any) {
+        const { id, name, asset_cd } = node;
 
-        if (
-            this.productInterfaces.some((intf: any) => intf.PD_INTF_ID === id)
-        ) {
+        const has_prod_intf = this.productInterfaces.some(
+            (intf: PRODUCTINTERFACE) => intf.PD_INTF_ID === id
+        );
+
+        if (has_prod_intf) {
             this.$toast.add({
                 severity: 'warn',
                 summary: '인터페이스 중복 선택',
@@ -523,19 +608,59 @@ export default class VirtualProductPanel extends Vue {
                 life: 2000
             });
         } else {
-            if (this.selectedInterface.ID === null) {
-                this.selectedInterface.ID = -1;
+            const intf = this.productInterfaces.at(
+                this.selectedProductInterfaceIndex
+            );
+
+            if (intf) {
+                // by shkoh 20220701: prod_intf의 ID가 null인 경우(신규)와 null이 아닌 경우(기존에 등록)로 구분지어서 구현
+                if (intf.ID === null || intf.ID === -1) {
+                    intf.ID = -1;
+                    intf.PD_INTF_ID = id;
+                    intf.INTERFACE.ASSET_CD = asset_cd;
+                    intf.INTERFACE.NAME = name;
+                } else if (intf.ID !== -1) {
+                    const count = await this.countOfInterfaces(intf.ID);
+
+                    if (count === 0) {
+                        intf.ID = -1;
+                        intf.PD_INTF_ID = id;
+                        intf.INTERFACE.ASSET_CD = asset_cd;
+                        intf.INTERFACE.NAME = name;
+                    } else {
+                        this.$toast.add({
+                            severity: 'warn',
+                            summary: '인터페이스 사용 중',
+                            detail: `${intf.INTERFACE.NAME} 인터페이스는 등록 자산으로 사용 중입니다. 변경할 수 없습니다`,
+                            life: 2000
+                        });
+                    }
+                }
             }
-            this.selectedInterface.PD_INTF_ID = id;
-            this.selectedInterface.INTERFACE.ASSET_CD = asset_cd;
-            this.selectedInterface.INTERFACE.NAME = name;
 
             this.$refs.interfaceTreePanel.hide();
         }
     }
 
-    get selectedKeyToInterfaceTree(): number {
-        return -1;
+    countOfInterfaces(prod_intf_id: number) {
+        return new Promise((resolve, reject) => {
+            this.$nuxt.$loading.start();
+
+            this.$apollo
+                .query({
+                    query: gql`
+                    query {
+                        CountOfInterfaces(PROD_INTF_ID: ${prod_intf_id})
+                    }
+                `
+                })
+                .then(({ data: { CountOfInterfaces } }) => {
+                    resolve(CountOfInterfaces);
+                })
+                .finally(() => {
+                    this.$nuxt.$loading.finish();
+                });
+        });
     }
 
     get applyButtonDisabled(): boolean {
@@ -544,30 +669,33 @@ export default class VirtualProductPanel extends Vue {
         // by shkoh 20210910: API로부터 받은 제품정보와 작성자가 수정했을 경우의 데이터를 비교
         ['ASSET_CD', 'NAME', 'REMARK'].forEach((key) => {
             if (
-                this.dbVirtualProductData &&
                 this.virtualProductData[key] !== this.dbVirtualProductData[key]
             ) {
                 is_disabled = false;
             }
         });
 
-        if (
-            this.dbProductInterfaces.length !==
-            this.productInterfaces.filter((intf: any) => intf.ID !== null)
-                .length
-        ) {
-            // by shkoh 20220411: 사용 가능한 인터페이스의 전체 숫자가 변경된 경우
-            is_disabled = false;
-        } else {
-            for (const [idx, intf] of Object.entries(
-                this.dbProductInterfaces
-            )) {
-                if (
-                    intf.PD_INTF_ID !==
-                    this.productInterfaces[parseInt(idx)].PD_INTF_ID
-                ) {
-                    is_disabled = false;
-                    break;
+        if (is_disabled) {
+            if (
+                this.dbProductInterfaces.length !==
+                this.productInterfaces.filter((intf: any) => intf.ID !== null)
+                    .length
+            ) {
+                // by shkoh 20220411: 사용 가능한 인터페이스의 전체 숫자가 변경된 경우
+                is_disabled = false;
+            } else {
+                for (const [idx, intf] of Object.entries(
+                    this.dbProductInterfaces
+                )) {
+                    const is = this.productInterfaces.find(
+                        (i: PRODUCTINTERFACE) =>
+                            i.PD_INTF_ID === intf.PD_INTF_ID
+                    );
+
+                    if (is === undefined) {
+                        is_disabled = false;
+                        break;
+                    }
                 }
             }
         }
@@ -598,6 +726,13 @@ export default class VirtualProductPanel extends Vue {
 
         return is_valid;
     }
+
+    get getAssetCodeName(): string {
+        const asset_code = this.assetCodeList.find(
+            (code: any) => code.CODE === this.virtualProductData.ASSET_CD
+        );
+        return asset_code ? asset_code.NAME : '';
+    }
 }
 </script>
 
@@ -622,10 +757,6 @@ export default class VirtualProductPanel extends Vue {
         max-width: 100%;
         max-height: 30vh;
         border-radius: 3px;
-    }
-
-    .i-not-used-interface {
-        text-decoration: line-through;
     }
 }
 </style>

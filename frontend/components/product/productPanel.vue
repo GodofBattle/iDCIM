@@ -98,7 +98,6 @@
                                     </div>
                                 </div>
                                 <Button
-                                    ref="manualFileDownButton"
                                     class="p-mt-2 p-text-left p-button-sm p-button-outlined p-button-secondary"
                                     :icon="manualIcon"
                                     :label="manualFileName"
@@ -524,7 +523,6 @@ export default class ProductPanel extends Vue {
         manualFileUploader: any;
         imageFileUploader: any;
         interfaceTreePanel: any;
-        manualFileDownButton: Vue;
     };
 
     dbProductData: Product = {
@@ -694,14 +692,6 @@ export default class ProductPanel extends Vue {
             this.$set(variables, 'IMAGE_FILE_ID', null);
         }
 
-        // const insert_product_interfaces = this.productInterfaces
-        //     .filter((intf: PRODUCTINTERFACE) => intf.PD_INTF_ID !== null)
-        //     .map((intf: PRODUCTINTERFACE) => {
-        //         return {
-        //             ID: intf.ID,
-        //             PD_INTF_ID: intf.PD_INTF_ID
-        //         };
-        //     });
         const insert_product_interfaces: Array<object> = [];
         for (const src_intf of Object.values(this.dbProductInterfaces)) {
             const is = this.productInterfaces.find(
@@ -1077,7 +1067,7 @@ export default class ProductPanel extends Vue {
         if (this.productData.ASSET_CD === INTERFACE.ASSET_CD) {
             return ['p-button-text', 'p-button-info'];
         } else {
-            return ['p-button-text', 'p-button-warn'];
+            return ['p-button-text'];
         }
     }
 
@@ -1363,22 +1353,6 @@ export default class ProductPanel extends Vue {
         height: calc(100vh - 20px - var(--header-height) - 10px - 30px - 16px);
     }
 
-    .i-loading-panel {
-        position: relative;
-
-        .i-loading-overlay {
-            position: absolute;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2;
-        }
-
-        .i-loading-icon {
-            font-size: 2rem;
-        }
-    }
-
     .p-datatable.p-datatable-sm .p-datatable-thead > tr > th {
         padding: 0px;
     }
@@ -1387,14 +1361,6 @@ export default class ProductPanel extends Vue {
         max-width: 100%;
         max-height: 30vh;
         border-radius: 3px;
-    }
-
-    .i-not-used-interface {
-        text-decoration: line-through;
-    }
-
-    .i-hidden {
-        display: none;
     }
 }
 </style>

@@ -9,7 +9,11 @@
                 />
             </div>
             <div class="p-col p-pr-2">
-                <virtual-product-panel :product-id="id" @reset="reset" />
+                <virtual-product-panel
+                    v-if="id > 0"
+                    :product-id="id"
+                    @reset="reset"
+                />
             </div>
         </div>
     </div>
