@@ -36,9 +36,9 @@ import Component from '@/plugins/nuxt-class-component';
     props: {
         title: {
             type: String,
-            default: '자산 담당자',
-        },
-    },
+            default: '자산 관리책임자'
+        }
+    }
 })
 export default class AdminManager extends Vue {
     $refs!: {

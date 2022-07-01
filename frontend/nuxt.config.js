@@ -273,7 +273,7 @@ export default {
                         name: 'manager',
                         component: 'pages/admin/manager.vue',
                         meta: {
-                            title: '자산담당자'
+                            title: '관리책임자'
                         }
                     },
                     {

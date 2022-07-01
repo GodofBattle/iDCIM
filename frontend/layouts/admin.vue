@@ -13,8 +13,8 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import Component from '@/plugins/nuxt-class-component';
 import gql from 'graphql-tag';
+import Component from '@/plugins/nuxt-class-component';
 
 @Component<Admin>({
     middleware: 'authenticated_admin',
@@ -31,8 +31,8 @@ import gql from 'graphql-tag';
                 `,
                 result({
                     data: {
-                        RefreshToken: { ACCESS_TOKEN = '', REFRESH_TOKEN = '' },
-                    },
+                        RefreshToken: { ACCESS_TOKEN = '', REFRESH_TOKEN = '' }
+                    }
                 }) {
                     // by shkoh 20210729: 토큰이 갱신될 경우에 apollo client와 store에 토큰을 갱신시킴
                     // by shkoh 20210729: 토큰의 갱신방법은 api server에서 갱신 토큰을 구독하는 방법으로 함
@@ -41,7 +41,7 @@ import gql from 'graphql-tag';
                         .then(() => {
                             this.$store.commit('sessionStorage/REFRESHTOKEN', {
                                 access_token: ACCESS_TOKEN,
-                                refresh_token: REFRESH_TOKEN,
+                                refresh_token: REFRESH_TOKEN
                             });
                         })
                         .then(() => {
@@ -50,18 +50,18 @@ import gql from 'graphql-tag';
                 },
                 error(err: any) {
                     console.error(err);
-                },
-            },
-        },
-    },
+                }
+            }
+        }
+    }
 })
 export default class Admin extends Vue {
     menuItems = [
         { label: 'HOME' },
         { separator: true },
-        { label: '자산담당자', to: '/admin/manager' },
+        { label: '관리책임자', to: '/admin/manager' },
         { label: '자산', to: '/admin/asset' },
-        { label: '운영그룹' },
+        { label: '운영그룹' }
     ];
 
     head() {
@@ -69,8 +69,8 @@ export default class Admin extends Vue {
         return {
             link: [
                 { rel: 'icon', type: 'image/x-icon', href: 'favicon.ico' },
-                { rel: 'stylesheet', href: `themes/${theme}/theme.css` },
-            ],
+                { rel: 'stylesheet', href: `themes/${theme}/theme.css` }
+            ]
         };
     }
 

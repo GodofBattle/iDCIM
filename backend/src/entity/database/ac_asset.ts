@@ -39,11 +39,11 @@ export class ac_asset {
     ETC_INFO?: string;
 
     @Field(() => Int, { nullable: true })
-    @Column({ type: 'int', nullable: true, default: null, comment: '담당자 아이디 (정)(ac_asset_operator.TYPE : C,O' })
+    @Column({ type: 'int', nullable: true, default: null, comment: '관리책임자(정): 담당자 아이디(ac_asset_operator.TYPE : C,P' })
     OP_ID_M?: number;
 
     @Field(() => Int, { nullable: true })
-    @Column({ type: 'int', nullable: true, default: null, comment: '담당자 아이디 (부)(ac_asset_operator.TYPE : C,O' })
+    @Column({ type: 'int', nullable: true, default: null, comment: '관리책임자(부): 담당자 아이디(ac_asset_operator.TYPE : C,P' })
     OP_ID_S?: number;
 
     @Field(() => nullableDate, { nullable: true })

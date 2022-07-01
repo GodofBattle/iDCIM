@@ -3,7 +3,7 @@
         <div class="p-col p-fluid p-input-filled">
             <div class="p-field p-grid">
                 <label for="manager" class="p-col-fixed p-my-2 i-form-label">
-                    자산담당자(정)
+                    관리책임자(정)
                 </label>
                 <div class="p-col-5 i-form-value">
                     <Button
@@ -29,7 +29,7 @@
                     for="sub-manager"
                     class="p-col-fixed p-my-2 i-form-label"
                 >
-                    자산담당자(부)
+                    관리책임자(부)
                 </label>
                 <div class="p-col-5 i-form-value">
                     <Button
