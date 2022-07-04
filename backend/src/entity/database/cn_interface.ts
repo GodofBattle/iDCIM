@@ -1,7 +1,8 @@
-import { Field, ID, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, ID, Int, ObjectType } from "type-graphql";
 import { Column, Entity, getRepository, JoinColumn, OneToOne, PrimaryColumn } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
 import { ac_asset } from "./ac_asset";
+import { pd_interface } from "./pd_interface";
 import { pd_prod_intf } from "./pd_prod_intf";
 
 @ObjectType()
@@ -79,14 +80,44 @@ export class cn_interface {
     @JoinColumn({ name: 'ID', referencedColumnName: 'ID' })
     ASSET: ac_asset;
 
-    @Field(() => String, { nullable: true })
-    async PD_INTERFACE_NAME(): Promise<string> {
-        const prod_intf = await getRepository(pd_prod_intf)
-            .createQueryBuilder('prod')
-            .innerJoinAndSelect('prod.INTERFACE', 'intf', 'prod.PD_INTF_ID = intf.ID')
-            .where(`prod.ID = ${this.PROD_INTF_ID}`)
+    @Field(() => pd_interface, { nullable: true })
+    async PD_INTERFACE(): Promise<pd_interface> {
+        const pd_intf = await getRepository(pd_interface)
+            .createQueryBuilder('pd_intf')
+            .innerJoinAndSelect('pd_intf.PROD_INTF', 'prod_intf', 'pd_intf.ID = prod_intf.PD_INTF_ID')
+            .where(`prod_intf.ID = ${this.PROD_INTF_ID}`)
             .getOne();
 
-        return prod_intf ? prod_intf.INTERFACE.NAME : '';
+        return pd_intf;
     }
+}
+
+@ArgsType()
+export class cn_interface_args {
+    @Field(() => String, { nullable: true })
+    IP_ADDR: string;
+    
+    @Field(() => Int, { nullable: true })
+    PORT: number;
+    
+    @Field(() => Int, { nullable: true })
+    DEVICE_ID: number;
+    
+    @Field(() => Int, { nullable: true })
+    POLL_INTERVAL: number;
+    
+    @Field(() => Int, { nullable: true })
+    TIMEOUT: number;
+    
+    @Field(() => Int, { nullable: true })
+    RETRY: number;
+    
+    @Field(() => String, { nullable: true })
+    ACCESS_INFO: string;
+    
+    @Field(() => String, { nullable: true })
+    ODBC_QUERY: string;
+    
+    @Field(() => Int, { nullable: true })
+    IS_USE: number;
 }

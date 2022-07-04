@@ -150,10 +150,12 @@ export default class AssetTable extends Vue {
             this.$apollo.queries.assetList.refetch();
         }, 10000);
 
-        eventBus.$on('refreshAssetTable', () => {
+        eventBus.$on('refreshAssetTable', (id: number) => {
             this.$apollo.queries.assetList.refetch().then(() => {
+                const row_id = id || this.selectedRow.ID;
+
                 this.selectedRow = this.assetList.find(
-                    (asset: any) => asset.ID === this.selectedRow.ID
+                    (asset: any) => asset.ID === row_id
                 );
             });
         });
@@ -182,8 +184,8 @@ export default class AssetTable extends Vue {
         });
     }
 
-    is_used_interface({ IS_USE_INTF, INTERFACE }: any): boolean {
-        return IS_USE_INTF === 1 && INTERFACE && INTERFACE.IS_USE === 1;
+    is_used_interface({ IS_USE_INTF }: any): boolean {
+        return IS_USE_INTF === 1;
     }
 
     lvlStatus(lvl: undefined | number): Array<object | string> {
@@ -261,6 +263,8 @@ export default class AssetTable extends Vue {
 
         .i-comm05 {
             background-color: var(--comm05-color);
+            width: 0.9rem;
+            height: 0.9rem;
             border: 1px solid var(--surface-border);
         }
     }

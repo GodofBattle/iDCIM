@@ -201,14 +201,12 @@ export class AssetResolver {
         try {
             await publish();
 
-            if(!id) throw new UserInputError('전달한 인자의 데이터가 잘못됐꺼나 형식이 틀렸습니다');
+            if(!id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
 
             const update_data = {};
             for(const [key, value] of Object.entries({ NAME, SERIAL, CUST_HIER_ID_C, CUST_HIER_ID_P, OP_ID_M, OP_ID_S, INSTALL_DATE, MA_USER_ID, MA_START_DATE, MA_END_DATE, INSPECT_INFO })) {
                 if(value !== undefined) update_data[key] = value;
             }
-
-            console.info(update_data);
 
             const result = await getRepository(ac_asset).update({ ID: id }, update_data);
             return result.affected > 0 ? true : false;
@@ -236,7 +234,8 @@ export class AssetResolver {
                 case ACTION_CD.USED: {
                     result = await this.UsedInterface(asset_id, prod_intf_id, user);
                     // by shkoh 20220531: 사용이 가능한 INTERFACE로 변경
-                    await getRepository(ac_asset).update({ ID: asset_id }, { IS_USE_INTF: 1, UPDATE_USER_ID: user.ID, UPDATE_USER_DT: new Date() });
+                    const update_result = await getRepository(ac_asset).update({ ID: asset_id }, { IS_USE_INTF: 1, UPDATE_USER_ID: user.ID, UPDATE_USER_DT: new Date() });
+                    result = !result && update_result.affected > 0 ? true : false;
                     break;
                 }
                 case ACTION_CD.NOT_USED: {
@@ -244,7 +243,6 @@ export class AssetResolver {
                     break;
                 }
                 case ACTION_CD.UPDATE: {
-                    console.info('update');
                     result = await this.UsedInterface(asset_id, prod_intf_id, user);
                     break;
                 }

@@ -71,6 +71,9 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import AssetPanelInterface from './assetPanelInterface.vue';
+import AssetPanelManager from './assetPanelManager.vue';
+import AssetPanelInfo from './assetPanelInfo.vue';
 import Component from '@/plugins/nuxt-class-component';
 
 type TabItem = {
@@ -87,29 +90,32 @@ type TabItem = {
         item: Object
     },
     watch: {
-        item(_item) {
-            if (_item === undefined || _item === null) return;
+        item: {
+            deep: true,
+            handler(_item) {
+                if (_item === undefined || _item === null) return;
 
-            const { IS_USE_INTF, INTERFACE } = _item;
-            const is_used =
-                IS_USE_INTF === 1 && INTERFACE && INTERFACE.IS_USE === 1;
+                const { IS_USE_INTF } = _item;
+                const is_used = IS_USE_INTF === 1;
 
-            this.assetTabList.forEach((item: TabItem) => {
-                if (item.is_interface) {
-                    this.$set(item, 'unvisible', !is_used);
+                this.assetTabList.forEach((item: TabItem) => {
+                    if (item.is_interface) {
+                        this.$set(item, 'unvisible', !is_used);
+                    }
+                });
+
+                if (this.assetTabList[this.tabIndex].is_interface !== is_used) {
+                    this.tabIndex = 0;
                 }
-            });
-
-            if (this.assetTabList[this.tabIndex].is_interface !== is_used) {
-                this.tabIndex = 0;
             }
         }
     }
 })
 export default class AssetPanel extends Vue {
     $refs!: {
-        assetPanelInfo: any;
-        assetPanelManager: any;
+        assetPanelInfo: AssetPanelInfo;
+        assetPanelManager: AssetPanelManager;
+        assetPanelInterface: AssetPanelInterface;
     };
 
     assetTabList: Array<TabItem> = [
@@ -208,6 +214,9 @@ export default class AssetPanel extends Vue {
             case 1: {
                 this.$refs.assetPanelManager.updateAsset();
                 break;
+            }
+            case 2: {
+                this.$refs.assetPanelInterface.updateAsset();
             }
         }
     }

@@ -123,7 +123,7 @@
                                         :id="intf.ID"
                                         v-model="productInterfaceID"
                                         name="intf"
-                                        :value="intf.PD_INTF_ID"
+                                        :value="Number(intf.ID)"
                                         :disabled="!is_interface"
                                     ></RadioButton>
                                     <label
@@ -518,9 +518,12 @@ type ASSET = {
                     }
                 }
             `,
+            skip() {
+                return this.asset.PRODUCT_ID === -1;
+            },
             variables() {
                 return {
-                    PRODUCT_ID: -1
+                    PRODUCT_ID: this.asset.PRODUCT_ID
                 };
             },
             update: ({ ProductInterfaces }) => ProductInterfaces
@@ -595,9 +598,16 @@ export default class AssetPanelInfo extends Vue {
     treeHier03: Array<any> = [];
     productInterfaces: Array<any> = [];
 
+    product_id = -1;
+
     // by shkoh 20220525: manual file 및 image file 데이터 처리
     manual_file_name: string = '';
     image_file: any = '';
+
+    refreshAsset() {
+        this.resetAsset();
+        this.$apollo.queries.dbAsset.refresh();
+    }
 
     resetAsset() {
         this.asset.ID = -1;
@@ -1046,6 +1056,8 @@ export default class AssetPanelInfo extends Vue {
             })
             .then(({ data: { SetAssetInterface } }) => {
                 if (SetAssetInterface) {
+                    eventBus.$emit('refreshAssetTable', this.asset.ID);
+
                     this.refreshAsset();
                 }
             })
@@ -1078,7 +1090,7 @@ export default class AssetPanelInfo extends Vue {
         let _message = ``;
 
         const dst_intf_name = this.productInterfaces.find(
-            (pi: any) => pi.PD_INTF_ID === this.asset.INTERFACE.PROD_INTF_ID
+            (pi: any) => Number(pi.ID) === this.asset.INTERFACE.PROD_INTF_ID
         ).INTERFACE.NAME;
 
         switch (this.status_asset_interface) {
@@ -1093,13 +1105,21 @@ export default class AssetPanelInfo extends Vue {
                 break;
             }
             case 3: {
-                const src_intf_name = this.productInterfaces.find(
+                const src_intf = this.productInterfaces.find(
                     (pi: any) =>
-                        pi.PD_INTF_ID === this.dbAsset?.INTERFACE.PROD_INTF_ID
-                ).INTERFACE.NAME;
+                        Number(pi.ID) === this.dbAsset?.INTERFACE.PROD_INTF_ID
+                );
 
-                _header = `[${this.asset.NAME}] 인터페이스 변경`;
-                _message = `[${src_intf_name}] --> [${dst_intf_name}] 인터페이스 변경\n\n자산의 인터페이스 변경은 자산과의 원할한 정보수집을 위하여\n관련 수집항목, 제어, 통신정보 등 모든 정보가 삭제 후 새로 설정됩니다\n그래도 진행하시겠습니까?`;
+                if (src_intf) {
+                    const src_intf_name = src_intf.INTERFACE.NAME;
+
+                    _header = `[${this.asset.NAME}] 인터페이스 변경`;
+                    _message = `[${src_intf_name}] --> [${dst_intf_name}] 인터페이스 변경\n\n자산의 인터페이스 변경은 자산과의 원할한 정보수집을 위하여\n관련 수집항목, 제어, 통신정보 등 모든 정보가 삭제 후 새로 설정됩니다\n그래도 진행하시겠습니까?`;
+                } else {
+                    // by shkoh 20220701: 자산의 인터페이스가 잘못 등록되어 초기상태로 되돌리기 위해서 구현된 코드
+                    _header = `[${this.asset.NAME}] 인터페이스 설정`;
+                    _message = `${dst_intf_name} 인터페이스를 사용 가능하도록 설정합니다\n진행하시겠습니까?`;
+                }
                 break;
             }
         }
@@ -1116,10 +1136,6 @@ export default class AssetPanelInfo extends Vue {
                 this.changeInterface();
             }
         });
-    }
-
-    refreshAsset() {
-        this.$apollo.queries.dbAsset.refresh();
     }
 
     get is_valid(): boolean {
@@ -1168,10 +1184,12 @@ export default class AssetPanelInfo extends Vue {
     }
 
     get productInterfaceID(): number {
+        console.info(this.asset.INTERFACE?.PROD_INTF_ID ?? -1);
         return this.asset.INTERFACE?.PROD_INTF_ID ?? -1;
     }
 
     set productInterfaceID(value: number) {
+        console.info(value);
         this.asset.INTERFACE.PROD_INTF_ID = value;
     }
 

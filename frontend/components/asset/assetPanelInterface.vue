@@ -236,22 +236,24 @@
                         </small>
                     </div>
                 </div>
-                <div class="p-field p-grid">
+                <div v-if="hasManual" class="p-field p-grid">
                     <label
                         for="odbc-query"
                         class="p-col-fixed p-my-2 i-form-panel-label"
                     >
-                        통신매뉴얼
+                        통신 매뉴얼
                     </label>
                     <div class="p-col-fixed i-form-value">
                         <Button
                             class="p-ml-2 p-text-nowrap p-text-truncate p-text-left p-button-sm p-button-outlined p-button-secondary"
-                            label="매뉴얼.pdf"
-                            icon="pi pi-download"
+                            :label="protocol_file_name"
+                            :icon="protocolFileIcon"
                             :style="{
+                                'min-width': '40px',
                                 'max-width': '100%',
                                 display: 'block'
                             }"
+                            @click="downloadProtocolFile"
                         />
                     </div>
                 </div>
@@ -264,6 +266,7 @@
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
+import { eventBus } from '~/plugins/vueEventBus';
 
 type CODE = {
     [index: string]: string;
@@ -272,9 +275,10 @@ type CODE = {
 };
 
 type PD_INTERFACE = {
-    [index: string]: string;
+    [index: string]: string | number | null;
     NAME: string;
     INTF_CD: string;
+    PROTOCOL_FILE_ID: number | null;
 };
 
 type INTERFACE = {
@@ -294,8 +298,9 @@ type INTERFACE = {
 };
 
 type ASSET = {
-    [index: string]: number | INTERFACE;
+    [index: string]: number | string | INTERFACE;
     ID: number;
+    NAME: string;
     INTERFACE: INTERFACE;
 };
 
@@ -323,16 +328,21 @@ type ASSET = {
                             ACCESS_INFO
                             ODBC_QUERY
                             IS_USE
-                            PD_INTERFACE_NAME
+                            PD_INTERFACE {
+                                NAME
+                                INTF_CD
+                                PROTOCOL_FILE_ID
+                            }
                         }
                     }
                 }
             `,
+            skip() {
+                return this.$props.assetItem?.ID < 0;
+            },
             variables(): any {
                 return {
-                    ID: this.$props.assetItem
-                        ? Number(this.$props.assetItem.ID)
-                        : -1
+                    ID: this.$props.assetItem.ID
                 };
             },
             update: ({ Asset }) => Asset,
@@ -341,7 +351,6 @@ type ASSET = {
                     const { Asset } = data;
 
                     if (Asset) {
-                        console.info(Asset);
                         this.apolloFetch(Asset);
                     }
                 }
@@ -358,13 +367,36 @@ type ASSET = {
             `,
             update: ({ Codes }) => Codes
         }
+    },
+    watch: {
+        assetItem: {
+            deep: true,
+            handler() {
+                this.resetAsset();
+            }
+        },
+        asset: {
+            deep: true,
+            handler(_asset: ASSET) {
+                if (this.dbAssetInterface) {
+                    const diff = this.isDiffAssetData(
+                        this.dbAssetInterface,
+                        _asset
+                    );
+                    this.$emit(
+                        'update:applyButtonDisabled',
+                        !this.is_valid || !diff
+                    );
+                }
+            }
+        }
     }
 })
 export default class AssetPanelInterface extends Vue {
     interfaceList: Array<CODE> = [];
-    dbAssetInterface: ASSET | null = null;
-    asset: ASSET = {
+    dbAssetInterface: ASSET = {
         ID: -1,
+        NAME: '',
         INTERFACE: {
             ID: -1,
             PROD_INTF_ID: -1,
@@ -379,7 +411,32 @@ export default class AssetPanelInterface extends Vue {
             IS_USE: 0,
             PD_INTERFACE: {
                 NAME: '',
-                INTF_CD: ''
+                INTF_CD: '',
+                PROTOCOL_FILE_ID: null
+            }
+        }
+    };
+
+    asset: ASSET = {
+        ID: -1,
+        NAME: '',
+        INTERFACE: {
+            ID: -1,
+            NAME: '',
+            PROD_INTF_ID: -1,
+            IP_ADDR: '',
+            PORT: 0,
+            DEVICE_ID: 0,
+            POLL_INTERVAL: 0,
+            TIMEOUT: 0,
+            RETRY: 0,
+            ACCESS_INFO: '',
+            ODBC_QUERY: '',
+            IS_USE: 0,
+            PD_INTERFACE: {
+                NAME: '',
+                INTF_CD: '',
+                PROTOCOL_FILE_ID: null
             }
         }
     };
@@ -390,7 +447,16 @@ export default class AssetPanelInterface extends Vue {
         ODBC_QUERY: undefined as string | undefined
     };
 
+    protocol_file_name: string = '';
+
+    refreshAsset() {
+        this.resetAsset();
+        this.$apollo.queries.dbAssetInterface.refresh();
+    }
+
     resetAsset() {
+        this.protocol_file_name = '';
+
         this.asset.ID = -1;
         this.asset.INTERFACE.ID = -1;
         this.asset.INTERFACE.PROD_INTF_ID = -1;
@@ -403,17 +469,39 @@ export default class AssetPanelInterface extends Vue {
         this.asset.INTERFACE.ACCESS_INFO = '';
         this.asset.INTERFACE.ODBC_QUERY = '';
         this.asset.INTERFACE.IS_USE = -1;
-        this.asset.INTERFACE.PD_INTERFACE.NAME = '';
-        this.asset.INTERFACE.PD_INTERFACE.INTF_CD = '';
+
+        if (this.asset.INTERFACE.PD_INTERFACE) {
+            this.asset.INTERFACE.PD_INTERFACE.NAME = '';
+            this.asset.INTERFACE.PD_INTERFACE.INTF_CD = '';
+            this.asset.INTERFACE.PD_INTERFACE.PROTOCOL_FILE_ID = null;
+        }
+
+        this.invalidMessage.IP_ADDR = undefined;
+        this.invalidMessage.ACCESS_INFO = undefined;
+        this.invalidMessage.ODBC_QUERY = undefined;
     }
 
     apolloFetch(asset: ASSET) {
-        this.resetAsset();
-
         for (const [key, value] of Object.entries(asset)) {
             if (key === 'INTERFACE') {
-                for (const [i_key, i_value] of Object.entries(value)) {
-                    this.asset[key][i_key] = i_value;
+                for (const [i_key, i_value] of Object.entries(asset[key])) {
+                    if (i_key === 'PD_INTERFACE') {
+                        for (const [pd_key, pd_value] of Object.entries(
+                            asset[key][i_key]
+                        )) {
+                            this.asset[key][i_key][pd_key] = pd_value;
+
+                            if (
+                                pd_key === 'PROTOCOL_FILE_ID' &&
+                                pd_value !== null
+                            ) {
+                                this.protocol_file_name = '';
+                                this.loadProtocolFile();
+                            }
+                        }
+                    } else {
+                        this.asset[key][i_key] = i_value;
+                    }
                 }
             } else {
                 this.asset[key] = value;
@@ -478,6 +566,208 @@ export default class AssetPanelInterface extends Vue {
         return is_ipv4;
     }
 
+    loadProtocolFile() {
+        this.$apollo
+            .query({
+                query: gql`
+                query {
+                    PdFile(ID: ${this.asset.INTERFACE.PD_INTERFACE.PROTOCOL_FILE_ID}) {
+                        FILE_NAME
+                    }
+                }
+            `
+            })
+            .then(({ data: { PdFile } }) => {
+                this.protocol_file_name = PdFile.FILE_NAME;
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '파일 로드 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            });
+    }
+
+    downloadProtocolFile() {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .query({
+                query: gql`
+                query {
+                    PdFile(ID: ${this.asset.INTERFACE.PD_INTERFACE.PROTOCOL_FILE_ID}) {
+                        FILE_NAME
+                        MIMETYPE
+                        DATA
+                    }
+                }
+            `
+            })
+            .then(({ data: { PdFile } }) => {
+                this.$nextTick(() => {
+                    const buf = Buffer.from(PdFile.DATA, 'base64');
+                    const manual = new File(
+                        [buf.buffer],
+                        PdFile.FILE_NAME.normalize('NFC'),
+                        { type: PdFile.MIMETYPE }
+                    );
+
+                    const reader = new FileReader();
+                    reader.readAsDataURL(manual);
+
+                    reader.onloadend = (event: any) => {
+                        const link = document.createElement('a');
+                        link.download = PdFile.FILE_NAME.normalize('NFC');
+                        link.href = event.target.result;
+
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    };
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '파일 불러오기 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    isDiffAssetData(source: ASSET, target: ASSET) {
+        let is_diff = false;
+
+        for (const key of Object.keys(target)) {
+            if (key === 'INTERFACE') {
+                [
+                    'IP_ADDR',
+                    'PORT',
+                    'DEVICE_ID',
+                    'POLL_INTERVAL',
+                    'TIMEOUT',
+                    'RETRY',
+                    'ACCESS_INFO',
+                    'ODBC_QUERY',
+                    'IS_USE'
+                ].forEach((i_key: string) => {
+                    if (source[key][i_key] !== target[key][i_key]) {
+                        is_diff = true;
+                    }
+                });
+            }
+        }
+
+        return is_diff;
+    }
+
+    updateAsset() {
+        const variables = {
+            ID: this.asset.INTERFACE.ID
+        };
+
+        [
+            'IP_ADDR',
+            'PORT',
+            'DEVICE_ID',
+            'POLL_INTERVAL',
+            'TIMEOUT',
+            'RETRY',
+            'ACCESS_INFO',
+            'ODBC_QUERY',
+            'IS_USE'
+        ].forEach((i_key: string) => {
+            if (
+                this.dbAssetInterface.INTERFACE[i_key] !==
+                this.asset.INTERFACE[i_key]
+            ) {
+                this.$set(variables, i_key, this.asset.INTERFACE[i_key]);
+            }
+        });
+
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation UpdateAssetInterface(
+                        $ID: ID!
+                        $IP_ADDR: String
+                        $PORT: Int
+                        $DEVICE_ID: Int
+                        $POLL_INTERVAL: Int
+                        $TIMEOUT: Int
+                        $RETRY: Int
+                        $ACCESS_INFO: String
+                        $ODBC_QUERY: String
+                        $IS_USE: Int
+                    ) {
+                        UpdateAssetInterface(
+                            ID: $ID
+                            IP_ADDR: $IP_ADDR
+                            PORT: $PORT
+                            DEVICE_ID: $DEVICE_ID
+                            POLL_INTERVAL: $POLL_INTERVAL
+                            TIMEOUT: $TIMEOUT
+                            RETRY: $RETRY
+                            ACCESS_INFO: $ACCESS_INFO
+                            ODBC_QUERY: $ODBC_QUERY
+                            IS_USE: $IS_USE
+                        )
+                    }
+                `,
+                variables
+            })
+            .then(() => {
+                eventBus.$emit('refreshAssetTable');
+
+                this.refreshAsset();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '자산 인터페이스 변경 완료',
+                    detail: `${this.dbAssetInterface.NAME} 자산 인터페이스 변경`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '자산 인터페이스 정보 적용 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    get is_valid(): boolean {
+        let is_valid = true;
+
+        for (const value of Object.values(this.invalidMessage)) {
+            if (value) {
+                is_valid = false;
+                break;
+            }
+        }
+
+        return is_valid;
+    }
+
     get is_com(): boolean {
         return this.asset.INTERFACE.IS_USE === 1;
     }
@@ -487,19 +777,31 @@ export default class AssetPanelInterface extends Vue {
     }
 
     get interfaceHeader(): string {
-        const interface_name = this.asset.INTERFACE.PD_INTERFACE.NAME;
-        let comm_name = '';
-        if (interface_name.length > 0) {
-            const comm = this.interfaceList.find(
-                (intf_code: CODE) =>
-                    intf_code.CODE === this.asset.INTERFACE.PD_INTERFACE.INTF_CD
+        if (this.asset.INTERFACE.PD_INTERFACE) {
+            const pd_intf_name = this.asset.INTERFACE.PD_INTERFACE.NAME;
+            const pd_intf_code = this.interfaceList.find(
+                (l: any) =>
+                    l.CODE === this.asset.INTERFACE?.PD_INTERFACE.INTF_CD
             );
-            if (comm) {
-                comm_name = ` | ${comm.NAME}`;
-            }
-        }
 
-        return `${interface_name}${comm_name}`;
+            return `
+                ${pd_intf_name}
+                ${pd_intf_name.length > 0 ? ' | ' : ''}
+                ${pd_intf_code ? pd_intf_code.NAME : ''}
+            `;
+        } else {
+            return '';
+        }
+    }
+
+    get hasManual(): boolean {
+        return this.asset.INTERFACE.PD_INTERFACE?.PROTOCOL_FILE_ID !== null;
+    }
+
+    get protocolFileIcon(): string {
+        return this.protocol_file_name.length > 0
+            ? 'pi pi-download'
+            : 'pi pi-spin pi-spinner';
     }
 }
 </script>
