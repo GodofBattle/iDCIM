@@ -474,6 +474,12 @@ export default class AssetPanelInterface extends Vue {
             this.asset.INTERFACE.PD_INTERFACE.NAME = '';
             this.asset.INTERFACE.PD_INTERFACE.INTF_CD = '';
             this.asset.INTERFACE.PD_INTERFACE.PROTOCOL_FILE_ID = null;
+        } else {
+            this.$set(this.asset.INTERFACE, 'PD_INTERFACE', {
+                NAME: '',
+                INTF_CD: '',
+                PROTOCOL_FILE_ID: null
+            });
         }
 
         this.invalidMessage.IP_ADDR = undefined;
@@ -485,11 +491,17 @@ export default class AssetPanelInterface extends Vue {
         for (const [key, value] of Object.entries(asset)) {
             if (key === 'INTERFACE') {
                 for (const [i_key, i_value] of Object.entries(asset[key])) {
-                    if (i_key === 'PD_INTERFACE') {
+                    if (i_key === 'PD_INTERFACE' && i_value !== null) {
                         for (const [pd_key, pd_value] of Object.entries(
                             asset[key][i_key]
                         )) {
-                            this.asset[key][i_key][pd_key] = pd_value;
+                            if (pd_value !== null) {
+                                this.$set(
+                                    this.asset[key][i_key],
+                                    pd_key,
+                                    pd_value
+                                );
+                            }
 
                             if (
                                 pd_key === 'PROTOCOL_FILE_ID' &&
@@ -500,7 +512,7 @@ export default class AssetPanelInterface extends Vue {
                             }
                         }
                     } else {
-                        this.asset[key][i_key] = i_value;
+                        this.$set(this.asset[key], i_key, i_value);
                     }
                 }
             } else {

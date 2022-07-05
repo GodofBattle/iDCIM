@@ -96,6 +96,7 @@ let timerId: NodeJS.Timeout;
                         NAME
                         IS_USE_INTF
                         INTERFACE {
+                            PROD_INTF_ID
                             CURR_STATUS
                             CURR_LEVEL
                             IS_USE

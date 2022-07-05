@@ -277,6 +277,24 @@ export class PredefinedProductResolver {
         }
     }
 
+    @Query(() => pd_prod_intf, { nullable: true })
+    async ProductInterface(
+        @Arg('ID', () => ID) id: number,
+        @Ctx() ctx: any
+    ): Promise<pd_prod_intf> {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            if(id === undefined) throw new UserInputError('전달한 인자의 데이터가 잘못됐꺼나 형식이 틀렸습니다');
+
+            return await getRepository(pd_prod_intf).findOne({ ID: id });
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
     @Query(() => [pd_prod_intf], { nullable: true })
     async ProductInterfaces(
         @Arg('PRODUCT_ID', () => Int!) product_id: number,

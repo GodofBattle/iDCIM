@@ -1,4 +1,4 @@
-import { Field, ID, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, ID, InputType, Int, ObjectType } from "type-graphql";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 import { nullableDate } from "../../scalar/nullableDate";
@@ -45,4 +45,40 @@ export class cn_modbus_cmd {
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256, nullable: true, default: null, comment: '설명' })
     REMARK?: string;
+}
+
+@ArgsType()
+export class cn_modbus_cmd_args {
+    @Field(() => Int, { nullable: true })
+    FUNC_NO: number;
+
+    @Field(() => Int, { nullable: true })
+    START_ADDR: number;
+
+    @Field(() => Int, { nullable: true })
+    POINT_CNT: number;
+
+    @Field(() => String, { nullable: true })
+    DTYPE_CD: string;
+}
+
+@InputType('ModbusCommandInput')
+export class cn_modbus_cmd_input {
+    @Field(() => Int, { nullable: true })
+    INTF_ID: number;
+
+    @Field(() => Int, { nullable: true })
+    MC_ID: number;
+
+    @Field(() => Int, { nullable: true })
+    FUNC_NO: number;
+
+    @Field(() => Int, { nullable: true })
+    START_ADDR: number;
+
+    @Field(() => Int, { nullable: true })
+    POINT_CNT: number;
+
+    @Field(() => String, { nullable: true })
+    DTYPE_CD: string;
 }

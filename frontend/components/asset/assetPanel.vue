@@ -6,6 +6,7 @@
             </div>
             <div class="p-ml-auto">
                 <Button
+                    v-show="showSaveButton"
                     class="p-button-rounded p-button-text p-mr-1"
                     icon="pi pi-save"
                     :disabled="applyButtonDisabled"
@@ -44,9 +45,12 @@
                 :asset-item.sync="item"
                 :apply-button-disabled.sync="applyButtonDisabled"
             />
-            <div v-else-if="tabIndex === 3">
-                <h1>통신정보</h1>
-            </div>
+            <asset-panel-commander
+                v-else-if="tabIndex === 3"
+                ref="assetPanelCommander"
+                :asset-item.sync="item"
+                :apply-button-disabled.sync="applyButtonDisabled"
+            />
             <div v-else-if="tabIndex === 4">
                 <h1>수집항목</h1>
             </div>
@@ -71,9 +75,11 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import gql from 'graphql-tag';
 import AssetPanelInterface from './assetPanelInterface.vue';
 import AssetPanelManager from './assetPanelManager.vue';
 import AssetPanelInfo from './assetPanelInfo.vue';
+import AssetPanelCommander from './assetPanelCommander.vue';
 import Component from '@/plugins/nuxt-class-component';
 
 type TabItem = {
@@ -82,6 +88,7 @@ type TabItem = {
     disabled: boolean;
     unvisible: boolean;
     is_interface: boolean;
+    show_save_button: boolean;
     type: string;
 };
 
@@ -109,6 +116,65 @@ type TabItem = {
                 }
             }
         }
+    },
+    apollo: {
+        productInterface: {
+            query: gql`
+                query ProductInterface($ID: ID!) {
+                    ProductInterface(ID: $ID) {
+                        PD_INTF_ID
+                        INTERFACE {
+                            INTF_CD
+                        }
+                    }
+                }
+            `,
+            manual: true,
+            skip() {
+                return this.$props.item?.INTERFACE?.PROD_INTF_ID == undefined;
+            },
+            variables() {
+                return {
+                    ID: this.$props.item.INTERFACE.PROD_INTF_ID
+                };
+            },
+            result({ loading, data }) {
+                if (!loading) {
+                    const { ProductInterface } = data;
+
+                    let is_command_list = false;
+
+                    if (ProductInterface) {
+                        is_command_list = [
+                            'INTF02',
+                            'INTF06',
+                            'INTF07'
+                        ].includes(ProductInterface.INTERFACE.INTF_CD);
+                    }
+
+                    const asset_content_04 = this.assetTabList.find(
+                        (tab: TabItem) => tab.type === 'ASSETCONTENT04'
+                    );
+                    if (asset_content_04) {
+                        console.info(`158: ${is_command_list}`);
+
+                        this.$set(
+                            asset_content_04,
+                            'unvisible',
+                            !is_command_list
+                        );
+                    }
+
+                    if (
+                        !is_command_list &&
+                        this.assetTabList[this.tabIndex].type ===
+                            'ASSETCONTENT04'
+                    ) {
+                        this.tabIndex = 0;
+                    }
+                }
+            }
+        }
     }
 })
 export default class AssetPanel extends Vue {
@@ -116,6 +182,7 @@ export default class AssetPanel extends Vue {
         assetPanelInfo: AssetPanelInfo;
         assetPanelManager: AssetPanelManager;
         assetPanelInterface: AssetPanelInterface;
+        assetPanelCommander: AssetPanelCommander;
     };
 
     assetTabList: Array<TabItem> = [
@@ -125,6 +192,7 @@ export default class AssetPanel extends Vue {
             unvisible: false,
             is_interface: false,
             is_virtual: false,
+            show_save_button: true,
             type: 'ASSETCONTENT01'
         },
         {
@@ -133,6 +201,7 @@ export default class AssetPanel extends Vue {
             unvisible: false,
             is_interface: false,
             is_virtual: false,
+            show_save_button: true,
             type: 'ASSETCONTENT02'
         },
         {
@@ -141,6 +210,7 @@ export default class AssetPanel extends Vue {
             unvisible: false,
             is_interface: true,
             is_virtual: false,
+            show_save_button: true,
             type: 'ASSETCONTENT03'
         },
         {
@@ -149,6 +219,7 @@ export default class AssetPanel extends Vue {
             unvisible: false,
             is_interface: true,
             is_virtual: false,
+            show_save_button: false,
             type: 'ASSETCONTENT04'
         },
         {
@@ -157,6 +228,7 @@ export default class AssetPanel extends Vue {
             unvisible: false,
             is_interface: true,
             is_virtual: false,
+            show_save_button: false,
             type: 'ASSETCONTENT05'
         },
         {
@@ -165,6 +237,7 @@ export default class AssetPanel extends Vue {
             unvisible: false,
             is_interface: true,
             is_virtual: false,
+            show_save_button: false,
             type: 'ASSETCONTENT06'
         },
         {
@@ -173,6 +246,7 @@ export default class AssetPanel extends Vue {
             unvisible: false,
             is_interface: true,
             is_virtual: false,
+            show_save_button: true,
             type: 'ASSETCONTENT07'
         },
         {
@@ -181,6 +255,7 @@ export default class AssetPanel extends Vue {
             unvisible: false,
             is_interface: true,
             is_virtual: false,
+            show_save_button: true,
             type: 'ASSETCONTENT08'
         },
         {
@@ -189,6 +264,7 @@ export default class AssetPanel extends Vue {
             unvisible: false,
             is_interface: false,
             is_virtual: false,
+            show_save_button: true,
             type: 'ASSETCONTENT09'
         },
         {
@@ -197,6 +273,7 @@ export default class AssetPanel extends Vue {
             unvisible: false,
             is_interface: false,
             is_vitual: false,
+            show_save_button: true,
             type: 'ASSETCONTENT10'
         }
     ];
@@ -219,6 +296,10 @@ export default class AssetPanel extends Vue {
                 this.$refs.assetPanelInterface.updateAsset();
             }
         }
+    }
+
+    get showSaveButton(): boolean {
+        return this.assetTabList[this.tabIndex].show_save_button;
     }
 }
 </script>

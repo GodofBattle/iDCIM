@@ -1,5 +1,5 @@
 <template>
-    <div v-if="showCommPanel" id="interfacePanelComm" class="p-grid">
+    <div id="i-asset-panel-commander" class="p-grid">
         <DataTable
             :value="commList"
             data-key="MC_ID"
@@ -8,6 +8,11 @@
             :style="{ width: '100%', height: '100%' }"
             :row-hover="true"
         >
+            <template #empty>
+                <div class="i-table-empty">
+                    정의된 통신방법이 존재하지 않습니다
+                </div>
+            </template>
             <template #header>
                 <div class="i-table-header p-d-flex">
                     <div class="p-ml-auto">
@@ -15,26 +20,23 @@
                             icon="pi pi-save"
                             label="SAVE ALL"
                             class="p-field p-button-outlined p-button-secondary"
-                            :disabled="applyButtonDisabled"
-                            @click="saveAll"
+                            :disabled="isDisabledSaveAllButton"
+                            @click="saveAllModbusCmd"
                         ></Button>
                         <Button
                             icon="pi pi-plus"
                             label="ADD"
                             class="p-field p-button-outlined p-button-secondary"
-                            @click="addModbusCmdCard"
-                        ></Button>
+                            @click="addModbusCmd"
+                        />
                     </div>
                 </div>
-            </template>
-            <template #empty>
-                <div class="i-table-empty">통신방법을 추가하세요</div>
             </template>
             <Column>
                 <template #body="slotProps">
                     <modbus-cmd-card
                         :idx="slotProps.index"
-                        :intf-id="id"
+                        :intf-id="Number(assetItem.ID)"
                         :mc-id.sync="slotProps.data.MC_ID"
                         :func-no.sync="slotProps.data.FUNC_NO"
                         :start-addr.sync="slotProps.data.START_ADDR"
@@ -42,10 +44,10 @@
                         :dtype-cd.sync="slotProps.data.DTYPE_CD"
                         :is-editable.sync="slotProps.data.is_editable"
                         :init-data="initModbusCmdInfo(slotProps.index)"
-                        @copy="copyModbusCmdInfo"
-                        @save="saveModbusCmdCard"
-                        @change="chageCardInfo"
-                        @delete="deleteModbusCmdCard(slotProps.index)"
+                        @copy="copyModbusCmd"
+                        @save="saveModbusCmd"
+                        @delete="deleteModbusCmd(slotProps.index)"
+                        @change="changeModbusCmd"
                     />
                 </template>
             </Column>
@@ -59,7 +61,7 @@ import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
 
 type ModbusCmd = {
-    [index: string]: number | string | boolean;
+    [index: string]: string | number | boolean;
     ID: number;
     MC_ID: number;
     FUNC_NO: number;
@@ -69,21 +71,16 @@ type ModbusCmd = {
     is_editable: boolean;
 };
 
-@Component<InterfacePanelComm>({
+@Component<AssetPanelCommander>({
     props: {
-        id: Number,
+        assetItem: Object,
         applyButtonDisabled: Boolean
-    },
-    watch: {
-        id() {
-            this.reset();
-        }
     },
     apollo: {
         dbCommList: {
             query: gql`
-                query PredefineModbusCommands($ID: Int!) {
-                    PredefineModbusCommands(PD_INTF_ID: $ID) {
+                query ModbusCommands($INTF_ID: Int!) {
+                    ModbusCommands(INTF_ID: $INTF_ID) {
                         ID
                         MC_ID
                         FUNC_NO
@@ -93,53 +90,61 @@ type ModbusCmd = {
                     }
                 }
             `,
-            variables(): any {
+            skip() {
+                return Number(this.assetItem.ID) < 0;
+            },
+            variables() {
                 return {
-                    ID: this.id ? this.id : -1
+                    INTF_ID: Number(this.assetItem.ID)
                 };
             },
-            update: ({ PredefineModbusCommands }) => PredefineModbusCommands,
-            result({ data, loading }: any) {
+            update: ({ ModbusCommands }) => ModbusCommands,
+            result({ loading, data }) {
                 if (!loading) {
-                    const { PredefineModbusCommands } = data;
-
-                    if (PredefineModbusCommands) {
-                        this.apolloFetch(PredefineModbusCommands);
+                    const { ModbusCommands } = data;
+                    if (ModbusCommands) {
+                        this.apolloFetch(ModbusCommands);
                     }
                 }
             },
             fetchPolicy: 'cache-and-network',
             deep: true
         }
+    },
+    watch: {
+        assetItem: {
+            deep: true,
+            handler(_item) {
+                this.reset();
+            }
+        }
     }
 })
-export default class InterfacePanelComm extends Vue {
+export default class AssetPanelCommander extends Vue {
     dbCommList: Array<ModbusCmd> = [];
     commList: Array<ModbusCmd> = [];
 
-    get showCommPanel(): boolean {
-        return this.$props.id > 0;
-    }
-
-    initModbusCmdInfo(index: number): any {
-        return this.dbCommList?.at(index);
-    }
+    isDisabledSaveAllButton = true;
 
     reset() {
         this.commList.splice(0, this.commList.length);
     }
 
-    apolloFetch(data: Array<ModbusCmd>) {
-        const editable_list = this.editableCommList;
+    refreshCommList() {
+        this.$apollo.queries.dbCommList.refresh();
+    }
 
+    apolloFetch(list: Array<ModbusCmd>) {
+        const editable_list = this.editableCommList;
+        // by shkoh 20220705: reset은 DB가 변경된 후에 새로 읽어들일 때, commList를 초기화함
         this.reset();
 
-        data.forEach((datum) => {
+        for (const l of list) {
             const edit_data = editable_list.find(
-                (e: ModbusCmd) => e.ID === datum.ID
+                (e: ModbusCmd) => e.ID === l.ID
             );
 
-            const db_comm_data: ModbusCmd = Object.create({});
+            const comm_data: ModbusCmd = Object.create({});
             [
                 'ID',
                 'MC_ID',
@@ -150,21 +155,25 @@ export default class InterfacePanelComm extends Vue {
                 'is_editable'
             ].forEach((key: string) => {
                 if (key === 'MC_ID') {
-                    db_comm_data[key] = datum[key];
+                    comm_data[key] = l.MC_ID;
                 } else {
-                    db_comm_data[key] = edit_data ? edit_data[key] : datum[key];
+                    comm_data[key] = edit_data ? edit_data[key] : l[key];
                 }
             });
 
-            this.commList.push(db_comm_data);
-        });
+            this.commList.push(comm_data);
+        }
     }
 
-    addModbusCmdCard() {
+    initModbusCmdInfo(index: number) {
+        return this.dbCommList?.at(index);
+    }
+
+    addModbusCmd() {
         if (this.commList.length === 127) {
             this.$toast.add({
                 severity: 'warn',
-                summary: '통신방법 추가 불가',
+                summary: '통신방법 복사 불가',
                 detail: `인터페이스당 통신방법은 최대 127개까지 가능합니다`,
                 life: 2000
             });
@@ -178,8 +187,8 @@ export default class InterfacePanelComm extends Vue {
             .mutate({
                 mutation: gql`
                     mutation {
-                        AddPredefineModbusCommand(
-                            PD_INTF_ID: ${this.$props.id}
+                        AddModbusCommand(
+                            INTF_ID: ${Number(this.$props.assetItem.ID)}
                             MC_ID: ${this.commList.length + 1}
                             FUNC_NO: 0
                             START_ADDR: 0
@@ -214,27 +223,42 @@ export default class InterfacePanelComm extends Vue {
             });
     }
 
-    deleteModbusCmdCard(index: number) {
+    saveAllModbusCmd() {
+        const editable_list = this.editableCommList.map((comm: ModbusCmd) => {
+            return {
+                INTF_ID: Number(this.$props.assetItem.ID),
+                MC_ID: comm.MC_ID,
+                FUNC_NO: comm.FUNC_NO,
+                START_ADDR: comm.START_ADDR,
+                POINT_CNT: comm.POINT_CNT,
+                DTYPE_CD: comm.DTYPE_CD
+            };
+        });
+
+        if (editable_list.length === 0) {
+            return;
+        }
+
         this.$nuxt.$loading.start();
 
         this.$apollo
             .mutate({
                 mutation: gql`
-                    mutation {
-                        DeletePredefineModbusCommand(
-                            PD_INTF_ID: ${this.$props.id}
-                            MC_ID: ${index + 1}
-                        )
+                    mutation ($Input: [ModbusCommandInput!]) {
+                        UpdateModbusCommands(Input: $Input)
                     }
-                `
+                `,
+                variables: {
+                    Input: editable_list
+                }
             })
             .then(() => {
                 this.refreshCommList();
 
                 this.$toast.add({
                     severity: 'info',
-                    summary: '통신방법 삭제 완료',
-                    detail: `MC ID: ${index + 1} 삭제 완료`,
+                    summary: '통신방법 적용 완료',
+                    detail: `${editable_list.length}개의 통신방법이 갱신되었습니다`,
                     life: 2000
                 });
             })
@@ -243,7 +267,7 @@ export default class InterfacePanelComm extends Vue {
 
                 this.$toast.add({
                     severity: 'error',
-                    summary: '통신방법 삭제 실패',
+                    summary: '통신방법 적용 실패',
                     detail: error.message,
                     life: 2000
                 });
@@ -253,9 +277,65 @@ export default class InterfacePanelComm extends Vue {
             });
     }
 
-    saveModbusCmdCard(index: number, modbusCmd: any) {
+    copyModbusCmd(modbusCmd: any) {
+        if (this.commList.length === 127) {
+            this.$toast.add({
+                severity: 'warn',
+                summary: '통신방법 복사 불가',
+                detail: `인터페이스당 통신방법은 최대 127개까지 가능합니다`,
+                life: 2000
+            });
+
+            return;
+        }
+
+        this.$nuxt.$loading.start();
+
+        console.info(modbusCmd);
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation {
+                        AddModbusCommand(
+                            INTF_ID: ${Number(this.$props.assetItem.ID)}
+                            MC_ID: ${this.commList.length + 1}
+                            FUNC_NO: ${modbusCmd.FUNC_NO}
+                            START_ADDR: ${modbusCmd.START_ADDR}
+                            POINT_CNT: ${modbusCmd.POINT_CNT}
+                            DTYPE_CD: "${modbusCmd.DTYPE_CD}"
+                        )
+                    }
+                `
+            })
+            .then(() => {
+                this.refreshCommList();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '통신방법 복사 완료',
+                    detail: `MC ID: ${modbusCmd.MC_ID} 복사`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '통신방법 복사 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    saveModbusCmd(index: number, modbusCmd: any) {
         const variables = {
-            PD_INTF_ID: this.$props.id,
+            INTF_ID: Number(this.$props.assetItem.ID),
             MC_ID: index + 1,
             ...modbusCmd
         };
@@ -266,22 +346,22 @@ export default class InterfacePanelComm extends Vue {
             .mutate({
                 mutation: gql`
                     mutation (
-                        $PD_INTF_ID: Int!
+                        $INTF_ID: Int!
                         $MC_ID: Int!
                         $FUNC_NO: Int
                         $START_ADDR: Int
                         $POINT_CNT: Int
                         $DTYPE_CD: String
                     ) {
-                        UpdatePredefineModbusCommand(
-                            PD_INTF_ID: $PD_INTF_ID
+                        UpdateModbusCommand(
+                            INTF_ID: $INTF_ID
                             MC_ID: $MC_ID
                             FUNC_NO: $FUNC_NO
                             START_ADDR: $START_ADDR
                             POINT_CNT: $POINT_CNT
                             DTYPE_CD: $DTYPE_CD
                         ) {
-                            PD_INTF_ID
+                            INTF_ID
                             MC_ID
                             FUNC_NO
                             START_ADDR
@@ -317,31 +397,16 @@ export default class InterfacePanelComm extends Vue {
             });
     }
 
-    copyModbusCmdInfo(modbusCmd: any) {
-        if (this.commList.length === 127) {
-            this.$toast.add({
-                severity: 'warn',
-                summary: '통신방법 복사 불가',
-                detail: `인터페이스당 통신방법은 최대 127개까지 가능합니다`,
-                life: 2000
-            });
-
-            return;
-        }
-
+    deleteModbusCmd(index: number) {
         this.$nuxt.$loading.start();
 
         this.$apollo
             .mutate({
                 mutation: gql`
                     mutation {
-                        AddPredefineModbusCommand(
-                            PD_INTF_ID: ${modbusCmd.INTF_ID}
-                            MC_ID: ${this.commList.length + 1}
-                            FUNC_NO: ${modbusCmd.FUNC_NO}
-                            START_ADDR: ${modbusCmd.START_ADDR}
-                            POINT_CNT: ${modbusCmd.POINT_CNT}
-                            DTYPE_CD: "${modbusCmd.DTYPE_CD}"
+                        DeleteModbusCommand(
+                            INTF_ID: ${Number(this.$props.assetItem.ID)}
+                            MC_ID: ${index + 1}
                         )
                     }
                 `
@@ -351,8 +416,8 @@ export default class InterfacePanelComm extends Vue {
 
                 this.$toast.add({
                     severity: 'info',
-                    summary: '통신방법 복사 완료',
-                    detail: `MC ID: ${modbusCmd.MC_ID} 복사`,
+                    summary: '통신방법 삭제 완료',
+                    detail: `MC ID: ${index + 1} 삭제 완료`,
                     life: 2000
                 });
             })
@@ -361,7 +426,7 @@ export default class InterfacePanelComm extends Vue {
 
                 this.$toast.add({
                     severity: 'error',
-                    summary: '통신방법 복사 실패',
+                    summary: '통신방법 삭제 실패',
                     detail: error.message,
                     life: 2000
                 });
@@ -371,70 +436,12 @@ export default class InterfacePanelComm extends Vue {
             });
     }
 
-    chageCardInfo() {
-        const is_edit = this.commList.some((data) => data.is_editable === true);
-        this.$emit('update:applyButtonDisabled', !is_edit);
-    }
-
-    refreshCommList() {
-        this.$apollo.queries.dbCommList.refresh();
-    }
-
-    saveAll() {
-        const editableCommList = this.commList
-            .filter((comm) => comm.is_editable === true)
-            .map((comm) => {
-                return {
-                    PD_INTF_ID: this.$props.id,
-                    MC_ID: comm.MC_ID,
-                    FUNC_NO: comm.FUNC_NO,
-                    START_ADDR: comm.START_ADDR,
-                    POINT_CNT: comm.POINT_CNT,
-                    DTYPE_CD: comm.DTYPE_CD,
-                    REMARK: ''
-                };
-            });
-
-        if (editableCommList.length === 0) {
-            return;
-        }
-
-        this.$nuxt.$loading.start();
-
-        this.$apollo
-            .mutate({
-                mutation: gql`
-                    mutation ($Input: [PdModbusCmdInput!]) {
-                        UpdatePredefineModbusCommands(Input: $Input)
-                    }
-                `,
-                variables: {
-                    Input: editableCommList
-                }
-            })
-            .then(() => {
-                this.refreshCommList();
-
-                this.$toast.add({
-                    severity: 'info',
-                    summary: '통신방법 적용 완료',
-                    detail: `${editableCommList.length}개의 통신방법이 갱신되었습니다`,
-                    life: 2000
-                });
-            })
-            .catch((error) => {
-                console.error(error);
-
-                this.$toast.add({
-                    severity: 'error',
-                    summary: '통신방법 적용 실패',
-                    detail: error.message,
-                    life: 2000
-                });
-            })
-            .finally(() => {
-                this.$nuxt.$loading.finish();
-            });
+    changeModbusCmd() {
+        // by shkoh 20220705: Modbus Command Card의 데이터 변경이 일어날 때, 발생하는 트리거 이벤트
+        const is_edit = this.commList.some(
+            (data: ModbusCmd) => data.is_editable === true
+        );
+        this.isDisabledSaveAllButton = !is_edit;
     }
 
     get editableCommList(): Array<ModbusCmd> {
@@ -446,7 +453,7 @@ export default class InterfacePanelComm extends Vue {
 </script>
 
 <style lang="scss" scoped>
-#interfacePanelComm::v-deep {
+#i-asset-panel-commander::v-deep {
     height: 100%;
 
     .i-table-header {
@@ -458,7 +465,6 @@ export default class InterfacePanelComm extends Vue {
     .i-table-empty {
         height: 10vh;
         line-height: 10vh;
-        text-align: center;
         font-size: 1.2rem;
     }
 

@@ -28,7 +28,11 @@
             </div>
             <div class="p-col" :style="{ width: '30vw' }">
                 <div v-if="isVirtualAsset">Virtual</div>
-                <asset-panel v-else :item.sync="selectedAsset"></asset-panel>
+                <asset-panel
+                    v-else
+                    :item.sync="selectedAsset"
+                    :style="{ height: '100%' }"
+                ></asset-panel>
             </div>
         </div>
     </div>

@@ -276,55 +276,6 @@ export class PredefinedInterfaceResolver {
         }
     }
 
-    @Mutation(() => Boolean)
-    async CopyPredefineModbusCommand(
-        @Arg('PD_INTF_ID', () => Int) pd_interface_id: number,
-        @Arg('MC_ID', () => Int) mc_id: number,
-        @Args() { FUNC_NO, START_ADDR, POINT_CNT, DTYPE_CD }: pd_modbus_cmd_arg,
-        @Ctx() ctx: any,
-        @PubSub('REFRESHTOKEN') publish: Publisher<void>
-    ) {
-        if (!ctx.isAuth) {
-            throw new AuthenticationError('인증되지 않은 접근입니다');
-        }
-
-        try {
-            await publish();
-
-            if (!pd_interface_id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
-            if (!mc_id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
-
-            let is_result = 0;
-            const previous_data: pd_modbus_cmd[] = await getRepository(pd_modbus_cmd).find({ where: { PD_INTF_ID: pd_interface_id, MC_ID: MoreThan(mc_id) }, order: { PD_INTF_ID: 'ASC', MC_ID: 'ASC' } });
-            previous_data.unshift({
-                ID: 0,
-                PD_INTF_ID: pd_interface_id,
-                MC_ID: mc_id,
-                FUNC_NO: FUNC_NO,
-                START_ADDR: START_ADDR,
-                POINT_CNT: POINT_CNT,
-                DTYPE_CD: DTYPE_CD
-            });
-
-            previous_data.forEach(async (pdModbusCmd: pd_modbus_cmd, index: number, pData: pd_modbus_cmd[]) => {
-                const { MC_ID, FUNC_NO, START_ADDR, POINT_CNT, DTYPE_CD } = pdModbusCmd;
-
-                // by shkoh 20211022: 복사 시 가장 마지막 항목은 Insert를 하고, 나머지는 Update를 수행함
-                if (index === pData.length - 1) {
-                    const result = await getRepository(pd_modbus_cmd).insert({ PD_INTF_ID: pd_interface_id, MC_ID: MC_ID + 1, FUNC_NO, START_ADDR, POINT_CNT, DTYPE_CD });
-                    is_result += result.identifiers.length;
-                } else {
-                    const result = await getRepository(pd_modbus_cmd).update({ PD_INTF_ID: pd_interface_id, MC_ID: MC_ID + 1 }, { FUNC_NO, START_ADDR, POINT_CNT, DTYPE_CD });
-                    is_result += result.affected;
-                }
-            });
-
-            return is_result > 0 ? true : false;
-        } catch (err) {
-            throw new SchemaError(err.message);
-        }
-    }
-
     @Mutation(() => Boolean, { nullable: true })
     async UpdatePredefineModbusCommands(
         @Arg('Input', () => [pd_modbus_cmd_input], { nullable: true }) input: pd_modbus_cmd_input[],
