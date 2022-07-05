@@ -1,16 +1,20 @@
 <template>
-    <div id="i-asset-panel-interface">
-        <div class="p-col p-fluid p-input-filled">
-            <div class="p-field-checkbox">
+    <i-scroll-panel
+        id="i-asset-panel-interface"
+        class="p-px-2 p-pt-2 p-pb-4"
+        :style="{ height: '100%' }"
+    >
+        <div class="p-fluid p-input-filled p-col">
+            <div class="p-field-checkbox p-mb-0">
                 <InputSwitch id="is_communication" v-model="is_com" />
                 <label for="is_communication">통신사용 여부</label>
             </div>
         </div>
         <div
-            class="p-col p-fluid p-input-filled"
+            class="p-col p-fluid p-input-filled p-ml-1"
             :class="{ 'i-disabled': !is_com }"
         >
-            <div class="p-field p-grid">
+            <div class="p-grid">
                 <label for="ip-addr" class="p-col-fixed p-my-2 i-form-label">
                     통신 IP
                 </label>
@@ -211,7 +215,7 @@
                 <div class="p-field p-grid">
                     <label
                         for="odbc-query"
-                        class="p-col-fixed p-my-2 i-form-panel-label"
+                        class="p-col-fixed i-form-panel-label"
                     >
                         ODBC 쿼리
                     </label>
@@ -259,7 +263,7 @@
                 </div>
             </div>
         </Panel>
-    </div>
+    </i-scroll-panel>
 </template>
 
 <script lang="ts">

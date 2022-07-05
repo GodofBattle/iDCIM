@@ -1,6 +1,10 @@
 <template>
-    <div id="i-asset-panel-manager">
-        <div class="p-col p-fluid p-input-filled">
+    <i-scroll-panel
+        id="i-asset-panel-manager"
+        class="p-px-2 p-pt-2 p-pb-4"
+        :style="{ height: '100%' }"
+    >
+        <div class="p-col p-fluid p-input-filled p-ml-1">
             <div class="p-field p-grid">
                 <label for="manager" class="p-col-fixed p-my-2 i-form-label">
                     관리책임자(정)
@@ -252,7 +256,7 @@
                 </template>
             </i-moveable-tree>
         </OverlayPanel>
-    </div>
+    </i-scroll-panel>
 </template>
 
 <script lang="ts">

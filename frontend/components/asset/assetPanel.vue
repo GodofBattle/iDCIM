@@ -26,7 +26,7 @@
             >
             </tab-header-list>
         </div>
-        <div class="i-asset-content">
+        <div class="i-asset-content-panel">
             <asset-panel-info
                 v-if="tabIndex === 0"
                 ref="assetPanelInfo"
@@ -312,8 +312,8 @@ export default class AssetPanel extends Vue {
         width: 30vw;
     }
 
-    .i-asset-content {
-        padding: 1rem;
+    .i-asset-content-panel {
+        height: calc(100% - 38px - 23px - 0.5rem);
     }
 }
 </style>

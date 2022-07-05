@@ -1,6 +1,10 @@
 <template>
-    <div id="i-asset-panel-info">
-        <div class="p-col p-fluid p-input-filled">
+    <i-scroll-panel
+        id="i-asset-panel-info"
+        class="p-px-2 p-pt-2 p-pb-4"
+        :style="{ height: '100%' }"
+    >
+        <div class="p-fluid p-input-filled p-col p-ml-1">
             <div class="p-field p-grid">
                 <label for="name" class="p-col-fixed p-my-2 i-form-label">
                     자산명
@@ -239,7 +243,7 @@
             >
             </i-moveable-tree>
         </OverlayPanel>
-    </div>
+    </i-scroll-panel>
 </template>
 
 <script lang="ts">

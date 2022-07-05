@@ -1,11 +1,14 @@
 <template>
-    <div id="i-asset-panel-commander" class="p-grid">
+    <div
+        id="i-asset-panel-commander"
+        class="p-px-2 p-pb-4"
+        :style="{ height: '100%' }"
+    >
         <DataTable
             :value="commList"
             data-key="MC_ID"
             :scrollable="true"
             scroll-height="flex"
-            :style="{ width: '100%', height: '100%' }"
             :row-hover="true"
         >
             <template #empty>
@@ -291,8 +294,6 @@ export default class AssetPanelCommander extends Vue {
 
         this.$nuxt.$loading.start();
 
-        console.info(modbusCmd);
-
         this.$apollo
             .mutate({
                 mutation: gql`
@@ -454,8 +455,6 @@ export default class AssetPanelCommander extends Vue {
 
 <style lang="scss" scoped>
 #i-asset-panel-commander::v-deep {
-    height: 100%;
-
     .i-table-header {
         display: flex;
         align-items: center;
