@@ -25,6 +25,7 @@ import { AccountCustomResolver } from './resolver/accountCustom';
 import { ManagerResolver } from "./resolver/manager";
 import { AssetResolver } from './resolver/asset';
 import { InterfaceResolver } from './resolver/interface';
+import { SensorResolver } from "./resolver/sensor";
 
 import Auth from './utils/auth';
 
@@ -46,7 +47,8 @@ const schemas = buildSchemaSync({
         AccountCustomResolver,
         ManagerResolver,
         AssetResolver,
-        InterfaceResolver
+        InterfaceResolver,
+        SensorResolver
     ],
 });
 

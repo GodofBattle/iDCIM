@@ -76,8 +76,7 @@ type ModbusCmd = {
 
 @Component<AssetPanelCommander>({
     props: {
-        assetItem: Object,
-        applyButtonDisabled: Boolean
+        assetItem: Object
     },
     apollo: {
         dbCommList: {

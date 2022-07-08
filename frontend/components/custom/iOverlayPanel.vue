@@ -87,15 +87,23 @@ export default class IOverlayPanel extends Vue {
 
             const containerOffset = DomHandler.getOffset(this.$refs.container);
             const targetOffset = DomHandler.getOffset(this.target);
+            // const targetOffset = DomHandler.
+            const targetRect = this.target.getBoundingClientRect();
+            const targetCenter = targetRect.width / 2;
 
-            let arrowLeft = 0;
+            let arrowLeft = 20;
             if (containerOffset.left < targetOffset.left) {
-                arrowLeft = targetOffset.left - containerOffset.left;
+                // by shkoh 20220707: Overlay Panel의 화살표의 위치를 target의 중앙에 위치하도록 계산함
+                arrowLeft =
+                    targetOffset.left -
+                    containerOffset.left +
+                    (targetCenter - 12);
             }
 
+            // by shkoh 20220707: Arrow의 Left지점을 기준으로 위치하기 때문에, Arrow 자체의 width 값을 고려하여 그 차이(5px)를 뺌
             this.$refs.container.style.setProperty(
                 '--overlayArrowLeft',
-                `${arrowLeft}px`
+                `${arrowLeft - 5}px`
             );
 
             if (containerOffset.top < targetOffset.top) {

@@ -1059,6 +1059,7 @@ export default class AssetPanelInfo extends Vue {
                 `
             })
             .then(({ data: { SetAssetInterface } }) => {
+                console.info(SetAssetInterface);
                 if (SetAssetInterface) {
                     eventBus.$emit('refreshAssetTable', this.asset.ID);
 
@@ -1188,12 +1189,10 @@ export default class AssetPanelInfo extends Vue {
     }
 
     get productInterfaceID(): number {
-        console.info(this.asset.INTERFACE?.PROD_INTF_ID ?? -1);
         return this.asset.INTERFACE?.PROD_INTF_ID ?? -1;
     }
 
     set productInterfaceID(value: number) {
-        console.info(value);
         this.asset.INTERFACE.PROD_INTF_ID = value;
     }
 

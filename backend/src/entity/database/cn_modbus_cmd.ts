@@ -1,7 +1,8 @@
 import { ArgsType, Field, ID, InputType, Int, ObjectType } from "type-graphql";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { AfterLoad, Column, Entity, getRepository, PrimaryGeneratedColumn } from "typeorm";
 
 import { nullableDate } from "../../scalar/nullableDate";
+import { pd_code } from "./pd_code";
 
 @ObjectType()
 @Entity({ synchronize: false })
@@ -45,6 +46,13 @@ export class cn_modbus_cmd {
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256, nullable: true, default: null, comment: '설명' })
     REMARK?: string;
+
+    @AfterLoad()
+    @Field(() => String, { nullable: true })
+    async DTYPE_NAME?() {
+        const code: pd_code = await getRepository(pd_code).findOne({ CODE: this.DTYPE_CD });
+        return code.NAME;
+    }
 }
 
 @ArgsType()

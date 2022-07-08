@@ -1,11 +1,14 @@
 <template>
-    <div class="p-grid p-ai-center vertical-container">
+    <div
+        class="p-grid p-ai-center vertical-container"
+        :style="{ 'margin-bottom': '-0.5rem' }"
+    >
         <div
             v-if="showMinMax"
             class="p-col-fiexed p-text-center p-py-5"
             :style="{
                 width: new_value_active.min ? '100px' : '80px',
-                'margin-right': '0.4rem',
+                'margin-right': '0.4rem'
             }"
         >
             <Inplace :active.sync="new_value_active.min" :class="editorClass">
@@ -14,15 +17,13 @@
                 </template>
                 <template #content>
                     <div class="p-inputgroup">
-                        <InputNumber
+                        <i-input-number
                             v-model="inputValueMin"
-                            auto-focus
-                            :min-fraction-digits="1"
+                            :auto-focus="true"
                             :max-fraction-digits="1"
                             :max="n3"
-                            :input-style="{ width: '60px' }"
-                            @blur="onInputBlur('min')"
-                            @keyup.enter="onInputBlur('min')"
+                            @keydownEnter="onInputNumberBlur($event, 'min')"
+                            @keydownEscape="onInputNumberBlur($event, 'min')"
                         />
                         <Button
                             class="p-button-secondary p-button-sm"
@@ -47,16 +48,14 @@
                     </template>
                     <template #content>
                         <div class="p-inputgroup">
-                            <InputNumber
+                            <i-input-number
                                 v-model="inputValueN3"
-                                auto-focus
-                                :min-fraction-digits="1"
+                                :auto-focus="true"
                                 :max-fraction-digits="1"
                                 :min="min"
                                 :max="n2"
-                                :input-style="{ width: '60px' }"
-                                @blur="onInputBlur('n3')"
-                                @keyup.enter="onInputBlur('n3')"
+                                @keydownEnter="onInputNumberBlur($event, 'n3')"
+                                @keydownEscape="onInputNumberBlur($event, 'n3')"
                             />
                             <Button
                                 class="p-button-secondary p-button-sm"
@@ -79,6 +78,16 @@
                 <span class="p-slider-range" :style="rangeN1ToP1Style"></span>
                 <span class="p-slider-range" :style="rangeP1ToP2Style"></span>
                 <span class="p-slider-range" :style="rangeP2ToP3Style"></span>
+                <span
+                    v-if="currVal !== null"
+                    class="i-curr-value-handle"
+                    tabindex="0"
+                    role="slider"
+                    :style="rangeValHandleStyle"
+                >
+                    <span class="pi pi-caret-down i-curr-value-icon" />
+                    <span class="pi pi-caret-up i-curr-value-icon" />
+                </span>
                 <span
                     v-if="n1 !== null"
                     class="p-slider-handle"
@@ -103,16 +112,19 @@
                         </template>
                         <template #content>
                             <div class="p-inputgroup">
-                                <InputNumber
+                                <i-input-number
                                     v-model="inputValueN1"
-                                    auto-focus
-                                    :min-fraction-digits="1"
+                                    :auto-focus="true"
                                     :max-fraction-digits="1"
                                     :min="n2"
                                     :max="p1 - barStep"
-                                    :input-style="{ width: '60px' }"
-                                    @blur="onInputBlur('n1')"
-                                    @keyup.enter="onInputBlur('n1')"
+                                    :style="{ width: '60px' }"
+                                    @keydownEnter="
+                                        onInputNumberBlur($event, 'n1')
+                                    "
+                                    @keydownEscape="
+                                        onInputNumberBlur($event, 'n1')
+                                    "
                                 />
                                 <Button
                                     class="p-button-secondary p-button-sm"
@@ -147,16 +159,19 @@
                         </template>
                         <template #content>
                             <div class="p-inputgroup">
-                                <InputNumber
+                                <i-input-number
                                     v-model="inputValueP1"
-                                    auto-focus
-                                    :min-fraction-digits="1"
+                                    :auto-focus="true"
                                     :max-fraction-digits="1"
                                     :min="n1 + barStep"
                                     :max="p2"
-                                    :input-style="{ width: '60px' }"
-                                    @blur="onInputBlur('p1')"
-                                    @keyup.enter="onInputBlur('p1')"
+                                    :style="{ width: '60px' }"
+                                    @keydownEnter="
+                                        onInputNumberBlur($event, 'p1')
+                                    "
+                                    @keydownEscape="
+                                        onInputNumberBlur($event, 'p1')
+                                    "
                                 />
                                 <Button
                                     class="p-button-secondary p-button-sm"
@@ -191,16 +206,19 @@
                         </template>
                         <template #content>
                             <div class="p-inputgroup">
-                                <InputNumber
+                                <i-input-number
                                     v-model="inputValueN2"
-                                    auto-focus
-                                    :min-fraction-digits="1"
+                                    :auto-focus="true"
                                     :max-fraction-digits="1"
                                     :min="n3"
                                     :max="n1"
-                                    :input-style="{ width: '60px' }"
-                                    @blur="onInputBlur('n2')"
-                                    @keyup.enter="onInputBlur('n2')"
+                                    :style="{ width: '60px' }"
+                                    @keydownEnter="
+                                        onInputNumberBlur($event, 'n2')
+                                    "
+                                    @keydownEscape="
+                                        onInputNumberBlur($event, 'n2')
+                                    "
                                 />
                                 <Button
                                     class="p-button-secondary p-button-sm"
@@ -235,16 +253,19 @@
                         </template>
                         <template #content>
                             <div class="p-inputgroup">
-                                <InputNumber
+                                <i-input-number
                                     v-model="inputValueP2"
-                                    auto-focus
-                                    :min-fraction-digits="1"
+                                    :auto-focus="true"
                                     :max-fraction-digits="1"
                                     :min="p1"
                                     :max="p3"
-                                    :input-style="{ width: '60px' }"
-                                    @blur="onInputBlur('p2')"
-                                    @keyup.enter="onInputBlur('p2')"
+                                    :style="{ width: '60px' }"
+                                    @keydownEnter="
+                                        onInputNumberBlur($event, 'p2')
+                                    "
+                                    @keydownEscape="
+                                        onInputNumberBlur($event, 'p2')
+                                    "
                                 />
                                 <Button
                                     class="p-button-secondary p-button-sm"
@@ -271,16 +292,15 @@
                     </template>
                     <template #content>
                         <div class="p-inputgroup">
-                            <InputNumber
+                            <i-input-number
                                 v-model="inputValueP3"
-                                auto-focus
-                                :min-fraction-digits="1"
+                                :auto-focus="true"
                                 :max-fraction-digits="1"
                                 :min="p2"
                                 :max="showMinMax ? max : null"
-                                :input-style="{ width: '60px' }"
-                                @blur="onInputBlur('p3')"
-                                @keyup.enter="onInputBlur('p3')"
+                                :style="{ width: '60px' }"
+                                @keydownEnter="onInputNumberBlur($event, 'p3')"
+                                @keydownEscape="onInputNumberBlur($event, 'p3')"
                             />
                             <Button
                                 class="p-button-secondary p-button-sm"
@@ -297,7 +317,7 @@
             class="p-col-fiexed p-text-center p-py-5"
             :style="{
                 width: new_value_active.max ? '100px' : '80px',
-                'margin-left': '0.4rem',
+                'margin-left': '0.4rem'
             }"
         >
             <Inplace :active.sync="new_value_active.max" :class="editorClass">
@@ -306,15 +326,14 @@
                 </template>
                 <template #content>
                     <div class="p-inputgroup">
-                        <InputNumber
+                        <i-input-number
                             v-model="inputValueMax"
-                            auto-focus
-                            :min-fraction-digits="1"
+                            :auto-focus="true"
                             :max-fraction-digits="1"
                             :min="p3"
-                            :input-style="{ width: '60px' }"
-                            @blur="onInputBlur('max')"
-                            @keyup.enter="onInputBlur('max')"
+                            :style="{ width: '60px' }"
+                            @keydownEnter="onInputNumberBlur($event, 'max')"
+                            @keydownEscape="onInputNumberBlur($event, 'max')"
                         />
                         <Button
                             class="p-button-secondary p-button-sm"
@@ -345,56 +364,60 @@ type EditControl = {
     p3: boolean;
 };
 
-@Component({
+@Component<ThresholdAnalog>({
     props: {
         n3: {
             type: Number,
-            default: 20,
+            default: 20
         },
         n2: {
             type: Number,
-            default: 30,
+            default: 30
         },
         n1: {
             type: Number,
-            default: 40,
+            default: 40
         },
         p1: {
             type: Number,
-            default: 60,
+            default: 60
         },
         p2: {
             type: Number,
-            default: 70,
+            default: 70
         },
         p3: {
             type: Number,
-            default: 80,
+            default: 80
         },
         min: {
             type: Number,
-            default: undefined,
+            default: undefined
         },
         max: {
             type: Number,
-            default: undefined,
+            default: undefined
+        },
+        currVal: {
+            type: Number,
+            default: null
         },
         step: {
             type: Number,
-            default: null,
+            default: null
         },
         disabled: {
             type: Boolean,
-            default: false,
+            default: false
         },
         showMinMax: {
             type: Boolean,
-            default: false,
+            default: false
         },
         ariaLabelledBy: {
             type: String,
-            default: null,
-        },
+            default: null
+        }
     },
     watch: {
         showMinMax(_is_show) {
@@ -418,8 +441,8 @@ type EditControl = {
                     this.$emit('update:min', this.$props.n3);
                 }
             }
-        },
-    },
+        }
+    }
 })
 export default class ThresholdAnalog extends Vue {
     $refs!: {
@@ -445,11 +468,20 @@ export default class ThresholdAnalog extends Vue {
         n1: false,
         p1: false,
         p2: false,
-        p3: false,
+        p3: false
     };
 
     beforeDestroy() {
         this.unbindDragListeners();
+    }
+
+    get listeners() {
+        return {
+            ...this.$listeners,
+            keydown() {
+                console.info(`keydown`);
+            }
+        };
     }
 
     get containerClass(): Array<string | object> {
@@ -457,16 +489,16 @@ export default class ThresholdAnalog extends Vue {
             'p-slider p-component',
             'p-slider-horizontal',
             {
-                'p-disabled': this.$props.disabled,
-            },
+                'p-disabled': this.$props.disabled
+            }
         ];
     }
 
     get editorClass(): Array<string | object> {
         return [
             {
-                'p-disabled i-disabled-opacity': this.$props.disabled,
-            },
+                'p-disabled i-disabled-opacity': this.$props.disabled
+            }
         ];
     }
 
@@ -474,8 +506,12 @@ export default class ThresholdAnalog extends Vue {
         return this.$props.min;
     }
 
-    set inputValueMin(_new_value) {
-        this.$emit('update:min', _new_value);
+    set inputValueMin(_new_value: number) {
+        if (_new_value !== null && typeof _new_value === 'number') {
+            if (this.$props.n3 && this.$props.n3 < _new_value) return;
+
+            this.$emit('update:min', _new_value);
+        }
     }
 
     get inputValueMax() {
@@ -483,7 +519,11 @@ export default class ThresholdAnalog extends Vue {
     }
 
     set inputValueMax(_new_value) {
-        this.$emit('update:max', _new_value);
+        if (_new_value !== null && typeof _new_value === 'number') {
+            if (this.$props.p3 && this.$props.p3 > _new_value) return;
+
+            this.$emit('update:max', _new_value);
+        }
     }
 
     get inputValueN3() {
@@ -491,7 +531,12 @@ export default class ThresholdAnalog extends Vue {
     }
 
     set inputValueN3(_new_value) {
-        this.$emit('update:n3', _new_value);
+        if (_new_value !== null && typeof _new_value === 'number') {
+            if (this.$props.min && this.$props.min > _new_value) return;
+            if (this.$props.n2 && this.$props.n2 < _new_value) return;
+
+            this.$emit('update:n3', _new_value);
+        }
     }
 
     get inputValueN2() {
@@ -499,7 +544,9 @@ export default class ThresholdAnalog extends Vue {
     }
 
     set inputValueN2(_new_value) {
-        this.$emit('update:n2', _new_value);
+        if (_new_value !== null && typeof _new_value === 'number') {
+            this.$emit('update:n2', _new_value);
+        }
     }
 
     get inputValueN1() {
@@ -507,7 +554,9 @@ export default class ThresholdAnalog extends Vue {
     }
 
     set inputValueN1(_new_value) {
-        this.$emit('update:n1', _new_value);
+        if (_new_value !== null && typeof _new_value === 'number') {
+            this.$emit('update:n1', _new_value);
+        }
     }
 
     get inputValueP1() {
@@ -515,7 +564,9 @@ export default class ThresholdAnalog extends Vue {
     }
 
     set inputValueP1(_new_value) {
-        this.$emit('update:p1', _new_value);
+        if (_new_value !== null && typeof _new_value === 'number') {
+            this.$emit('update:p1', _new_value);
+        }
     }
 
     get inputValueP2() {
@@ -523,7 +574,9 @@ export default class ThresholdAnalog extends Vue {
     }
 
     set inputValueP2(_new_value) {
-        this.$emit('update:p2', _new_value);
+        if (_new_value !== null && typeof _new_value === 'number') {
+            this.$emit('update:p2', _new_value);
+        }
     }
 
     get inputValueP3() {
@@ -531,7 +584,9 @@ export default class ThresholdAnalog extends Vue {
     }
 
     set inputValueP3(_new_value) {
-        this.$emit('update:p3', _new_value);
+        if (_new_value !== null && typeof _new_value === 'number') {
+            this.$emit('update:p3', _new_value);
+        }
     }
 
     get barStep() {
@@ -554,7 +609,7 @@ export default class ThresholdAnalog extends Vue {
         return {
             left: '0%',
             width: this.rangeN2Position + '%',
-            background: 'var(--major)',
+            background: 'var(--major)'
         };
     }
 
@@ -563,7 +618,7 @@ export default class ThresholdAnalog extends Vue {
         return {
             left: this.rangeN2Position + '%',
             width: this.rangeN1Position - this.rangeN2Position + '%',
-            background: 'var(--warning)',
+            background: 'var(--warning)'
         };
     }
 
@@ -572,7 +627,7 @@ export default class ThresholdAnalog extends Vue {
         return {
             left: this.rangeN1Position + '%',
             width: this.rangeP1Position - this.rangeN1Position + '%',
-            background: 'var(--normal)',
+            background: 'var(--normal)'
         };
     }
 
@@ -581,7 +636,7 @@ export default class ThresholdAnalog extends Vue {
         return {
             left: this.rangeP1Position + '%',
             width: this.rangeP2Position - this.rangeP1Position + '%',
-            background: 'var(--warning)',
+            background: 'var(--warning)'
         };
     }
 
@@ -590,7 +645,7 @@ export default class ThresholdAnalog extends Vue {
         return {
             left: this.rangeP2Position + '%',
             width: 100 - this.rangeP2Position + '%',
-            background: 'var(--major)',
+            background: 'var(--major)'
         };
     }
 
@@ -688,6 +743,24 @@ export default class ThresholdAnalog extends Vue {
 
     get rangeP3HandleStyle() {
         return { left: this.rangeP3Position + '%' };
+    }
+
+    get rangeValPosition(): number {
+        if (this.$props.currVal) {
+            if (this.$props.currVal > this.rangeMax) return 100;
+            else if (this.$props.currVal < this.rangeMin) return 0;
+
+            return (
+                ((this.$props.currVal - this.rangeMin) * 100) /
+                (this.rangeMax - this.rangeMin)
+            );
+        } else {
+            return 100;
+        }
+    }
+
+    get rangeValHandleStyle() {
+        return { left: this.rangeValPosition + '%' };
     }
 
     updateDomData() {
@@ -840,6 +913,11 @@ export default class ThresholdAnalog extends Vue {
     }
 
     onInputBlur(target: string) {
+        console.info(`blur:: ${target}`);
+        this.new_value_active[target] = false;
+    }
+
+    onInputNumberBlur(event: Event, target: string) {
         this.new_value_active[target] = false;
     }
 }
@@ -854,7 +932,9 @@ export default class ThresholdAnalog extends Vue {
     position: absolute;
     cursor: grab;
     touch-action: none;
-    display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .p-slider-range {
@@ -873,12 +953,10 @@ export default class ThresholdAnalog extends Vue {
 }
 
 .i-tag-position-top {
-    margin-left: -0.2rem;
     margin-top: -2.75rem;
 }
 
 .i-tag-position {
-    margin-left: -0.3rem;
     margin-top: 1.45rem;
 }
 
@@ -905,5 +983,19 @@ export default class ThresholdAnalog extends Vue {
 
 .i-disabled-opacity {
     opacity: 1;
+}
+
+.i-curr-value-handle {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+    top: -20px;
+    margin-left: -6px;
+}
+
+.i-curr-value-icon {
+    line-height: 22px;
 }
 </style>

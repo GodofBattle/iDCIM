@@ -47,13 +47,13 @@
             />
             <asset-panel-commander
                 v-else-if="tabIndex === 3"
-                ref="assetPanelCommander"
                 :asset-item.sync="item"
-                :apply-button-disabled.sync="applyButtonDisabled"
             />
-            <div v-else-if="tabIndex === 4">
-                <h1>수집항목</h1>
-            </div>
+            <asset-panel-sensor
+                v-else-if="tabIndex === 4"
+                :asset-item.sync="item"
+                :has-comm="hasCommandList"
+            />
             <div v-else-if="tabIndex === 5">
                 <h1>제어항목</h1>
             </div>
@@ -79,7 +79,6 @@ import gql from 'graphql-tag';
 import AssetPanelInterface from './assetPanelInterface.vue';
 import AssetPanelManager from './assetPanelManager.vue';
 import AssetPanelInfo from './assetPanelInfo.vue';
-import AssetPanelCommander from './assetPanelCommander.vue';
 import Component from '@/plugins/nuxt-class-component';
 
 type TabItem = {
@@ -150,14 +149,15 @@ type TabItem = {
                             'INTF06',
                             'INTF07'
                         ].includes(ProductInterface.INTERFACE.INTF_CD);
+                        this.hasCommandList = is_command_list;
+                    } else {
+                        this.hasCommandList = false;
                     }
 
                     const asset_content_04 = this.assetTabList.find(
                         (tab: TabItem) => tab.type === 'ASSETCONTENT04'
                     );
                     if (asset_content_04) {
-                        console.info(`158: ${is_command_list}`);
-
                         this.$set(
                             asset_content_04,
                             'unvisible',
@@ -182,7 +182,6 @@ export default class AssetPanel extends Vue {
         assetPanelInfo: AssetPanelInfo;
         assetPanelManager: AssetPanelManager;
         assetPanelInterface: AssetPanelInterface;
-        assetPanelCommander: AssetPanelCommander;
     };
 
     assetTabList: Array<TabItem> = [
@@ -279,8 +278,8 @@ export default class AssetPanel extends Vue {
     ];
 
     tabIndex: number = 0;
-
     applyButtonDisabled: boolean = true;
+    hasCommandList: boolean = false;
 
     updateAsset() {
         switch (this.tabIndex) {

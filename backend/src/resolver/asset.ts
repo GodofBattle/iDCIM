@@ -14,6 +14,7 @@ import { cn_tcpetc_cmd } from "../entity/database/cn_tcpetc_cmd";
 import { pd_asset_code } from "../entity/database/pd_asset_code";
 import { pd_ctrl_cmd } from "../entity/database/pd_ctrl_cmd";
 import { pd_modbus_cmd } from "../entity/database/pd_modbus_cmd";
+import { pd_prod_intf } from "../entity/database/pd_prod_intf";
 import { pd_sensor } from "../entity/database/pd_sensor";
 import { pd_sensor_threshold_ai } from "../entity/database/pd_sensor_threshold_ai";
 import { pd_sensor_threshold_di } from "../entity/database/pd_sensor_threshold_di";
@@ -228,22 +229,23 @@ export class AssetResolver {
 
         try {
             const user = await getRepository(ac_user).findOne({ USER_ID: ctx.user.sub });
+            const prod_intf = await getRepository(pd_prod_intf).findOne({ ID: prod_intf_id });
 
             let result: boolean = false;
             switch(action) {
                 case ACTION_CD.USED: {
-                    result = await this.UsedInterface(asset_id, prod_intf_id, user);
+                    result = await this.UsedInterface(asset_id, prod_intf, user);
                     // by shkoh 20220531: 사용이 가능한 INTERFACE로 변경
                     const update_result = await getRepository(ac_asset).update({ ID: asset_id }, { IS_USE_INTF: 1, UPDATE_USER_ID: user.ID, UPDATE_USER_DT: new Date() });
-                    result = !result && update_result.affected > 0 ? true : false;
+                    result = result || (update_result.affected > 0 ? true : false);
                     break;
                 }
                 case ACTION_CD.NOT_USED: {
-                    result = await this.NotUsedInterface(asset_id, prod_intf_id, user);
+                    result = await this.NotUsedInterface(asset_id, user);
                     break;
                 }
                 case ACTION_CD.UPDATE: {
-                    result = await this.UsedInterface(asset_id, prod_intf_id, user);
+                    result = await this.UsedInterface(asset_id, prod_intf, user);
                     break;
                 }
             }
@@ -254,44 +256,44 @@ export class AssetResolver {
         }
     }
 
-    async UsedInterface(asset_id: number, prod_intf_id: number, user: ac_user) {
+    async UsedInterface(asset_id: number, prod_intf: pd_prod_intf, user: ac_user) {
         const [intf, intf_count] = await getRepository(cn_interface).findAndCount({ where: { ID: asset_id } });
 
         let result: number = 0;
 
         if(intf_count === 0) {
             // by shkoh 20220527: 해당 자산과 일치하는 cn_interface가 존재하지 않은 경우에는 insert를 수행
-            result += await this.InsertInterface(asset_id, prod_intf_id, user);
+            result += await this.InsertInterface(asset_id, prod_intf, user);
         } else if(intf_count === 1) {
             // by shkoh 20220527: 해당 자산과 일치하는 cn_interface가 존재하는 경우에는 2가지 상황이 발생함
             // by shkoh 20220527: 1. 존재하는 PROD_INTF_ID가 동일한 경우에는 어떤 일도 하지 않지만
             // by shkoh 20220527: 2. 존재하는 PROD_INTF_ID가 다른 경우에는 모두 삭제하여 새로운 PROD_INTF_ID를 가진 데이터들로 부여함
-            if(intf[0].PROD_INTF_ID !== prod_intf_id) {
-                result += await this.DeleteInterface(asset_id, prod_intf_id, user);
-                result += await this.InsertInterface(asset_id, prod_intf_id, user);
+            if(intf[0].PROD_INTF_ID !== prod_intf.ID) {
+                result += await this.DeleteInterface(asset_id);
+                result += await this.InsertInterface(asset_id, prod_intf, user);
             }
         }
 
         return result > 0 ? true : false;
     }
 
-    async NotUsedInterface(asset_id: number, prod_intf_id: number, user: ac_user) {
+    async NotUsedInterface(asset_id: number, user: ac_user) {
         // by shkoh 20220527: 자산의 인터페이스를 사용하지 않은 경우에는 IS_USE_INTF가 0으로만 변경되면 됨
         const result = await getRepository(ac_asset).update({ ID: asset_id }, { IS_USE_INTF: 0, UPDATE_USER_ID: user.ID, UPDATE_USER_DT: new Date() });
         return result.affected > 0 ? true : false;
     }
 
-    async InsertInterface(asset_id: number, prod_intf_id: number, user: ac_user) {
+    async InsertInterface(asset_id: number, prod_intf: pd_prod_intf, user: ac_user) {
         // by shkoh 20220530: interface insert 과정
         try {
             let result: number = 0;
             
             // by shkoh 20220530: Step1. cn_interface 추가
-            const c_i_result = await getRepository(cn_interface).insert({ ID: asset_id, PROD_INTF_ID: prod_intf_id, UPDATE_USER_ID: user.ID, UPDATE_USER_DT: new Date() });
+            const c_i_result = await getRepository(cn_interface).insert({ ID: asset_id, PROD_INTF_ID: prod_intf.ID, UPDATE_USER_ID: user.ID, UPDATE_USER_DT: new Date() });
             result += c_i_result.identifiers.length;
 
             // by shkoh 20220530: Step2. cn_sensor 추가 cn_sensor 추가 후에 cn_sensor_threshold_xx 도 추가함
-            const pd_sensor_list = await getRepository(pd_sensor).find({ where: { PD_INTF_ID: prod_intf_id }, relations: [ 'SENSOR_CODE' ] });
+            const pd_sensor_list = await getRepository(pd_sensor).find({ where: { PD_INTF_ID: prod_intf.PD_INTF_ID }, relations: [ 'SENSOR_CODE' ] });
             pd_sensor_list.forEach(async ( p_s: pd_sensor ) => {
                 // by shkoh 20220531: Step2.1 cn_sensor 한개 추가
                 const c_s_result = await getRepository(cn_sensor).insert({
@@ -312,7 +314,7 @@ export class AssetResolver {
                 result += c_s_result.identifiers.length;
 
                 // by shkoh 20220531: Step2.2. 관련된 pd_sensor_threshold의 값을 가져옴
-                const sensor_code = await p_s.SENSOR_CODE;
+                const sensor_code = p_s.SENSOR_CODE;
                 let threshold: pd_sensor_threshold_ai | pd_sensor_threshold_di;
                 if(sensor_code.TYPE === 'A') {
                     threshold = await getRepository(pd_sensor_threshold_ai).findOne({ ID: p_s.PD_THRESHOLD_ID });
@@ -414,7 +416,7 @@ export class AssetResolver {
             });
 
             // by shkoh 20220530: Step3. cn_ctrl_cmd 추가, 제어항목이 존재할 경우에 제어항목 추가
-            const inserted_ctrl_cmd: Array<any> = (await getRepository(pd_ctrl_cmd).find({ where: { PD_INTF_ID: prod_intf_id } })).map((ctrl: pd_ctrl_cmd) => {
+            const inserted_ctrl_cmd: Array<any> = (await getRepository(pd_ctrl_cmd).find({ where: { PD_INTF_ID: prod_intf.PD_INTF_ID } })).map((ctrl: pd_ctrl_cmd) => {
                 return {
                     INTF_ID: asset_id,
                     NAME: ctrl.NAME,
@@ -430,7 +432,7 @@ export class AssetResolver {
             }
 
             // by shkoh 20220530: Step4. cn_modbus_cmd 추가
-            const inserted_modbus_cmd: Array<any> = (await getRepository(pd_modbus_cmd).find({ where: { PD_INTF_ID: prod_intf_id } })).map((cmd: pd_modbus_cmd) => {
+            const inserted_modbus_cmd: Array<any> = (await getRepository(pd_modbus_cmd).find({ where: { PD_INTF_ID: prod_intf.PD_INTF_ID } })).map((cmd: pd_modbus_cmd) => {
                 return {
                     INTF_ID: asset_id,
                     MC_ID: cmd.MC_ID,
@@ -449,7 +451,7 @@ export class AssetResolver {
             }
 
             // by shkoh 20220530: Step5. cn_tcpetc_cmd 추가
-            const inserted_tcpetc_cmd: Array<any> = (await getRepository(pd_tcpetc_cmd).find({ where: { PD_INTF_ID: prod_intf_id } })).map((cmd: pd_tcpetc_cmd) => {
+            const inserted_tcpetc_cmd: Array<any> = (await getRepository(pd_tcpetc_cmd).find({ where: { PD_INTF_ID: prod_intf.PD_INTF_ID } })).map((cmd: pd_tcpetc_cmd) => {
                 return {
                     INTF_ID: asset_id,
                     CMD_ID: cmd.CMD_ID,
@@ -472,7 +474,7 @@ export class AssetResolver {
         }
     }
 
-    async DeleteInterface(asset_id: number, prod_intf_id: number, user: ac_user) {
+    async DeleteInterface(asset_id: number) {
         // by shkoh 20220531: 자산 인터페이스 삭제 과정(등록과는 역순으로 수행)
         try {
             let result: number = 0;
