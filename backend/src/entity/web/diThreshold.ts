@@ -24,6 +24,9 @@ export class DIThreshold {
     ID: number;
 
     @Field(() => Int)
+    SENSOR_ID: number;
+
+    @Field(() => Int)
     HOLD_TIME: number;
 
     @Field(() => [DigitalValue], { nullable: true })

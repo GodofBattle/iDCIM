@@ -314,7 +314,7 @@ export class AssetResolver {
                 result += c_s_result.identifiers.length;
 
                 // by shkoh 20220531: Step2.2. 관련된 pd_sensor_threshold의 값을 가져옴
-                const sensor_code = p_s.SENSOR_CODE;
+                const sensor_code = await p_s.SENSOR_CODE;
                 let threshold: pd_sensor_threshold_ai | pd_sensor_threshold_di;
                 if(sensor_code.TYPE === 'A') {
                     threshold = await getRepository(pd_sensor_threshold_ai).findOne({ ID: p_s.PD_THRESHOLD_ID });

@@ -17,13 +17,14 @@
                         'p-px-2',
                         'p-my-1',
                         'p-ai-center',
-                        'i-digit-row',
+                        'i-digit-row'
                     ]"
                 >
-                    <div class="p-mr-2">
+                    <div v-if="showLevel" class="p-mr-2">
                         <Inplace
                             class="p-py-3"
                             :active.sync="data.isEditableGrade"
+                            @open="onOpenLevel"
                         >
                             <template #display>
                                 <span :class="thresholdEditClass(data.LEVEL)">
@@ -31,7 +32,12 @@
                                 </span>
                             </template>
                             <template #content>
-                                <span class="p-inputgroup">
+                                <span
+                                    class="p-inputgroup"
+                                    @keydown.enter="
+                                        onKeyDownGradeLabel($event, index)
+                                    "
+                                >
                                     <Dropdown
                                         v-model="data.LEVEL"
                                         :options="levelGrade"
@@ -40,6 +46,12 @@
                                         data-key="CODE"
                                         append-to="body"
                                         auto-complete="off"
+                                        @hide="
+                                            onCloseEditorMode(
+                                                index,
+                                                'isEditableGrade'
+                                            )
+                                        "
                                     ></Dropdown>
                                     <Button
                                         class="p-button-secondary p-button-sm"
@@ -66,31 +78,23 @@
                                 </span>
                             </template>
                             <template #content>
-                                <span class="p-d-inline-flex">
+                                <span
+                                    class="p-d-inline-flex"
+                                    @keydown.enter="
+                                        onKeyDownIndexLabel($event, index)
+                                    "
+                                >
                                     <span>
-                                        <InputNumber
-                                            id="threshold_digit_index"
+                                        <i-input-number
                                             v-model="data.INDEX"
-                                            mode="decimal"
                                             :min="0"
                                             :max="29"
-                                            show-buttons
-                                            button-layout="horizontal"
+                                            :max-fraction-digits="0"
                                             :step="1"
-                                            decrement-button-class="p-button-secondary"
-                                            decrement-button-icon="pi pi-minus"
-                                            increment-button-class="p-button-secondary"
-                                            increment-button-icon="pi pi-plus"
-                                            aria-describedby="func-num-help"
-                                            auto-complete="off"
+                                            :auto-focus="true"
                                             :input-style="{ width: '60px' }"
-                                            @input="
-                                                inputThresholdDigitIndex(
-                                                    index,
-                                                    data.INDEX
-                                                )
-                                            "
-                                        ></InputNumber>
+                                            :show-buttons="true"
+                                        />
                                     </span>
                                     <span class="p-px-1 p-py-2">:</span>
                                     <span class="p-inputgroup">
@@ -141,14 +145,18 @@ import Component from '@/plugins/nuxt-class-component';
     props: {
         di: {
             type: Array,
-            default: [],
+            default: []
         },
         levelCodes: Array,
         isEditable: {
             type: Boolean,
-            default: false,
+            default: false
         },
-    },
+        showLevel: {
+            type: Boolean,
+            default: true
+        }
+    }
 })
 export default class ThresholdDigital extends Vue {
     // by shkoh 20220116: 임계치 수정 시에, 값의 변화를 확인하기 위한 초기값
@@ -166,8 +174,8 @@ export default class ThresholdDigital extends Vue {
                 'i-normal': level === 0,
                 'i-warning': level === 1,
                 'i-major': level === 2,
-                'i-critical': level === 3,
-            },
+                'i-critical': level === 3
+            }
         ];
     }
 
@@ -180,8 +188,8 @@ export default class ThresholdDigital extends Vue {
                 'i-normal': level === 0,
                 'i-warning': level === 1,
                 'i-major': level === 2,
-                'i-critical': level === 3,
-            },
+                'i-critical': level === 3
+            }
         ];
     }
 
@@ -208,7 +216,7 @@ export default class ThresholdDigital extends Vue {
                 severity: 'warn',
                 summary: 'DI 값 중복',
                 detail: `임계치의 값은 중복될 수 없습니다`,
-                life: 1200,
+                life: 1200
             });
         }
     }
@@ -227,6 +235,40 @@ export default class ThresholdDigital extends Vue {
         });
 
         this.$props.di[index].hasSameINDEX = has_same_index;
+    }
+
+    onKeyDownIndexLabel(event: any, index: any) {
+        const target = event.target as HTMLInputElement;
+        if (target.nodeName === 'INPUT') {
+            this.onCloseEditorMode(index, 'isEditableValue');
+        }
+    }
+
+    onKeyDownGradeLabel(event: any, index: any) {
+        const target = event.target as HTMLInputElement;
+        if (target.nodeName === 'INPUT') {
+            this.onCloseEditorMode(index, 'isEditableGrade');
+        }
+    }
+
+    onOpenLevel(event: any) {
+        setTimeout(
+            () => {
+                const input = (event.target as HTMLElement).querySelector(
+                    'input'
+                );
+
+                if (input) {
+                    input.focus();
+                }
+            },
+            100,
+            event
+        );
+    }
+
+    onLoadSpan() {
+        console.info('onLoadSpan');
     }
 }
 </script>

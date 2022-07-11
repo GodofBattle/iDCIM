@@ -1,13 +1,28 @@
 <template>
-    <input
-        ref="input"
-        :class="['p-component p-inputtext', { 'p-filled': filled }]"
-        :value="formattedValue"
-        v-bind="$attrs"
-        :aria-valuemin="min"
-        :aria-valuemax="max"
-        v-on="listeners"
-    />
+    <div class="p-inputgroup">
+        <Button
+            v-if="showButtons"
+            class="p-button-secondary p-button-sm"
+            icon="pi pi-minus"
+            @click="spin($event, -1)"
+        />
+        <input
+            ref="input"
+            :class="['p-component p-inputtext', { 'p-filled': filled }]"
+            :value="formattedValue"
+            v-bind="$attrs"
+            :aria-valuemin="min"
+            :aria-valuemax="max"
+            :style="inputStyle"
+            v-on="listeners"
+        />
+        <Button
+            v-if="showButtons"
+            class="p-button-secondary p-button-sm"
+            icon="pi pi-plus"
+            @click="spin($event, 1)"
+        />
+    </div>
 </template>
 
 <script lang="ts">
@@ -44,7 +59,12 @@ import Component from '@/plugins/nuxt-class-component';
         autoFocus: {
             type: Boolean,
             default: false
-        }
+        },
+        showButtons: {
+            type: Boolean,
+            default: false
+        },
+        inputStyle: Object
     }
 })
 export default class IInputNumber extends Vue {
@@ -126,6 +146,7 @@ export default class IInputNumber extends Vue {
             },
             blur: (event: FocusEvent) => {
                 const input = event.target as HTMLInputElement;
+                this.setValue(event);
                 this.updateInput(event, input);
             }
         };
@@ -214,7 +235,7 @@ export default class IInputNumber extends Vue {
         const fraction = _value.split('.')[1];
         const max_digit = this.$props.maxFractionDigits;
 
-        if (max_digit && fraction) {
+        if (max_digit !== null && fraction) {
             if (fraction.length > max_digit) {
                 return true;
             }
@@ -227,7 +248,7 @@ export default class IInputNumber extends Vue {
         const fraction = _value.split('.')[1];
         const min_digit = this.$props.minFractionDigits;
 
-        if (min_digit) {
+        if (min_digit !== null) {
             if (fraction === undefined || fraction.length < min_digit) {
                 const num_val = this.convertNumber(_value);
                 return num_val.toFixed(min_digit);
@@ -237,10 +258,10 @@ export default class IInputNumber extends Vue {
         return _value;
     }
 
-    spin(event: KeyboardEvent, dir: number) {
+    spin(event: KeyboardEvent | PointerEvent, dir: number) {
         const step = this.$props.step * dir;
 
-        const input = event.target as HTMLInputElement;
+        const input = this.$refs.input;
         const current_value = this.convertNumber(input.value);
         const new_value = current_value + step;
 
@@ -256,7 +277,7 @@ export default class IInputNumber extends Vue {
         this.updateInput(event, input);
     }
 
-    setValue(event: KeyboardEvent) {
+    setValue(event: KeyboardEvent | FocusEvent) {
         const input = event.target as HTMLInputElement;
 
         let current_value = this.convertNumber(input.value);

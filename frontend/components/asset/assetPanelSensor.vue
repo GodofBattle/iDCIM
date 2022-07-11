@@ -42,6 +42,7 @@
                         :sensor-codes="sensorCodeList"
                         :modbus-commands="commandList"
                         :display-power-list="displayPowerList"
+                        :level-codes="levelCodes"
                         :init-sensor-data="initSensorData(slotProps.index)"
                         :node-id="slotProps.index + 1"
                         :is-use="slotProps.data.IS_USE"
@@ -197,6 +198,18 @@ interface Sensor {
                 }
             `,
             update: ({ Codes }) => Codes
+        },
+        levelCodes: {
+            query: gql`
+                query {
+                    Codes(TYPE: "LEVEL") {
+                        CODE
+                        NAME
+                        VALUE
+                    }
+                }
+            `,
+            update: ({ Codes }) => Codes
         }
     }
 })
@@ -207,6 +220,7 @@ export default class AssetPanelSensor extends Vue {
     sensorCodeList: Array<any> = [];
     commandList: Array<any> = [];
     displayPowerList: Array<any> = [];
+    levelCodes: Array<any> = [];
 
     reset() {
         this.sensors.splice(0, this.sensors.length);

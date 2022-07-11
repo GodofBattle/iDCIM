@@ -22,8 +22,9 @@
                             :auto-focus="true"
                             :max-fraction-digits="1"
                             :max="n3"
-                            @keydownEnter="onInputNumberBlur($event, 'min')"
-                            @keydownEscape="onInputNumberBlur($event, 'min')"
+                            :input-style="{ width: '60px' }"
+                            @keydownEnter="onInputBlur('min')"
+                            @keydownEscape="onInputBlur('min')"
                         />
                         <Button
                             class="p-button-secondary p-button-sm"
@@ -54,8 +55,9 @@
                                 :max-fraction-digits="1"
                                 :min="min"
                                 :max="n2"
-                                @keydownEnter="onInputNumberBlur($event, 'n3')"
-                                @keydownEscape="onInputNumberBlur($event, 'n3')"
+                                :input-style="{ width: '60px' }"
+                                @keydownEnter="onInputBlur('n3')"
+                                @keydownEscape="onInputBlur('n3')"
                             />
                             <Button
                                 class="p-button-secondary p-button-sm"
@@ -118,13 +120,9 @@
                                     :max-fraction-digits="1"
                                     :min="n2"
                                     :max="p1 - barStep"
-                                    :style="{ width: '60px' }"
-                                    @keydownEnter="
-                                        onInputNumberBlur($event, 'n1')
-                                    "
-                                    @keydownEscape="
-                                        onInputNumberBlur($event, 'n1')
-                                    "
+                                    :input-style="{ width: '60px' }"
+                                    @keydownEnter="onInputBlur('n1')"
+                                    @keydownEscape="onInputBlur('n1')"
                                 />
                                 <Button
                                     class="p-button-secondary p-button-sm"
@@ -165,13 +163,9 @@
                                     :max-fraction-digits="1"
                                     :min="n1 + barStep"
                                     :max="p2"
-                                    :style="{ width: '60px' }"
-                                    @keydownEnter="
-                                        onInputNumberBlur($event, 'p1')
-                                    "
-                                    @keydownEscape="
-                                        onInputNumberBlur($event, 'p1')
-                                    "
+                                    :input-style="{ width: '60px' }"
+                                    @keydownEnter="onInputBlur('p1')"
+                                    @keydownEscape="onInputBlur('p1')"
                                 />
                                 <Button
                                     class="p-button-secondary p-button-sm"
@@ -212,13 +206,9 @@
                                     :max-fraction-digits="1"
                                     :min="n3"
                                     :max="n1"
-                                    :style="{ width: '60px' }"
-                                    @keydownEnter="
-                                        onInputNumberBlur($event, 'n2')
-                                    "
-                                    @keydownEscape="
-                                        onInputNumberBlur($event, 'n2')
-                                    "
+                                    :input-style="{ width: '60px' }"
+                                    @keydownEnter="onInputBlur('n2')"
+                                    @keydownEscape="onInputBlur('n2')"
                                 />
                                 <Button
                                     class="p-button-secondary p-button-sm"
@@ -259,13 +249,9 @@
                                     :max-fraction-digits="1"
                                     :min="p1"
                                     :max="p3"
-                                    :style="{ width: '60px' }"
-                                    @keydownEnter="
-                                        onInputNumberBlur($event, 'p2')
-                                    "
-                                    @keydownEscape="
-                                        onInputNumberBlur($event, 'p2')
-                                    "
+                                    :input-style="{ width: '60px' }"
+                                    @keydownEnter="onInputBlur('p2')"
+                                    @keydownEscape="onInputBlur('p2')"
                                 />
                                 <Button
                                     class="p-button-secondary p-button-sm"
@@ -298,9 +284,9 @@
                                 :max-fraction-digits="1"
                                 :min="p2"
                                 :max="showMinMax ? max : null"
-                                :style="{ width: '60px' }"
-                                @keydownEnter="onInputNumberBlur($event, 'p3')"
-                                @keydownEscape="onInputNumberBlur($event, 'p3')"
+                                :input-style="{ width: '60px' }"
+                                @keydownEnter="onInputBlur('p3')"
+                                @keydownEscape="onInputBlur('p3')"
                             />
                             <Button
                                 class="p-button-secondary p-button-sm"
@@ -331,9 +317,9 @@
                             :auto-focus="true"
                             :max-fraction-digits="1"
                             :min="p3"
-                            :style="{ width: '60px' }"
-                            @keydownEnter="onInputNumberBlur($event, 'max')"
-                            @keydownEscape="onInputNumberBlur($event, 'max')"
+                            :input-style="{ width: '60px' }"
+                            @keydownEnter="onInputBlur('max')"
+                            @keydownEscape="onInputBlur('max')"
                         />
                         <Button
                             class="p-button-secondary p-button-sm"
@@ -913,11 +899,6 @@ export default class ThresholdAnalog extends Vue {
     }
 
     onInputBlur(target: string) {
-        console.info(`blur:: ${target}`);
-        this.new_value_active[target] = false;
-    }
-
-    onInputNumberBlur(event: Event, target: string) {
         this.new_value_active[target] = false;
     }
 }

@@ -97,12 +97,11 @@
                     v-else-if="!is_analog && diThresholdData !== null"
                     :style="{
                         'max-height': '50vh',
-                        height: heightDIThresholdContent,
+                        height: heightDIThresholdContent
                     }"
                 >
                     <div class="p-d-flex p-flex-column">
                         <threshold-digital
-                            :init-di="dbDiThresholdData && dbDiThresholdData.DI"
                             :di.sync="diThresholdData.DI"
                             :is-editable="true"
                             :level-codes="levelCodes"
@@ -115,7 +114,7 @@
                             :style="{
                                 width: '24px',
                                 height: '24px',
-                                padding: '0px',
+                                padding: '0px'
                             }"
                             @click="addThresholdDigital"
                         ></Button>
@@ -173,7 +172,7 @@ type DigitalThreshold = {
         unit: String,
         name: String,
         holdTime: Number,
-        levelCodes: Array,
+        levelCodes: Array
     },
     watch: {
         saveButtonDisabled(is_flag: boolean) {
@@ -181,7 +180,7 @@ type DigitalThreshold = {
         },
         checkThresholdDI(is_flag: boolean) {
             this.$emit('change', this.saveButtonDisabled || is_flag);
-        },
+        }
     },
     apollo: {
         dbAiThresholdData: {
@@ -205,7 +204,7 @@ type DigitalThreshold = {
             fetchPolicy: 'no-cache',
             variables(): any {
                 return {
-                    ID: this.id ? this.id : -1,
+                    ID: this.id ? this.id : -1
                 };
             },
             update: ({ PredefineThresholdByAI }) => PredefineThresholdByAI,
@@ -217,7 +216,7 @@ type DigitalThreshold = {
                         this.apolloFetchAI(PredefineThresholdByAI);
                     }
                 }
-            },
+            }
         },
         dbDiThresholdData: {
             query: gql`
@@ -236,7 +235,7 @@ type DigitalThreshold = {
             fetchPolicy: 'no-cache',
             variables(): any {
                 return {
-                    ID: this.id ? this.id : -1,
+                    ID: this.id ? this.id : -1
                 };
             },
             update: ({ PredefineThresholdByDI }) => PredefineThresholdByDI,
@@ -248,19 +247,19 @@ type DigitalThreshold = {
                         this.apolloFetchDI(PredefineThresholdByDI);
                     }
                 }
-            },
-        },
-    },
+            }
+        }
+    }
 })
 export default class PredefineThresholdCard extends Vue {
     initData: PredefineThreshold = {
         NAME: this.$props.name,
-        HOLD_TIME: this.$props.holdTime,
+        HOLD_TIME: this.$props.holdTime
     };
 
     data: PredefineThreshold = {
         NAME: this.$props.name,
-        HOLD_TIME: this.$props.holdTime,
+        HOLD_TIME: this.$props.holdTime
     };
 
     dbAiThresholdData: AnalogThreshold | null = null;
@@ -276,12 +275,12 @@ export default class PredefineThresholdCard extends Vue {
         POINT_N1: 0,
         POINT_P1: 0,
         POINT_P2: 0,
-        POINT_P3: 0,
+        POINT_P3: 0
     };
 
     diThresholdData: DigitalThreshold = {
         ID: 0,
-        DI: [],
+        DI: []
     };
 
     apolloFetchAI(_data: AnalogThreshold) {
@@ -300,7 +299,7 @@ export default class PredefineThresholdCard extends Vue {
                         LABEL: dv.LABEL,
                         isEditableGrade: false,
                         isEditableValue: false,
-                        hasSameINDEX: false,
+                        hasSameINDEX: false
                     });
                 });
             } else {
@@ -315,7 +314,7 @@ export default class PredefineThresholdCard extends Vue {
                 severity: 'error',
                 summary: '임계치 초과',
                 detail: `임계값은 최대 30개까지 가능합니다`,
-                life: 1200,
+                life: 1200
             });
             return;
         }
@@ -326,7 +325,7 @@ export default class PredefineThresholdCard extends Vue {
             LABEL: '새로운 임계값',
             isEditableGrade: false,
             isEditableValue: false,
-            hasSameINDEX: false,
+            hasSameINDEX: false
         });
     }
 
@@ -337,7 +336,7 @@ export default class PredefineThresholdCard extends Vue {
     copyThreshold() {
         const copy_data = {
             NAME: this.data.NAME,
-            HOLD_TIME: this.data.HOLD_TIME,
+            HOLD_TIME: this.data.HOLD_TIME
         };
 
         if (this.is_analog) {
@@ -354,7 +353,7 @@ export default class PredefineThresholdCard extends Vue {
                     value: val,
                     configurable: true,
                     enumerable: true,
-                    writable: true,
+                    writable: true
                 });
             }
         } else {
@@ -368,7 +367,7 @@ export default class PredefineThresholdCard extends Vue {
                 value: _di,
                 configurable: true,
                 enumerable: true,
-                writable: true,
+                writable: true
             });
         }
 
@@ -401,7 +400,7 @@ export default class PredefineThresholdCard extends Vue {
                     this.$props.id,
                     this.data.NAME
                 );
-            },
+            }
         });
     }
 
@@ -545,7 +544,7 @@ export default class PredefineThresholdCard extends Vue {
 
     get changedThresholdData(): object {
         const changed_data = {
-            ID: this.$props.id,
+            ID: this.$props.id
         };
 
         // by shkoh 202201107: 저장할 임계치 데이터의 기본값 들 중에서 변경될 값을 비교하여 저장
@@ -555,7 +554,7 @@ export default class PredefineThresholdCard extends Vue {
                     value: this.data[key],
                     configurable: true,
                     enumerable: true,
-                    writable: true,
+                    writable: true
                 });
             }
         }
@@ -568,7 +567,7 @@ export default class PredefineThresholdCard extends Vue {
                         value: this.aiThresholdData[key],
                         configurable: true,
                         enumerable: true,
-                        writable: true,
+                        writable: true
                     });
                 }
             }
@@ -583,7 +582,7 @@ export default class PredefineThresholdCard extends Vue {
                 value: _di,
                 configurable: true,
                 enumerable: true,
-                writable: true,
+                writable: true
             });
         }
 

@@ -144,7 +144,12 @@
                     />
                 </div>
             </div>
-            <Panel :toggleable="true" :collapsed="false" class="p-mt-2">
+            <Panel
+                ref="thresholdPanel"
+                :toggleable="true"
+                :collapsed.sync="isCollapsedThresholdPanel"
+                class="p-mt-2"
+            >
                 <template #header>
                     <div v-if="isAnalog" class="p-d-flex">
                         <Button
@@ -206,8 +211,16 @@
                             </Card>
                         </i-overlay-panel>
                     </div>
+                    <div v-else class="p-d-flex">
+                        <Button
+                            class="p-button-text"
+                            :disabled="true"
+                            :label="sensorValueLabel"
+                            :style="{ opacity: 1 }"
+                        />
+                    </div>
                 </template>
-                <template #icons>
+                <template v-if="is_noti" #icons>
                     <label
                         v-if="aiThreshold.HOLD_TIME > 0"
                         class="i-threshold-header-label"
@@ -284,6 +297,15 @@
                         :disabled="false"
                     />
                 </div>
+                <div v-else-if="!isAnalog && diThreshold !== null">
+                    <threshold-digital
+                        :di.sync="diThreshold.DI"
+                        :is-editable="true"
+                        :level-codes="levelCodes"
+                        :show-level="is_noti"
+                        :style="{ padding: 0 }"
+                    />
+                </div>
             </Panel>
         </template>
     </Card>
@@ -349,6 +371,23 @@ interface AnalogThreshold {
     POINT_P3: number;
 }
 
+interface DIValue {
+    INDEX: number;
+    LEVEL: number;
+    LABEL: string;
+    isEditableGrade: boolean | undefined;
+    isEditableValue: boolean | undefined;
+    hasSameINDEX: boolean | undefined;
+}
+
+interface DigitalThreshold {
+    [index: string]: number | Array<DIValue>;
+    ID: number;
+    SENSOR_ID: number;
+    HOLD_TIME: number;
+    DI: Array<DIValue>;
+}
+
 @Component<SensorCard>({
     props: {
         initSensorData: {
@@ -358,6 +397,7 @@ interface AnalogThreshold {
         sensorCodes: Array,
         modbusCommands: Array,
         displayPowerList: Array,
+        levelCodes: Array,
         nodeId: Number,
         isUse: Number,
         isMkstats: Number,
@@ -424,6 +464,48 @@ interface AnalogThreshold {
                     }
                 }
             }
+        },
+        dbDiThreshold: {
+            query: gql`
+                query ($SENSOR_ID: Int!) {
+                    AssetThresholdByDI(SENSOR_ID: $SENSOR_ID) {
+                        ID
+                        SENSOR_ID
+                        HOLD_TIME
+                        DI {
+                            INDEX
+                            LEVEL
+                            LABEL
+                        }
+                    }
+                }
+            `,
+            fetchPolicy: 'no-cache',
+            prefetch: true,
+            skip() {
+                const id = Number(this.sensor.ID);
+
+                return (
+                    this.isAnalog ||
+                    this.sensor === null ||
+                    typeof id !== 'number'
+                );
+            },
+            variables() {
+                return {
+                    SENSOR_ID: Number(this.sensor.ID)
+                };
+            },
+            update: ({ AssetThresholdByDI }) => AssetThresholdByDI,
+            result({ loading, data }) {
+                if (!loading) {
+                    const { AssetThresholdByDI } = data;
+
+                    if (AssetThresholdByDI) {
+                        this.apolloFetchDI(AssetThresholdByDI);
+                    }
+                }
+            }
         }
     }
 })
@@ -432,6 +514,7 @@ export default class SensorCard extends Vue {
         modbusCommandOverlayPanel: IOverlayPanel;
         dispPowerOverlayPanel: IOverlayPanel;
         thresholdSettingOverlayPanel: IOverlayPanel;
+        thresholdPanel: any;
     };
 
     sensor: Sensor = {
@@ -476,9 +559,38 @@ export default class SensorCard extends Vue {
         POINT_P3: 0
     };
 
+    dbDiThreshold: DigitalThreshold;
+    diThreshold: DigitalThreshold = {
+        ID: 0,
+        SENSOR_ID: 0,
+        HOLD_TIME: 0,
+        DI: [] as Array<DIValue>
+    };
+
+    isCollapsedThresholdPanel: boolean = !this.$props.isNoti;
+
     apolloFetchAI(data: AnalogThreshold) {
         for (const [key, value] of Object.entries(data)) {
             this.aiThreshold[key] = value;
+        }
+    }
+
+    apolloFetchDI(data: DigitalThreshold) {
+        for (const [key, value] of Object.entries(data)) {
+            if (key === 'DI') {
+                data.DI.forEach((di: DIValue) => {
+                    this.diThreshold[key].push({
+                        INDEX: di.INDEX,
+                        LEVEL: di.LEVEL,
+                        LABEL: di.LABEL,
+                        isEditableGrade: false,
+                        isEditableValue: false,
+                        hasSameINDEX: false
+                    });
+                });
+            } else {
+                this.diThreshold[key] = value;
+            }
         }
     }
 
@@ -588,6 +700,8 @@ export default class SensorCard extends Vue {
     set is_noti(_is_noti: boolean) {
         this.sensor.IS_NOTI = _is_noti ? 1 : 0;
         this.$emit('update:isNoti', this.sensor.IS_NOTI);
+
+        this.isCollapsedThresholdPanel = !_is_noti;
     }
 
     get sensorCode(): SensorCode {
@@ -626,6 +740,17 @@ export default class SensorCard extends Vue {
             }
 
             label = `${num} ${prefix}${unit}`;
+        } else if (this.diThreshold) {
+            const num = this.sensor.CURR_VALUE;
+            const curr = this.diThreshold.DI.find(
+                (di: DIValue) => di.INDEX === num
+            );
+
+            if (curr) {
+                label = `${num}: ${curr.LABEL}`;
+            } else {
+                label = `${num}`;
+            }
         }
 
         return label;
@@ -711,6 +836,10 @@ export default class SensorCard extends Vue {
         .i-threshold-header-label {
             color: var(--text-color-secondary);
         }
+    }
+
+    .p-panel-header {
+        padding: 0.5rem 1rem;
     }
 }
 
