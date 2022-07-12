@@ -16,11 +16,11 @@
                     </div>
                     <div class="p-field-checkbox p-mb-0 p-mr-2">
                         <Checkbox
-                            id="is_noti"
+                            id="chk_event"
                             v-model="is_event"
                             :binary="true"
                         />
-                        <label for="is_noti">알림</label>
+                        <label for="chk_event">알림</label>
                     </div>
                     <Button
                         class="p-button-rounded p-button-text p-button-help"

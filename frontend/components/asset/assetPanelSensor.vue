@@ -38,12 +38,13 @@
             <Column key="ID" :styles="{ 'flex-grow': 1, 'flex-basis': '100%' }">
                 <template #body="slotProps">
                     <sensor-card
+                        :ref="'sensorCard_' + slotProps.data.ID"
                         :has-comm="hasComm"
                         :sensor-codes="sensorCodeList"
                         :modbus-commands="commandList"
                         :display-power-list="displayPowerList"
                         :level-codes="levelCodes"
-                        :init-sensor-data="initSensorData(slotProps.index)"
+                        :init-sensor-data="slotProps.data"
                         :node-id="slotProps.index + 1"
                         :is-use="slotProps.data.IS_USE"
                         :is-mkstats="slotProps.data.IS_MKSTATS"
@@ -59,6 +60,7 @@
                         :noti-addmsg="slotProps.data.NOTI_ADDMSG"
                         :curr-status="slotProps.data.CURR_STATUS"
                         :curr-level="slotProps.data.CURR_LEVEL"
+                        @save="onSaveSensor"
                     />
                 </template>
             </Column>
@@ -69,6 +71,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
+import SensorCard from '../common/sensorCard.vue';
 import Component from '@/plugins/nuxt-class-component';
 
 interface Sensor {
@@ -221,6 +224,20 @@ export default class AssetPanelSensor extends Vue {
     displayPowerList: Array<any> = [];
     levelCodes: Array<any> = [];
 
+    refreshSensors() {
+        this.$apollo.queries.dbSensors.refetch();
+    }
+
+    refreshThreshold(sensor_id: string) {
+        const sensor_card: SensorCard = this.$refs[
+            `sensorCard_${sensor_id}`
+        ] as SensorCard;
+
+        if (sensor_card) {
+            sensor_card.refreshThreshold();
+        }
+    }
+
     reset() {
         this.sensors.splice(0, this.sensors.length);
     }
@@ -233,8 +250,210 @@ export default class AssetPanelSensor extends Vue {
         }
     }
 
-    initSensorData(index: number): Sensor | undefined {
-        return this.dbSensors?.at(index);
+    onSaveSensor(
+        is_analog: boolean,
+        { NODE_ID, NAME }: any,
+        { SENSOR_ID, SENSOR, THRESHOLD_AI, THRESHOLD_DI }: any
+    ) {
+        console.info(
+            is_analog,
+            NAME,
+            NODE_ID,
+            SENSOR_ID,
+            SENSOR,
+            THRESHOLD_AI,
+            THRESHOLD_DI
+        );
+
+        if (Object.keys(SENSOR).length > 0) {
+            this.saveSensor({ ID: SENSOR_ID, NODE_ID, NAME }, SENSOR);
+        }
+
+        if (is_analog && Object.keys(THRESHOLD_AI).length > 0) {
+            this.saveThresholdAi(
+                { SENSOR_ID: Number(SENSOR_ID), NODE_ID, NAME },
+                THRESHOLD_AI
+            );
+        } else if (Object.keys(THRESHOLD_DI).length > 0) {
+            this.saveThresholdDi(
+                { SENSOR_ID: Number(SENSOR_ID), NODE_ID, NAME },
+                THRESHOLD_DI
+            );
+        }
+    }
+
+    saveSensor({ ID, NODE_ID, NAME }: any, sensor: any) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation (
+                        $ID: ID!
+                        $NAME: String
+                        $SENSOR_CD: String
+                        $DATA_ADDRESS: String
+                        $ADJUST_VALUE: String
+                        $MC_ID: Int
+                        $DISP_POWER: Int
+                        $IS_USE: Int
+                        $IS_EVENT: Int
+                        $IS_MKSTATS: Int
+                    ) {
+                        UpdateAssetSensor(
+                            ID: $ID
+                            NAME: $NAME
+                            SENSOR_CD: $SENSOR_CD
+                            DATA_ADDRESS: $DATA_ADDRESS
+                            ADJUST_VALUE: $ADJUST_VALUE
+                            MC_ID: $MC_ID
+                            DISP_POWER: $DISP_POWER
+                            IS_USE: $IS_USE
+                            IS_EVENT: $IS_EVENT
+                            IS_MKSTATS: $IS_MKSTATS
+                        )
+                    }
+                `,
+                variables: {
+                    ID,
+                    ...sensor
+                }
+            })
+            .then(() => {
+                this.refreshSensors();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '수집항목 적용',
+                    detail: `[NODE ID: ${NODE_ID}] ${NAME} 수집항목 데이터 변경 완료`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: `${NAME} 수집항목 적용 실패`,
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    saveThresholdAi({ SENSOR_ID, NODE_ID, NAME }: any, threshold: any) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation (
+                        $SENSOR_ID: Int!
+                        $HOLD_TIME: Int
+                        $VALID_MIN: Float
+                        $VALID_MAX: Float
+                        $IS_VALID: Int
+                        $POINT_N3: Float
+                        $POINT_N2: Float
+                        $POINT_N1: Float
+                        $POINT_P1: Float
+                        $POINT_P2: Float
+                        $POINT_P3: Float
+                    ) {
+                        UpdateAssetAiThreshold(
+                            SENSOR_ID: $SENSOR_ID
+                            HOLD_TIME: $HOLD_TIME
+                            VALID_MIN: $VALID_MIN
+                            VALID_MAX: $VALID_MAX
+                            IS_VALID: $IS_VALID
+                            POINT_N3: $POINT_N3
+                            POINT_N2: $POINT_N2
+                            POINT_N1: $POINT_N1
+                            POINT_P1: $POINT_P1
+                            POINT_P2: $POINT_P2
+                            POINT_P3: $POINT_P3
+                        )
+                    }
+                `,
+                variables: {
+                    SENSOR_ID,
+                    ...threshold
+                }
+            })
+            .then(() => {
+                this.refreshThreshold(SENSOR_ID);
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: 'AI 임계치 적용',
+                    detail: `[NODE ID: ${NODE_ID}] ${NAME} 수집항목 AI 임계치 변경 완료`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: `${NAME} 수집항목 AI 임계치 적용 실패`,
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    saveThresholdDi({ SENSOR_ID, NODE_ID, NAME }: any, threshold: any) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation (
+                        $SENSOR_ID: Int!
+                        $HOLD_TIME: Int
+                        $DI: [DigitalValueInput!]
+                    ) {
+                        UpdateAssetDiThreshold(
+                            SENSOR_ID: $SENSOR_ID
+                            HOLD_TIME: $HOLD_TIME
+                            DI: $DI
+                        )
+                    }
+                `,
+                variables: {
+                    SENSOR_ID,
+                    ...threshold
+                }
+            })
+            .then(() => {
+                this.refreshThreshold(SENSOR_ID);
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: 'DI 임계치 적용',
+                    detail: `[NODE ID: ${NODE_ID}] ${NAME} 수집항목 DI 임계치 변경 완료`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: `${NAME} 수집항목 DI 임계치 적용 실패`,
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
     }
 }
 </script>

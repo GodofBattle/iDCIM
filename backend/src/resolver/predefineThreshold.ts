@@ -235,7 +235,7 @@ export class PredefineThresholdResolver {
 
             const update_data = {};
             if(name) update_data['NAME'] = name;
-            if(hold_time) update_data['HOLD_TIME'] = hold_time;
+            if(hold_time !== undefined) update_data['HOLD_TIME'] = hold_time;
 
             for(let idx = 0; idx < 30; idx++) {
                 let level = undefined;

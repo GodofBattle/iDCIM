@@ -1,10 +1,11 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
-import { Arg, Ctx, ID, Int, Query, Resolver } from "type-graphql";
+import { Arg, Args, Ctx, ID, Int, Mutation, Publisher, PubSub, Query, Resolver } from "type-graphql";
 import { getRepository } from "typeorm";
-import { cn_sensor } from "../entity/database/cn_sensor";
-import { cn_sensor_threshold_ai } from "../entity/database/cn_sensor_threshold_ai";
+import { ac_user } from "../entity/database/ac_user";
+import { cn_sensor, cn_sensor_args } from "../entity/database/cn_sensor";
+import { cn_sensor_threshold_ai, cn_sensor_threshold_ai_args } from "../entity/database/cn_sensor_threshold_ai";
 import { cn_sensor_threshold_di } from "../entity/database/cn_sensor_threshold_di";
-import { DigitalValue, DIThreshold } from "../entity/web/diThreshold";
+import { DigitalValue, DigitalValueInput, DIThreshold } from "../entity/web/diThreshold";
 
 @Resolver()
 export class SensorResolver {
@@ -82,6 +83,115 @@ export class SensorResolver {
             } else {
                 return null;
             }
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async UpdateAssetSensor(
+        @Arg('ID', () => ID!) id: number,
+        @Args() { NAME, SENSOR_CD, DATA_ADDRESS, ADJUST_VALUE, MC_ID, DISP_POWER, IS_USE, IS_EVENT, IS_MKSTATS }: cn_sensor_args,
+        @Ctx() ctx: any
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            if(!id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+
+            const user = await getRepository(ac_user).findOne({ USER_ID: ctx.user.sub });
+
+            const update_data = {
+                UPDATE_USER_ID: user.ID,
+                UPDATE_USER_DT: new Date()
+            };
+            for(const [key, value] of Object.entries({ NAME, SENSOR_CD, DATA_ADDRESS, ADJUST_VALUE, MC_ID, DISP_POWER, IS_USE, IS_EVENT, IS_MKSTATS })) {
+                if(value !== undefined) update_data[key] = value;
+            }
+
+            const result = await getRepository(cn_sensor).update({ ID: id }, update_data);
+            return result.affected > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async UpdateAssetAiThreshold(
+        @Arg('SENSOR_ID', () => Int!) sensor_id: number,
+        @Args() { HOLD_TIME, VALID_MAX, VALID_MIN, IS_VALID, POINT_N1, POINT_N2, POINT_N3, POINT_P1, POINT_P2, POINT_P3 }: cn_sensor_threshold_ai_args,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            if(!sensor_id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+
+            await publish();
+
+            const user = await getRepository(ac_user).findOne({ USER_ID: ctx.user.sub });
+
+            const update_data = {
+                UPDATE_USER_ID: user.ID,
+                UPDATE_USER_DT: new Date()
+            };
+            for(const [key, value] of Object.entries({ HOLD_TIME, VALID_MAX, VALID_MIN, IS_VALID, POINT_N1, POINT_N2, POINT_N3, POINT_P1, POINT_P2, POINT_P3 })) {
+                if(value !== undefined) update_data[key] = value;
+            }
+
+            const result = await getRepository(cn_sensor_threshold_ai).update({ SENSOR_ID: sensor_id }, update_data);
+            return result.affected > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async UpdateAssetDiThreshold(
+        @Arg('SENSOR_ID', () => Int!) sensor_id: number,
+        @Arg('HOLD_TIME', () => Int, { nullable: true }) hold_time: number,
+        @Arg('DI', () => [DigitalValueInput!], { nullable: true }) di: DigitalValueInput[],
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            if(!sensor_id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+
+            await publish();
+
+            const user = await getRepository(ac_user).findOne({ USER_ID: ctx.user.sub });
+            const update_data = {
+                UPDATE_USER_ID: user.ID,
+                UPDATE_USER_DT: new Date()
+            };
+
+            if(hold_time !== undefined) update_data['HOLD_TIME'] = hold_time;
+
+            for(let idx = 0; idx < 30; idx++) {
+                let level = undefined;
+                let label = undefined;
+
+                const finder_di = di.find((_d: DigitalValueInput) => _d.INDEX === idx);
+                if(finder_di) {
+                    level = finder_di.LEVEL;
+                    label = finder_di.LABEL;
+                }
+
+                update_data[`VALUE_${idx}_LEVEL`] = level;
+                update_data[`VALUE_${idx}_LABEL`] = label;
+            }
+
+            const result = await getRepository(cn_sensor_threshold_di).update({ SENSOR_ID: sensor_id }, update_data);
+            return result.affected > 0 ? true : false;
         } catch (err) {
             throw new SchemaError(err.message);
         }

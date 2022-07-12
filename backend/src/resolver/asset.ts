@@ -305,7 +305,7 @@ export class AssetResolver {
                     ADJUST_VALUE: p_s.ADJUST_VALUE,
                     MC_ID: p_s.MC_ID,
                     DISP_POWER: p_s.DISP_POWER,
-                    IS_NOTI: p_s.IS_NOTI,
+                    IS_EVENT: p_s.IS_EVENT,
                     IS_MKSTATS: p_s.IS_MKSTATS,
                     UPDATE_USER_ID: user.ID,
                     UPDATE_USER_DT: new Date()

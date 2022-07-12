@@ -1,4 +1,4 @@
-import { Field, Float, ID, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, Float, ID, Int, ObjectType } from "type-graphql";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
 
@@ -68,4 +68,37 @@ export class cn_sensor_threshold_ai {
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256, nullable: true, default: null, comment: '설명' })
     REMARK?: string;
+}
+
+@ArgsType()
+export class cn_sensor_threshold_ai_args {
+    @Field(() => Int, { nullable: true })
+    HOLD_TIME: number;
+
+    @Field(() => Float, { nullable: true })
+    VALID_MIN: number;
+
+    @Field(() => Float, { nullable: true })
+    VALID_MAX: number;
+
+    @Field(() => Int, { nullable: true })
+    IS_VALID: number;
+
+    @Field(() => Float, { nullable: true })
+    POINT_N3: number;
+    
+    @Field(() => Float, { nullable: true })
+    POINT_N2: number;
+    
+    @Field(() => Float, { nullable: true })
+    POINT_N1: number;
+    
+    @Field(() => Float, { nullable: true })
+    POINT_P1: number;
+    
+    @Field(() => Float, { nullable: true })
+    POINT_P2: number;
+    
+    @Field(() => Float, { nullable: true })
+    POINT_P3: number;
 }

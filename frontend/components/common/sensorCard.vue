@@ -3,27 +3,31 @@
         <template #header>
             <div class="p-d-flex">
                 <div class="p-field-checkbox p-mb-0 p-mr-4">
-                    <Checkbox id="is_use" v-model="is_use" :binary="true" />
-                    <label for="is_use" class="i-header-title">
+                    <Checkbox
+                        :id="`is_use_${nodeId}`"
+                        v-model="is_use"
+                        :binary="true"
+                    />
+                    <label :for="`is_use_${nodeId}`" class="i-header-title">
                         NODE ID: {{ nodeId }}
                     </label>
                 </div>
                 <div class="p-ml-auto p-d-flex">
                     <div class="p-field-checkbox p-mb-0 p-mr-4">
                         <Checkbox
-                            id="is_mkstats"
+                            :id="`is_mkstats_${nodeId}`"
                             v-model="is_mkstats"
                             :binary="true"
                         />
-                        <label for="is_mkstats">통계생성</label>
+                        <label :for="`is_mkstats_${nodeId}`">통계생성</label>
                     </div>
                     <div class="p-field-checkbox p-mb-0 p-mr-2">
                         <Checkbox
-                            id="is_event"
+                            :id="`is_event_${nodeId}`"
                             v-model="is_event"
                             :binary="true"
                         />
-                        <label for="is_event">알림</label>
+                        <label :for="`is_event_${nodeId}`">알림</label>
                     </div>
                     <Button
                         v-if="hasComm"
@@ -84,7 +88,8 @@
                     <Button
                         class="p-button-rounded p-button-text"
                         icon="pi pi-save"
-                        :disabled="saveButtonDisabled && validateDiThreshold"
+                        :disabled="saveButtonDisabled || checkDiThreshold"
+                        @click="saveSensor"
                     />
                     <Button
                         class="p-button-rounded p-button-text p-button-danger"
@@ -597,6 +602,14 @@ export default class SensorCard extends Vue {
 
     isCollapsedThresholdPanel: boolean = !this.$props.isEvent;
 
+    refreshThreshold() {
+        if (this.isAnalog) {
+            this.$apollo.queries.dbAiThreshold.refetch();
+        } else {
+            this.$apollo.queries.dbDiThreshold.refetch();
+        }
+    }
+
     apolloFetchAI(data: AnalogThreshold) {
         for (const [key, value] of Object.entries(data)) {
             this.aiThreshold[key] = value;
@@ -606,6 +619,8 @@ export default class SensorCard extends Vue {
     apolloFetchDI(data: DigitalThreshold) {
         for (const [key, value] of Object.entries(data)) {
             if (key === 'DI') {
+                this.diThreshold[key].splice(0, this.diThreshold[key].length);
+
                 data.DI.forEach((di: DIValue) => {
                     this.diThreshold[key].push({
                         INDEX: di.INDEX,
@@ -675,9 +690,9 @@ export default class SensorCard extends Vue {
             is_disabled = !this.isDiffSensor;
         }
 
-        if (is_disabled && this.isAnalog) {
+        if (is_disabled === true && this.isAnalog) {
             is_disabled = !this.isDiffAiThreshold;
-        } else if (is_disabled && !this.isAnalog) {
+        } else if (is_disabled === true && !this.isAnalog) {
             is_disabled = !this.isDiffDiThreshold;
         }
 
@@ -688,8 +703,21 @@ export default class SensorCard extends Vue {
         let is_diff = false;
 
         if (this.$props.initSensorData !== null) {
-            for (const [key, value] of Object.entries(this.sensor)) {
-                if (value !== this.$props.initSensorData[key]) {
+            const keys = [
+                'NAME',
+                'SENSOR_CD',
+                'DATA_ADDRESS',
+                'NODE_ID',
+                'ADJUST_VALUE',
+                'MC_ID',
+                'DISP_POWER',
+                'IS_USE',
+                'IS_EVENT',
+                'IS_MKSTATS'
+            ];
+
+            for (const key of keys) {
+                if (this.sensor[key] !== this.$props.initSensorData[key]) {
                     is_diff = true;
                     break;
                 }
@@ -703,8 +731,21 @@ export default class SensorCard extends Vue {
         let is_diff = false;
 
         if (this.aiThreshold && this.dbAiThreshold) {
-            for (const [key, value] of Object.entries(this.aiThreshold)) {
-                if (value !== this.dbAiThreshold[key]) {
+            const keys = [
+                'HOLD_TIME',
+                'VALID_MIN',
+                'VALID_MAX',
+                'IS_VALID',
+                'POINT_N3',
+                'POINT_N2',
+                'POINT_N1',
+                'POINT_P1',
+                'POINT_P2',
+                'POINT_P3'
+            ];
+
+            for (const key of keys) {
+                if (this.aiThreshold[key] !== this.dbAiThreshold[key]) {
                     is_diff = true;
                     break;
                 }
@@ -729,7 +770,7 @@ export default class SensorCard extends Vue {
             ) {
                 is_diff = true;
             } else {
-                for (let idx = 0; idx < this.dbDiThreshold.DI.length; idx++) {
+                for (let idx = 0; idx < this.diThreshold.DI.length; idx++) {
                     const { INDEX, LEVEL, LABEL } = this.diThreshold.DI[idx];
 
                     if (
@@ -747,22 +788,22 @@ export default class SensorCard extends Vue {
         return is_diff;
     }
 
-    get validateDiThreshold(): boolean {
-        let is_valid = true;
+    get checkDiThreshold(): boolean {
+        let is_check = false;
 
         if (!this.isAnalog) {
             for (let idx = 0; idx < this.diThreshold.DI.length; idx++) {
                 const { isEditableGrade, isEditableValue, hasSameINDEX } =
-                    this.dbDiThreshold.DI[idx];
+                    this.diThreshold.DI[idx];
 
                 if (isEditableGrade || isEditableValue || hasSameINDEX) {
-                    is_valid = false;
+                    is_check = true;
                     break;
                 }
             }
         }
 
-        return is_valid;
+        return is_check;
     }
 
     get sensorCardClass(): Array<object> {
@@ -979,6 +1020,92 @@ export default class SensorCard extends Vue {
 
         return `${content_height}px`;
     }
+
+    saveSensor() {
+        this.$emit(
+            'save',
+            this.isAnalog,
+            {
+                NODE_ID: this.sensor.NODE_ID,
+                NAME: this.sensor.NAME
+            },
+            {
+                SENSOR_ID: this.sensor.ID,
+                SENSOR: this.changedSensorData,
+                THRESHOLD_AI:
+                    this.isAnalog && this.isDiffAiThreshold
+                        ? this.changedAiThresholdData
+                        : {},
+                THRESHOLD_DI:
+                    !this.isAnalog && this.isDiffDiThreshold
+                        ? this.changedDiThresholdData
+                        : { DI: [] }
+            }
+        );
+    }
+
+    get changedSensorData(): any {
+        const changed_data = {};
+
+        [
+            'NAME',
+            'SENSOR_CD',
+            'DATA_ADDRESS',
+            'ADJUST_VALUE',
+            'MC_ID',
+            'DISP_POWER',
+            'IS_USE',
+            'IS_EVENT',
+            'IS_MKSTATS'
+        ].forEach((key: string) => {
+            if (this.sensor[key] !== this.$props.initSensorData[key]) {
+                this.$set(changed_data, key, this.sensor[key]);
+            }
+        });
+
+        return changed_data;
+    }
+
+    get changedAiThresholdData(): any {
+        const changed_data = {};
+
+        [
+            'HOLD_TIME',
+            'VALID_MIN',
+            'VALID_MAX',
+            'IS_VALID',
+            'POINT_N3',
+            'POINT_N2',
+            'POINT_N1',
+            'POINT_P1',
+            'POINT_P2',
+            'POINT_P3'
+        ].forEach((key: string) => {
+            if (this.aiThreshold[key] !== this.dbAiThreshold[key]) {
+                this.$set(changed_data, key, this.aiThreshold[key]);
+            }
+        });
+
+        return changed_data;
+    }
+
+    get changedDiThresholdData(): any {
+        const changed_data = {};
+
+        if (this.diThreshold.HOLD_TIME !== this.dbDiThreshold.HOLD_TIME) {
+            this.$set(changed_data, 'HOLD_TIME', this.diThreshold.HOLD_TIME);
+        }
+
+        const _di: Array<any> = [];
+        for (let idx = 0; idx < this.diThreshold.DI.length; idx++) {
+            const { INDEX, LEVEL, LABEL } = this.diThreshold.DI[idx];
+            _di.push({ INDEX, LEVEL, LABEL });
+        }
+
+        this.$set(changed_data, 'DI', _di);
+
+        return changed_data;
+    }
 }
 </script>
 
@@ -988,7 +1115,9 @@ export default class SensorCard extends Vue {
     border: 1px solid var(--surface-d);
 
     &.i-not-use-sensorcard {
-        opacity: 0.6;
+        .p-card-body {
+            opacity: 0.4;
+        }
     }
 
     &.i-has-editing {
