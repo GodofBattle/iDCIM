@@ -47,8 +47,8 @@ export class pd_sensor {
     DISP_POWER?: number;
 
     @Field(() => Int!)
-    @Column({ type: 'tinyint', nullable: false, default: 1, comment: '알림여부' })
-    IS_NOTI: number;
+    @Column({ type: 'tinyint', nullable: false, default: 0, comment: '임계치사용여부(1=사용, 0=미사용)' })
+    IS_EVENT: number;
 
     @Field(() => Int!)
     @Column({ type: 'tinyint', nullable: false, default: 1, comment: '통계생성여부' })
@@ -88,7 +88,7 @@ export class pd_sensor_args {
     DISP_POWER: number;
 
     @Field(() => Int, { nullable: true })
-    IS_NOTI: number;
+    IS_EVENT: number;
 
     @Field(() => Int, { nullable: true })
     IS_MKSTATS: number;
@@ -121,7 +121,7 @@ export class pd_sensor_input {
     PD_THRESHOLD_ID: number;
 
     @Field(() => Int, { nullable: true })
-    IS_NOTI: number;
+    IS_EVENT: number;
 
     @Field(() => Int, { nullable: true })
     IS_MKSTATS: number;

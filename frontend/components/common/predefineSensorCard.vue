@@ -17,7 +17,7 @@
                     <div class="p-field-checkbox p-mb-0 p-mr-2">
                         <Checkbox
                             id="is_noti"
-                            v-model="chkNoti"
+                            v-model="is_event"
                             :binary="true"
                         />
                         <label for="is_noti">알림</label>
@@ -164,7 +164,7 @@
                 :header="thresholdLabel"
                 :toggleable="true"
                 class="p-mt-2"
-                :collapsed="true"
+                :collapsed.sync="is_collapsed_panel"
             >
                 <div
                     v-if="
@@ -224,7 +224,7 @@ type PredefineSensor = {
     SENSOR_CD: string;
     DISP_POWER: number;
     PD_THRESHOLD_ID: number;
-    IS_NOTI: number;
+    IS_EVENT: number;
     IS_MKSTATS: number;
 };
 
@@ -273,8 +273,8 @@ type DigitalThreshold = {
         sensorCd: String,
         dispPower: Number,
         pdThresholdId: Number,
-        isNoti: Number,
-        isMkStats: Number,
+        isEvent: Number,
+        isMkStats: Number
     },
     apollo: {
         pdThresholdAIList: {
@@ -291,10 +291,10 @@ type DigitalThreshold = {
             prefetch: false,
             variables(): any {
                 return {
-                    SENSOR_CD: this.sensorCode?.CODE ?? '',
+                    SENSOR_CD: this.sensorCode?.CODE ?? ''
                 };
             },
-            update: ({ PredefineThresholdsByAI }) => PredefineThresholdsByAI,
+            update: ({ PredefineThresholdsByAI }) => PredefineThresholdsByAI
         },
         pdThresholdDIList: {
             query: gql`
@@ -310,10 +310,10 @@ type DigitalThreshold = {
             prefetch: false,
             variables(): any {
                 return {
-                    SENSOR_CD: this.sensorCode?.CODE ?? '',
+                    SENSOR_CD: this.sensorCode?.CODE ?? ''
                 };
             },
-            update: ({ PredefineThresholdsByDI }) => PredefineThresholdsByDI,
+            update: ({ PredefineThresholdsByDI }) => PredefineThresholdsByDI
         },
         aiThresholdData: {
             query: gql`
@@ -340,10 +340,10 @@ type DigitalThreshold = {
                         this.sensorCode?.TYPE === 'A' &&
                         this.data.PD_THRESHOLD_ID > 0
                             ? this.data.PD_THRESHOLD_ID
-                            : 0,
+                            : 0
                 };
             },
-            update: ({ PredefineThresholdByAI }) => PredefineThresholdByAI,
+            update: ({ PredefineThresholdByAI }) => PredefineThresholdByAI
         },
         diThresholdData: {
             query: gql`
@@ -366,12 +366,12 @@ type DigitalThreshold = {
                         this.sensorCode?.TYPE === 'D' &&
                         this.data.PD_THRESHOLD_ID > 0
                             ? this.data.PD_THRESHOLD_ID
-                            : 0,
+                            : 0
                 };
             },
-            update: ({ PredefineThresholdByDI }) => PredefineThresholdByDI,
-        },
-    },
+            update: ({ PredefineThresholdByDI }) => PredefineThresholdByDI
+        }
+    }
 })
 export default class PredefineSensorCard extends Vue {
     data: PredefineSensor = {
@@ -382,8 +382,8 @@ export default class PredefineSensorCard extends Vue {
         SENSOR_CD: this.$props.sensorCd,
         DISP_POWER: this.$props.dispPower,
         PD_THRESHOLD_ID: this.$props.pdThresholdId,
-        IS_NOTI: this.$props.isNoti,
-        IS_MKSTATS: this.$props.isMkStats,
+        IS_EVENT: this.$props.isEvent,
+        IS_MKSTATS: this.$props.isMkStats
     };
 
     pdThresholdAIList: Array<any> = [];
@@ -391,6 +391,8 @@ export default class PredefineSensorCard extends Vue {
 
     aiThresholdData: AnalogThreshold | null = null;
     diThresholdData: DigitalThreshold | null = null;
+
+    is_collapsed_panel: boolean = true;
 
     get saveButtonDisabled(): boolean {
         let is_disabled = true;
@@ -403,7 +405,7 @@ export default class PredefineSensorCard extends Vue {
 
         this.$emit('change', {
             id: this.$props.sensorId,
-            isEdit: !is_disabled,
+            isEdit: !is_disabled
         });
         return is_disabled;
     }
@@ -412,13 +414,13 @@ export default class PredefineSensorCard extends Vue {
         return [{ 'i-editable': !this.saveButtonDisabled }];
     }
 
-    get chkNoti(): boolean {
-        return this.data.IS_NOTI === 1;
+    get is_event(): boolean {
+        return this.data.IS_EVENT === 1;
     }
 
-    set chkNoti(_noti: boolean) {
-        this.data.IS_NOTI = _noti ? 1 : 0;
-        this.$emit('update:isNoti', this.data.IS_NOTI);
+    set is_event(_noti: boolean) {
+        this.data.IS_EVENT = _noti ? 1 : 0;
+        this.$emit('update:isEvent', this.data.IS_EVENT);
     }
 
     get chkStat(): boolean {
@@ -522,14 +524,14 @@ export default class PredefineSensorCard extends Vue {
             SENSOR_CD: this.data.SENSOR_CD,
             DISP_POWER: this.data.DISP_POWER,
             PD_THRESHOLD_ID: this.data.PD_THRESHOLD_ID,
-            IS_NOTI: this.data.IS_NOTI,
-            IS_MKSTATS: this.data.IS_MKSTATS,
+            IS_EVENT: this.data.IS_EVENT,
+            IS_MKSTATS: this.data.IS_MKSTATS
         });
     }
 
     saveSensorCard() {
         const save_data = {
-            ID: this.$props.sensorId,
+            ID: this.$props.sensorId
         };
 
         for (const key of Object.keys(this.data)) {
@@ -538,7 +540,7 @@ export default class PredefineSensorCard extends Vue {
                     value: this.data[key],
                     configurable: true,
                     enumerable: true,
-                    writable: true,
+                    writable: true
                 });
             }
         }
@@ -557,7 +559,7 @@ export default class PredefineSensorCard extends Vue {
             blockScroll: false,
             accept: () => {
                 this.$emit('delete');
-            },
+            }
         });
     }
 }

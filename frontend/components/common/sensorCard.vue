@@ -19,11 +19,11 @@
                     </div>
                     <div class="p-field-checkbox p-mb-0 p-mr-2">
                         <Checkbox
-                            id="is_noti"
-                            v-model="is_noti"
+                            id="is_event"
+                            v-model="is_event"
                             :binary="true"
                         />
-                        <label for="is_noti">알림</label>
+                        <label for="is_event">알림</label>
                     </div>
                     <Button
                         v-if="hasComm"
@@ -84,7 +84,7 @@
                     <Button
                         class="p-button-rounded p-button-text"
                         icon="pi pi-save"
-                        :disabled="saveButtonDisabled"
+                        :disabled="saveButtonDisabled && validateDiThreshold"
                     />
                     <Button
                         class="p-button-rounded p-button-text p-button-danger"
@@ -220,12 +220,18 @@
                         />
                     </div>
                 </template>
-                <template v-if="is_noti" #icons>
+                <template v-if="is_event" #icons>
                     <label
                         v-if="aiThreshold.HOLD_TIME > 0"
                         class="i-threshold-header-label"
                     >
                         상태 지속시간: {{ aiThreshold.HOLD_TIME }}초
+                    </label>
+                    <label
+                        v-else-if="diThreshold.HOLD_TIME > 0"
+                        class="i-threshold-header-label"
+                    >
+                        상태 지속시간: {{ diThreshold.HOLD_TIME }}초
                     </label>
                     <Button
                         icon="pi pi-cog"
@@ -248,7 +254,10 @@
                                         임계치 부가기능 설정
                                     </div>
                                     <Divider class="p-mt-0" />
-                                    <div class="p-field-checkbox p-mb-4">
+                                    <div
+                                        v-if="isAnalog"
+                                        class="p-field-checkbox p-mb-4"
+                                    >
                                         <InputSwitch
                                             id="is_valid_min_max"
                                             v-model="is_valid_min_max"
@@ -282,7 +291,10 @@
                     </i-overlay-panel>
                 </template>
 
-                <div v-if="isAnalog && aiThreshold !== null">
+                <div
+                    v-if="isAnalog && aiThreshold !== null"
+                    class="p-py-3 p-px-2"
+                >
                     <threshold-analog
                         :show-min-max="aiThreshold.IS_VALID === 1"
                         :curr-val.sync="sensor.CURR_VALUE"
@@ -297,15 +309,32 @@
                         :disabled="false"
                     />
                 </div>
-                <div v-else-if="!isAnalog && diThreshold !== null">
+                <i-scroll-panel
+                    v-else-if="!isAnalog && diThreshold !== null"
+                    class="p-py-2 p-px-2 p-mr-3"
+                    :style="{
+                        'max-height': '50vh',
+                        height: heightDIThresholdContent
+                    }"
+                >
                     <threshold-digital
                         :di.sync="diThreshold.DI"
                         :is-editable="true"
                         :level-codes="levelCodes"
-                        :show-level="is_noti"
+                        :show-level="is_event"
                         :style="{ padding: 0 }"
+                        @delete="deleteDiThresholdItem"
                     />
-                </div>
+                    <Button
+                        class="p-mt-2 p-mb-1 p-ml-1 p-p-0"
+                        icon="pi pi-plus"
+                        :style="{
+                            width: '24px',
+                            height: '24px'
+                        }"
+                        @click="addDiThresholdItem"
+                    />
+                </i-scroll-panel>
             </Panel>
         </template>
     </Card>
@@ -349,7 +378,7 @@ interface Sensor {
     DISP_POWER: number;
     NOTI_ADDMSG: string;
     IS_USE: number;
-    IS_NOTI: number;
+    IS_EVENT: number;
     IS_VIRTUAL: number;
     IS_MKSTATS: number;
     IS_LG_1MIN: number;
@@ -401,7 +430,7 @@ interface DigitalThreshold {
         nodeId: Number,
         isUse: Number,
         isMkstats: Number,
-        isNoti: Number,
+        isEvent: Number,
         name: String,
         adjustValue: String,
         dataAddress: String,
@@ -458,7 +487,6 @@ interface DigitalThreshold {
             result({ loading, data }) {
                 if (!loading) {
                     const { AssetThresholdByAI } = data;
-
                     if (AssetThresholdByAI) {
                         this.apolloFetchAI(AssetThresholdByAI);
                     }
@@ -533,7 +561,7 @@ export default class SensorCard extends Vue {
         DISP_POWER: this.$props.dispPower,
         NOTI_ADDMSG: this.$props.notiAddmsg,
         IS_USE: this.$props.isUse,
-        IS_NOTI: this.$props.isNoti,
+        IS_EVENT: this.$props.isEvent,
         IS_VIRTUAL: 0,
         IS_MKSTATS: this.$props.isMkstats,
         IS_LG_1MIN: 0
@@ -567,7 +595,7 @@ export default class SensorCard extends Vue {
         DI: [] as Array<DIValue>
     };
 
-    isCollapsedThresholdPanel: boolean = !this.$props.isNoti;
+    isCollapsedThresholdPanel: boolean = !this.$props.isEvent;
 
     apolloFetchAI(data: AnalogThreshold) {
         for (const [key, value] of Object.entries(data)) {
@@ -644,26 +672,97 @@ export default class SensorCard extends Vue {
         let is_disabled = true;
 
         if (this.$props.initSensorData) {
-            for (const [key, value] of Object.entries(this.sensor)) {
-                if (value !== this.$props.initSensorData[key]) {
-                    console.info(key, value, this.$props.initSensorData[key]);
-                    is_disabled = false;
-                    break;
-                }
-            }
+            is_disabled = !this.isDiffSensor;
         }
 
-        if (is_disabled && this.dbAiThreshold) {
-            for (const [ai_key, ai_value] of Object.entries(this.aiThreshold)) {
-                if (ai_value !== this.dbAiThreshold[ai_key]) {
-                    console.info(ai_key, ai_value, this.dbAiThreshold[ai_key]);
-                    is_disabled = false;
-                    break;
-                }
-            }
+        if (is_disabled && this.isAnalog) {
+            is_disabled = !this.isDiffAiThreshold;
+        } else if (is_disabled && !this.isAnalog) {
+            is_disabled = !this.isDiffDiThreshold;
         }
 
         return is_disabled;
+    }
+
+    get isDiffSensor(): boolean {
+        let is_diff = false;
+
+        if (this.$props.initSensorData !== null) {
+            for (const [key, value] of Object.entries(this.sensor)) {
+                if (value !== this.$props.initSensorData[key]) {
+                    is_diff = true;
+                    break;
+                }
+            }
+        }
+
+        return is_diff;
+    }
+
+    get isDiffAiThreshold(): boolean {
+        let is_diff = false;
+
+        if (this.aiThreshold && this.dbAiThreshold) {
+            for (const [key, value] of Object.entries(this.aiThreshold)) {
+                if (value !== this.dbAiThreshold[key]) {
+                    is_diff = true;
+                    break;
+                }
+            }
+        }
+
+        return is_diff;
+    }
+
+    get isDiffDiThreshold(): boolean {
+        let is_diff = false;
+
+        if (this.diThreshold && this.dbDiThreshold) {
+            if (
+                this.diThreshold.ID !== this.dbDiThreshold.ID ||
+                this.diThreshold.SENSOR_ID !== this.dbDiThreshold.SENSOR_ID ||
+                this.diThreshold.HOLD_TIME !== this.dbDiThreshold.HOLD_TIME
+            ) {
+                is_diff = true;
+            } else if (
+                this.diThreshold.DI.length !== this.dbDiThreshold.DI.length
+            ) {
+                is_diff = true;
+            } else {
+                for (let idx = 0; idx < this.dbDiThreshold.DI.length; idx++) {
+                    const { INDEX, LEVEL, LABEL } = this.diThreshold.DI[idx];
+
+                    if (
+                        INDEX !== this.dbDiThreshold.DI[idx].INDEX ||
+                        LEVEL !== this.dbDiThreshold.DI[idx].LEVEL ||
+                        LABEL !== this.dbDiThreshold.DI[idx].LABEL
+                    ) {
+                        is_diff = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return is_diff;
+    }
+
+    get validateDiThreshold(): boolean {
+        let is_valid = true;
+
+        if (!this.isAnalog) {
+            for (let idx = 0; idx < this.diThreshold.DI.length; idx++) {
+                const { isEditableGrade, isEditableValue, hasSameINDEX } =
+                    this.dbDiThreshold.DI[idx];
+
+                if (isEditableGrade || isEditableValue || hasSameINDEX) {
+                    is_valid = false;
+                    break;
+                }
+            }
+        }
+
+        return is_valid;
     }
 
     get sensorCardClass(): Array<object> {
@@ -693,15 +792,15 @@ export default class SensorCard extends Vue {
         this.$emit('update:isMkstats', this.sensor.IS_MKSTATS);
     }
 
-    get is_noti(): boolean {
-        return this.sensor.IS_NOTI === 1;
+    get is_event(): boolean {
+        return this.sensor.IS_EVENT === 1;
     }
 
-    set is_noti(_is_noti: boolean) {
-        this.sensor.IS_NOTI = _is_noti ? 1 : 0;
-        this.$emit('update:isNoti', this.sensor.IS_NOTI);
+    set is_event(_is_event: boolean) {
+        this.sensor.IS_EVENT = _is_event ? 1 : 0;
+        this.$emit('update:isEvent', this.sensor.IS_EVENT);
 
-        this.isCollapsedThresholdPanel = !_is_noti;
+        this.isCollapsedThresholdPanel = !_is_event;
     }
 
     get sensorCode(): SensorCode {
@@ -763,14 +862,22 @@ export default class SensorCard extends Vue {
     }
 
     get holdingTime(): number {
-        if (this.aiThreshold === null) return 0;
+        let holding_time = 0;
 
-        return this.aiThreshold.HOLD_TIME;
+        if (this.isAnalog) {
+            holding_time = this.aiThreshold.HOLD_TIME;
+        } else {
+            holding_time = this.diThreshold.HOLD_TIME;
+        }
+
+        return holding_time;
     }
 
     set holdingTime(_holding_time: number) {
-        if (this.aiThreshold) {
+        if (this.isAnalog) {
             this.aiThreshold.HOLD_TIME = _holding_time;
+        } else {
+            this.diThreshold.HOLD_TIME = _holding_time;
         }
     }
 
@@ -803,6 +910,74 @@ export default class SensorCard extends Vue {
                 this.sensor.DISP_POWER = 0;
             }
         }
+    }
+
+    deleteDiThresholdItem(index: number) {
+        this.diThreshold.DI.splice(index, 1);
+    }
+
+    addDiThresholdItem() {
+        if (this.diThreshold.DI.length === 30) {
+            this.$toast.add({
+                severity: 'error',
+                summary: '임계치 수 초과',
+                detail: `임계치는 최대 30가지 경우를 표현할 수 있습니다`,
+                life: 2000
+            });
+
+            return;
+        }
+
+        const idx = this.minimumDiThresholdIndex;
+        const new_di = {
+            INDEX: this.minimumDiThresholdIndex,
+            LEVEL: 0,
+            LABEL: '새로운 임계값',
+            isEditableGrade: false,
+            isEditableValue: false,
+            hasSameINDEX: false
+        };
+
+        this.diThreshold.DI.splice(idx, 0, new_di);
+    }
+
+    get minimumDiThresholdIndex(): number {
+        let min = 0;
+        for (let seq = 0; seq < 30; seq++) {
+            const has_seq = this.diThreshold.DI.some(
+                (d: DIValue) => d.INDEX === seq
+            );
+            if (!has_seq) {
+                min = seq;
+                break;
+            }
+        }
+
+        return min;
+    }
+
+    get heightDIThresholdContent(): string {
+        let content_height = 24 + 12;
+
+        this.diThreshold.DI.forEach((d: DIValue) => {
+            let di_heihgt = 2;
+            if (d.isEditableGrade || d.isEditableValue) {
+                di_heihgt += 48;
+            } else {
+                di_heihgt += 36;
+            }
+
+            content_height += di_heihgt;
+        });
+
+        // by shkoh 20220712: padding 값 추가
+        if (this.diThreshold.DI.length === 0) {
+            content_height += 12;
+        } else {
+            content_height += 6;
+        }
+
+        return `${content_height}px`;
     }
 }
 </script>
@@ -840,6 +1015,10 @@ export default class SensorCard extends Vue {
 
     .p-panel-header {
         padding: 0.5rem 1rem;
+    }
+
+    .p-panel-content {
+        padding: 0rem;
     }
 }
 

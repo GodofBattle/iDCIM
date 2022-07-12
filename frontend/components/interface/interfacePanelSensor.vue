@@ -53,7 +53,7 @@
                         :sensor-cd.sync="slotProps.data.SENSOR_CD"
                         :disp-power.sync="slotProps.data.DISP_POWER"
                         :pd-threshold-id.sync="slotProps.data.PD_THRESHOLD_ID"
-                        :is-noti.sync="slotProps.data.IS_NOTI"
+                        :is-event.sync="slotProps.data.IS_EVENT"
                         :is-mk-stats.sync="slotProps.data.IS_MKSTATS"
                         @change="changePredefineSensorCard"
                         @copy="copyPredefineSensorCard"
@@ -88,7 +88,7 @@ type Sensor = {
     ADJUST_VALUE: string;
     MC_ID: number;
     DISP_POWER: number;
-    IS_NOTI: number;
+    IS_EVENT: number;
     IS_MKSTATS: number;
 };
 
@@ -117,7 +117,7 @@ type Sensor = {
                         ADJUST_VALUE
                         MC_ID
                         DISP_POWER
-                        IS_NOTI
+                        IS_EVENT
                         IS_MKSTATS
                     }
                 }
@@ -217,24 +217,22 @@ export default class InterfacePanelSensor extends Vue {
     apolloFetch(data: Array<Sensor>) {
         this.reset();
 
-        this.$nextTick(() => {
-            data.forEach((datum) => {
-                const db_sensor_data: Sensor = Object.create({
-                    ID: datum.ID,
-                    PD_INTF_ID: datum.PD_INTF_ID,
-                    NAME: datum.NAME,
-                    SENSOR_CD: datum.SENSOR_CD,
-                    PD_THRESHOLD_ID: datum.PD_THRESHOLD_ID,
-                    DATA_ADDRESS: datum.DATA_ADDRESS,
-                    ADJUST_VALUE: datum.ADJUST_VALUE,
-                    MC_ID: datum.MC_ID,
-                    DISP_POWER: datum.DISP_POWER,
-                    IS_NOTI: datum.IS_NOTI,
-                    IS_MKSTATS: datum.IS_MKSTATS
-                });
-
-                this.sensorList.push(db_sensor_data);
+        data.forEach((datum) => {
+            const db_sensor_data: Sensor = Object.create({
+                ID: datum.ID,
+                PD_INTF_ID: datum.PD_INTF_ID,
+                NAME: datum.NAME,
+                SENSOR_CD: datum.SENSOR_CD,
+                PD_THRESHOLD_ID: datum.PD_THRESHOLD_ID,
+                DATA_ADDRESS: datum.DATA_ADDRESS,
+                ADJUST_VALUE: datum.ADJUST_VALUE,
+                MC_ID: datum.MC_ID,
+                DISP_POWER: datum.DISP_POWER,
+                IS_EVENT: datum.IS_EVENT,
+                IS_MKSTATS: datum.IS_MKSTATS
             });
+
+            this.sensorList.push(db_sensor_data);
         });
     }
 
@@ -319,7 +317,7 @@ export default class InterfacePanelSensor extends Vue {
                     SENSOR_CD: s_data?.SENSOR_CD,
                     DISP_POWER: s_data?.DISP_POWER,
                     PD_THRESHOLD_ID: s_data?.PD_THRESHOLD_ID,
-                    IS_NOTI: s_data?.IS_NOTI,
+                    IS_EVENT: s_data?.IS_EVENT,
                     IS_MKSTATS: s_data?.IS_MKSTATS
                 };
             });
@@ -382,7 +380,7 @@ export default class InterfacePanelSensor extends Vue {
                         $SENSOR_CD: String
                         $DISP_POWER: Int
                         $PD_THRESHOLD_ID: Int
-                        $IS_NOTI: Int
+                        $IS_EVENT: Int
                         $IS_MKSTATS: Int
                     ) {
                         CopyPredefineSensor(
@@ -395,7 +393,7 @@ export default class InterfacePanelSensor extends Vue {
                             SENSOR_CD: $SENSOR_CD
                             DISP_POWER: $DISP_POWER
                             PD_THRESHOLD_ID: $PD_THRESHOLD_ID
-                            IS_NOTI: $IS_NOTI
+                            IS_EVENT: $IS_EVENT
                             IS_MKSTATS: $IS_MKSTATS
                         )
                     }
@@ -442,7 +440,7 @@ export default class InterfacePanelSensor extends Vue {
                         $SENSOR_CD: String
                         $DISP_POWER: Int
                         $PD_THRESHOLD_ID: Int
-                        $IS_NOTI: Int
+                        $IS_EVENT: Int
                         $IS_MKSTATS: Int
                     ) {
                         UpdatePredefineSensor(
@@ -454,7 +452,7 @@ export default class InterfacePanelSensor extends Vue {
                             SENSOR_CD: $SENSOR_CD
                             DISP_POWER: $DISP_POWER
                             PD_THRESHOLD_ID: $PD_THRESHOLD_ID
-                            IS_NOTI: $IS_NOTI
+                            IS_EVENT: $IS_EVENT
                             IS_MKSTATS: $IS_MKSTATS
                         )
                     }

@@ -67,8 +67,8 @@ export class cn_sensor {
     IS_USE: number;
 
     @Field(() => Int, { nullable: true })
-    @Column({ type: 'tinyint', nullable: false, default: 0, comment: '알림여부' })
-    IS_NOTI: number;
+    @Column({ type: 'tinyint', nullable: false, default: 0, comment: '임계치사용여부(1=사용, 0=미사용)' })
+    IS_EVENT: number;
 
     @Field(() => Int, { nullable: true })
     @Column({ type: 'tinyint', nullable: false, default: 0, comment: '가상센서여부' })

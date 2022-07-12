@@ -68,7 +68,7 @@ export class PredefineSensorResolver {
     @Mutation(() => Boolean)
     async UpdatePredefineSensor(
         @Arg('ID', () => Int) id: number,
-        @Args() { NAME, SENSOR_CD, PD_THRESHOLD_ID, DATA_ADDRESS, ADJUST_VALUE, MC_ID, DISP_POWER, IS_NOTI, IS_MKSTATS }: pd_sensor_args,
+        @Args() { NAME, SENSOR_CD, PD_THRESHOLD_ID, DATA_ADDRESS, ADJUST_VALUE, MC_ID, DISP_POWER, IS_EVENT, IS_MKSTATS }: pd_sensor_args,
         @Ctx() ctx: any,
         @PubSub('REFRESHTOKEN') publish: Publisher<void>
     ) {
@@ -82,7 +82,7 @@ export class PredefineSensorResolver {
             if(!id) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
 
             const update_data = {};
-            for(const [ key, value ] of Object.entries({ NAME, SENSOR_CD, PD_THRESHOLD_ID, DATA_ADDRESS, ADJUST_VALUE, MC_ID, DISP_POWER, IS_NOTI, IS_MKSTATS })) {
+            for(const [ key, value ] of Object.entries({ NAME, SENSOR_CD, PD_THRESHOLD_ID, DATA_ADDRESS, ADJUST_VALUE, MC_ID, DISP_POWER, IS_EVENT, IS_MKSTATS })) {
                 if(value !== undefined) update_data[key] = value;
             }
 
@@ -130,7 +130,7 @@ export class PredefineSensorResolver {
     async CopyPredefineSensor(
         @Arg('PD_INTF_ID', () => Int!) pd_interface_id: number,
         @Arg('NODE_ID', () => Int!) node_id: number,
-        @Args() { NAME, ADJUST_VALUE, DATA_ADDRESS, MC_ID, SENSOR_CD, DISP_POWER, PD_THRESHOLD_ID, IS_NOTI, IS_MKSTATS }: pd_sensor_args,
+        @Args() { NAME, ADJUST_VALUE, DATA_ADDRESS, MC_ID, SENSOR_CD, DISP_POWER, PD_THRESHOLD_ID, IS_EVENT, IS_MKSTATS }: pd_sensor_args,
         @Ctx() ctx: any,
         @PubSub('REFRESHTOKEN') publish: Publisher<void>
     ) {
@@ -149,7 +149,7 @@ export class PredefineSensorResolver {
             const update_result = await getRepository(pd_sensor).update({ PD_INTF_ID: pd_interface_id, NODE_ID: MoreThan(node_id) }, { NODE_ID: () => 'NODE_ID + 1' });
             is_result += update_result.affected;
 
-            const insert_result = await getRepository(pd_sensor).insert({ NAME, ADJUST_VALUE, DATA_ADDRESS, MC_ID, SENSOR_CD, DISP_POWER, PD_THRESHOLD_ID, IS_NOTI, IS_MKSTATS, PD_INTF_ID: pd_interface_id, NODE_ID: node_id + 1 });
+            const insert_result = await getRepository(pd_sensor).insert({ NAME, ADJUST_VALUE, DATA_ADDRESS, MC_ID, SENSOR_CD, DISP_POWER, PD_THRESHOLD_ID, IS_EVENT, IS_MKSTATS, PD_INTF_ID: pd_interface_id, NODE_ID: node_id + 1 });
             is_result += insert_result.identifiers.length;
 
             return is_result > 0 ? true : false;
@@ -175,8 +175,8 @@ export class PredefineSensorResolver {
 
             let is_result: number = 0;
             input.forEach(async (sensor: pd_sensor_input) => {
-                const { ID, NAME, ADJUST_VALUE, DATA_ADDRESS, MC_ID, SENSOR_CD, DISP_POWER, PD_THRESHOLD_ID, IS_NOTI, IS_MKSTATS } = sensor;
-                const result = await getRepository(pd_sensor).update({ ID: ID }, { NAME, ADJUST_VALUE, DATA_ADDRESS, MC_ID, SENSOR_CD, DISP_POWER, PD_THRESHOLD_ID, IS_NOTI, IS_MKSTATS });
+                const { ID, NAME, ADJUST_VALUE, DATA_ADDRESS, MC_ID, SENSOR_CD, DISP_POWER, PD_THRESHOLD_ID, IS_EVENT, IS_MKSTATS } = sensor;
+                const result = await getRepository(pd_sensor).update({ ID: ID }, { NAME, ADJUST_VALUE, DATA_ADDRESS, MC_ID, SENSOR_CD, DISP_POWER, PD_THRESHOLD_ID, IS_EVENT, IS_MKSTATS });
                 is_result += result.affected;
             });
 

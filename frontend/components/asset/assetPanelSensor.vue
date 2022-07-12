@@ -47,7 +47,7 @@
                         :node-id="slotProps.index + 1"
                         :is-use="slotProps.data.IS_USE"
                         :is-mkstats="slotProps.data.IS_MKSTATS"
-                        :is-noti="slotProps.data.IS_NOTI"
+                        :is-event="slotProps.data.IS_EVENT"
                         :name="slotProps.data.NAME"
                         :adjust-value="slotProps.data.ADJUST_VALUE"
                         :data-address="slotProps.data.DATA_ADDRESS"
@@ -88,7 +88,7 @@ interface Sensor {
     DISP_POWER: number;
     NOTI_ADDMSG: string;
     IS_USE: number;
-    IS_NOTI: number;
+    IS_EVENT: number;
     IS_VIRTUAL: number;
     IS_MKSTATS: number;
     IS_LG_1MIN: number;
@@ -119,7 +119,7 @@ interface Sensor {
                         DISP_POWER
                         NOTI_ADDMSG
                         IS_USE
-                        IS_NOTI
+                        IS_EVENT
                         IS_VIRTUAL
                         IS_MKSTATS
                         IS_LG_1MIN
@@ -142,7 +142,6 @@ interface Sensor {
                     if (AssetSensors) {
                         // by shkoh 20220706: apollo를 통하여 가져온 데이터와 SensorCard 컴포넌트를 통하여 sync가 이루어진 데이터들의 변화가 감지되면 수초 뒤에,
                         //                    변경된 데이터로 새로 해당 루틴이 발생함(단, Database를 통하여 발생되는 것은 아님)
-                        console.info(AssetSensors);
                         this.apolloFetch(AssetSensors);
                     }
                 }

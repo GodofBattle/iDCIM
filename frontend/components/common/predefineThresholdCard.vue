@@ -79,7 +79,10 @@
                 :toggleable="true"
                 :collapsed="false"
             >
-                <div v-if="is_analog && aiThresholdData !== null">
+                <div
+                    v-if="is_analog && aiThresholdData !== null"
+                    class="p-py-3 p-px-2"
+                >
                     <threshold-analog
                         :show-min-max="aiThresholdData.IS_VALID === 1"
                         :n3.sync="aiThresholdData.POINT_N3"
@@ -93,8 +96,9 @@
                         :disabled="false"
                     ></threshold-analog>
                 </div>
-                <ScrollPanel
+                <i-scroll-panel
                     v-else-if="!is_analog && diThresholdData !== null"
+                    class="p-py-1 p-px-2 p-mr-3"
                     :style="{
                         'max-height': '50vh',
                         height: heightDIThresholdContent
@@ -102,6 +106,7 @@
                 >
                     <div class="p-d-flex p-flex-column">
                         <threshold-digital
+                            ref="thresholdDi"
                             :di.sync="diThresholdData.DI"
                             :is-editable="true"
                             :level-codes="levelCodes"
@@ -109,17 +114,16 @@
                             @delete="deleteThresholdDigital"
                         ></threshold-digital>
                         <Button
-                            class="p-mt-2"
+                            class="p-mt-2 p-mb-1 p-ml-1 p-p-0"
                             icon="pi pi-plus"
                             :style="{
                                 width: '24px',
-                                height: '24px',
-                                padding: '0px'
+                                height: '24px'
                             }"
                             @click="addThresholdDigital"
                         ></Button>
                     </div>
-                </ScrollPanel>
+                </i-scroll-panel>
             </Panel>
         </template>
     </Card>
@@ -128,6 +132,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
+import ThresholdDigital from './thresholdDigital.vue';
 import Component from '@/plugins/nuxt-class-component';
 
 type PredefineThreshold = {
@@ -252,6 +257,10 @@ type DigitalThreshold = {
     }
 })
 export default class PredefineThresholdCard extends Vue {
+    $refs!: {
+        thresholdDi: ThresholdDigital;
+    };
+
     initData: PredefineThreshold = {
         NAME: this.$props.name,
         HOLD_TIME: this.$props.holdTime
@@ -312,9 +321,9 @@ export default class PredefineThresholdCard extends Vue {
         if (this.diThresholdData.DI.length === 30) {
             this.$toast.add({
                 severity: 'error',
-                summary: '임계치 초과',
-                detail: `임계값은 최대 30개까지 가능합니다`,
-                life: 1200
+                summary: '임계치 수 초과',
+                detail: `임계치는 최대 30가지 경우를 표현할 수 있습니다`,
+                life: 2000
             });
             return;
         }
@@ -532,9 +541,9 @@ export default class PredefineThresholdCard extends Vue {
         let content_height = 24 + 12;
 
         this.diThresholdData.DI.forEach((d: DIValue) => {
-            let di_heihgt = 6;
-            if (d.isEditableGrade || d.isEditableValue) di_heihgt += 53;
-            else di_heihgt += 40;
+            let di_heihgt = 3;
+            if (d.isEditableGrade || d.isEditableValue) di_heihgt += 48;
+            else di_heihgt += 36;
 
             content_height += di_heihgt;
         });
@@ -610,7 +619,7 @@ export default class PredefineThresholdCard extends Vue {
     }
 
     .p-panel .p-panel-content {
-        padding: 1.2rem 1rem;
+        padding: 0;
     }
 }
 

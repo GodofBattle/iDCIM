@@ -1,7 +1,7 @@
 <template>
     <div
         class="p-grid p-ai-center vertical-container"
-        :style="{ 'margin-bottom': '-0.5rem' }"
+        :style="{ 'margin-bottom': '-0.25rem' }"
     >
         <div
             v-if="showMinMax"
@@ -732,9 +732,9 @@ export default class ThresholdAnalog extends Vue {
     }
 
     get rangeValPosition(): number {
-        if (this.$props.currVal) {
-            if (this.$props.currVal > this.rangeMax) return 100;
-            else if (this.$props.currVal < this.rangeMin) return 0;
+        if (this.$props.currVal !== null) {
+            if (this.$props.currVal > this.rangeMax) return NaN;
+            else if (this.$props.currVal < this.rangeMin) return NaN;
 
             return (
                 ((this.$props.currVal - this.rangeMin) * 100) /
@@ -746,7 +746,8 @@ export default class ThresholdAnalog extends Vue {
     }
 
     get rangeValHandleStyle() {
-        return { left: this.rangeValPosition + '%' };
+        const pos = this.rangeValPosition;
+        return Number.isNaN(pos) ? { display: 'none' } : { left: `${pos}%` };
     }
 
     updateDomData() {

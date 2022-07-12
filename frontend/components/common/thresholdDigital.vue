@@ -11,18 +11,10 @@
         </div>
         <div v-else class="i-editable-threshold-digital">
             <div v-for="(data, index) in di" :key="index">
-                <div
-                    :class="[
-                        'p-d-inline-flex',
-                        'p-px-2',
-                        'p-my-1',
-                        'p-ai-center',
-                        'i-digit-row'
-                    ]"
-                >
-                    <div v-if="showLevel" class="p-mr-2">
+                <div :class="['p-px-2', 'p-my-1', 'i-digit-row']">
+                    <div v-if="showLevel" class="p-mr-2 p-as-center">
                         <Inplace
-                            class="p-py-3"
+                            class="p-py-1 p-d-flex"
                             :active.sync="data.isEditableGrade"
                             @open="onOpenLevel"
                         >
@@ -67,9 +59,9 @@
                             </template>
                         </Inplace>
                     </div>
-                    <div class="p-mr-2">
+                    <div class="p-mr-2 p-as-center">
                         <Inplace
-                            class="p-py-3"
+                            class="p-py-2"
                             :active.sync="data.isEditableValue"
                         >
                             <template #display>
@@ -94,6 +86,12 @@
                                             :auto-focus="true"
                                             :input-style="{ width: '60px' }"
                                             :show-buttons="true"
+                                            @input="
+                                                inputThresholdDigitIndex(
+                                                    index,
+                                                    data.INDEX
+                                                )
+                                            "
                                         />
                                     </span>
                                     <span class="p-px-1 p-py-2">:</span>
@@ -121,10 +119,10 @@
                             </template>
                         </Inplace>
                     </div>
-                    <div v-if="data.hasSameINDEX" class="p-mx-2">
+                    <div v-if="data.hasSameINDEX" class="p-mx-2 p-as-center">
                         <span class="p-error">{{ same_index_message }}</span>
                     </div>
-                    <div class="p-mr-2">
+                    <div class="p-mr-2 p-as-center">
                         <Button
                             icon="pi pi-times"
                             class="p-button-rounded p-button-danger p-button-text"
@@ -142,6 +140,7 @@ import Vue from 'vue';
 import Component from '@/plugins/nuxt-class-component';
 
 @Component<ThresholdDigital>({
+    inheritAttrs: true,
     props: {
         di: {
             type: Array,
@@ -181,7 +180,8 @@ export default class ThresholdDigital extends Vue {
 
     thresholdEditClass(level: number): Array<string | object> {
         return [
-            'p-p-2',
+            'p-px-2',
+            'p-py-1',
             'p-text-center',
             'i-level',
             {
@@ -311,6 +311,7 @@ export default class ThresholdDigital extends Vue {
     border-radius: var(--border-radius);
     border: 1px solid var(--surface-d);
     cursor: pointer;
+    display: inline-flex;
 }
 
 .i-level {
