@@ -8,19 +8,19 @@
                 <div class="p-ml-auto p-d-flex">
                     <div class="p-field-checkbox p-mb-0 p-mr-4">
                         <Checkbox
-                            id="is_mkstat"
+                            :id="`is_mkstat_${nodeId}`"
                             v-model="chkStat"
                             :binary="true"
                         />
-                        <label for="is_mkstat">통계생성</label>
+                        <label :for="`is_mkstat_${nodeId}`">통계생성</label>
                     </div>
                     <div class="p-field-checkbox p-mb-0 p-mr-2">
                         <Checkbox
-                            id="chk_event"
+                            :id="`chk_event_${nodeId}`"
                             v-model="is_event"
                             :binary="true"
                         />
-                        <label for="chk_event">알림</label>
+                        <label :for="`chk_event_${nodeId}`">알림</label>
                     </div>
                     <Button
                         class="p-button-rounded p-button-text p-button-help"
@@ -288,10 +288,18 @@ type DigitalThreshold = {
                     }
                 }
             `,
-            prefetch: false,
+            prefetch: true,
+            fetchPolicy: 'cache-and-network',
+            skip() {
+                return (
+                    this.sensorCode === undefined ||
+                    this.sensorCode === null ||
+                    this.sensorCode.CODE.length === 0
+                );
+            },
             variables(): any {
                 return {
-                    SENSOR_CD: this.sensorCode?.CODE ?? ''
+                    SENSOR_CD: this.sensorCode.CODE
                 };
             },
             update: ({ PredefineThresholdsByAI }) => PredefineThresholdsByAI
@@ -448,7 +456,7 @@ export default class PredefineSensorCard extends Vue {
             const current_power = this.displayPower;
 
             label += `(${
-                this.isDispConv && current_power ? current_power.NAME : ``
+                this.isDispConv && current_power ? current_power.REMARK : ``
             }${this.sensorCode?.UNIT})`;
         }
 

@@ -602,7 +602,7 @@ export default class SensorCard extends Vue {
 
     isCollapsedThresholdPanel: boolean = !this.$props.isEvent;
 
-    refreshThreshold() {
+    refetchThreshold() {
         if (this.isAnalog) {
             this.$apollo.queries.dbAiThreshold.refetch();
         } else {

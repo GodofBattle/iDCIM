@@ -1,5 +1,5 @@
 <template>
-    <div v-if="showPanel" id="interfacePanelSensor" class="p-grid">
+    <div v-if="!$apollo.loading" id="interfacePanelSensor" class="p-grid">
         <DataTable
             :value="sensorList"
             :scrollable="true"
@@ -122,13 +122,16 @@ type Sensor = {
                     }
                 }
             `,
+            skip() {
+                return this.id === null || this.id <= 0;
+            },
             variables() {
                 return {
-                    PD_INTF_ID: this.id ? this.id : -1
+                    PD_INTF_ID: this.id
                 };
             },
             prefetch: false,
-            fetchPolicy: 'cache-and-network',
+            fetchPolicy: 'no-cache',
             update: ({ PredefineSensors }) => PredefineSensors,
             result({ data, loading }: any) {
                 if (!loading) {
@@ -183,6 +186,7 @@ type Sensor = {
                         CODE
                         NAME
                         VALUE
+                        REMARK
                     }
                 }
             `,
@@ -276,7 +280,7 @@ export default class InterfacePanelSensor extends Vue {
                 `
             })
             .then(() => {
-                this.refreshPredefineSensorList();
+                this.refetchPredefineSensorList();
 
                 this.$toast.add({
                     severity: 'info',
@@ -340,7 +344,7 @@ export default class InterfacePanelSensor extends Vue {
                 }
             })
             .then(() => {
-                this.refreshPredefineSensorList();
+                this.refetchPredefineSensorList();
 
                 this.$toast.add({
                     severity: 'info',
@@ -401,7 +405,7 @@ export default class InterfacePanelSensor extends Vue {
                 variables: copy_data
             })
             .then(() => {
-                this.refreshPredefineSensorList();
+                this.refetchPredefineSensorList();
 
                 this.$toast.add({
                     severity: 'info',
@@ -460,7 +464,7 @@ export default class InterfacePanelSensor extends Vue {
                 variables: save_data
             })
             .then(() => {
-                this.refreshPredefineSensorList();
+                this.refetchPredefineSensorList();
 
                 this.$toast.add({
                     severity: 'info',
@@ -496,7 +500,7 @@ export default class InterfacePanelSensor extends Vue {
             `
             })
             .then(() => {
-                this.refreshPredefineSensorList();
+                this.refetchPredefineSensorList();
 
                 this.$toast.add({
                     severity: 'info',
@@ -554,7 +558,7 @@ export default class InterfacePanelSensor extends Vue {
                 }
             })
             .then(() => {
-                this.refreshPredefineSensorList();
+                this.refetchPredefineSensorList();
 
                 this.$toast.add({
                     severity: 'info',
@@ -569,6 +573,10 @@ export default class InterfacePanelSensor extends Vue {
             .finally(() => {
                 this.$nuxt.$loading.finish();
             });
+    }
+
+    refetchPredefineSensorList() {
+        this.$apollo.queries.dbSensorList.refetch();
     }
 
     refreshPredefineSensorList() {

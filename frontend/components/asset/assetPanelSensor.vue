@@ -224,17 +224,17 @@ export default class AssetPanelSensor extends Vue {
     displayPowerList: Array<any> = [];
     levelCodes: Array<any> = [];
 
-    refreshSensors() {
+    refetchSensors() {
         this.$apollo.queries.dbSensors.refetch();
     }
 
-    refreshThreshold(sensor_id: string) {
+    refetchThreshold(sensor_id: string) {
         const sensor_card: SensorCard = this.$refs[
             `sensorCard_${sensor_id}`
         ] as SensorCard;
 
         if (sensor_card) {
-            sensor_card.refreshThreshold();
+            sensor_card.refetchThreshold();
         }
     }
 
@@ -320,7 +320,7 @@ export default class AssetPanelSensor extends Vue {
                 }
             })
             .then(() => {
-                this.refreshSensors();
+                this.refetchSensors();
 
                 this.$toast.add({
                     severity: 'info',
@@ -384,7 +384,7 @@ export default class AssetPanelSensor extends Vue {
                 }
             })
             .then(() => {
-                this.refreshThreshold(SENSOR_ID);
+                this.refetchThreshold(SENSOR_ID);
 
                 this.$toast.add({
                     severity: 'info',
@@ -432,7 +432,7 @@ export default class AssetPanelSensor extends Vue {
                 }
             })
             .then(() => {
-                this.refreshThreshold(SENSOR_ID);
+                this.refetchThreshold(SENSOR_ID);
 
                 this.$toast.add({
                     severity: 'info',
