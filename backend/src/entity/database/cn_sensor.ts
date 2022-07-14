@@ -1,4 +1,4 @@
-import { ArgsType, Field, Float, ID, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, Float, ID, InputType, Int, ObjectType } from "type-graphql";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 import { nullableDate } from "../../scalar/nullableDate";
@@ -109,6 +109,42 @@ export class cn_sensor_args {
 
     @Field(() => String, { nullable: true })
     DATA_ADDRESS: string;
+
+    @Field(() => String, { nullable: true })
+    ADJUST_VALUE: string;
+
+    @Field(() => Int, { nullable: true })
+    MC_ID: number;
+
+    @Field(() => Int, { nullable: true })
+    DISP_POWER: number;
+
+    @Field(() => Int, { nullable: true })
+    IS_USE: number;
+
+    @Field(() => Int, { nullable: true })
+    IS_EVENT: number;
+
+    @Field(() => Int, { nullable: true })
+    IS_MKSTATS: number;
+}
+
+@InputType()
+export class cn_sensor_input {
+    @Field(() => Int, { nullable: true })
+    INTF_ID: number;
+
+    @Field(() => String, { nullable: true })
+    NAME: string;
+
+    @Field(() => String, { nullable: true })
+    SENSOR_CD: string;
+
+    @Field(() => String, { nullable: true })
+    DATA_ADDRESS: string;
+
+    @Field(() => Int, { nullable: true })
+    NODE_ID: number;
 
     @Field(() => String, { nullable: true })
     ADJUST_VALUE: string;

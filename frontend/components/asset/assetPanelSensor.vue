@@ -19,11 +19,14 @@
                             icon="pi pi-save"
                             label="SAVE ALL"
                             class="p-button-outlined p-button-secondary"
+                            :disabled="isDisabledAllButton"
+                            @click="saveAll"
                         />
                         <Button
                             icon="pi pi-plus"
                             label="ADD"
                             class="p-button-outlined p-button-secondary"
+                            @click="addSensor"
                         />
                     </div>
                 </div>
@@ -61,6 +64,9 @@
                         :curr-status="slotProps.data.CURR_STATUS"
                         :curr-level="slotProps.data.CURR_LEVEL"
                         @save="onSaveSensor"
+                        @copy="onCopySensor"
+                        @delete="onDeleteSensor"
+                        @change="onChangeSensorCard"
                     />
                 </template>
             </Column>
@@ -75,7 +81,7 @@ import SensorCard from '../common/sensorCard.vue';
 import Component from '@/plugins/nuxt-class-component';
 
 interface Sensor {
-    [index: string]: number | string;
+    [index: string]: number | string | boolean;
     ID: number;
     INTF_ID: number;
     NAME: string;
@@ -95,12 +101,23 @@ interface Sensor {
     IS_VIRTUAL: number;
     IS_MKSTATS: number;
     IS_LG_1MIN: number;
+    is_editable: boolean;
+}
+
+interface ChangedDataInfo {
+    ID: number;
+    IS_EDIT: boolean;
 }
 
 @Component<AssetPanelSensor>({
     props: {
         assetItem: Object,
         hasComm: Boolean
+    },
+    watch: {
+        assetItem() {
+            this.isDisabledAllButton = true;
+        }
     },
     apollo: {
         dbSensors: {
@@ -219,10 +236,14 @@ export default class AssetPanelSensor extends Vue {
     dbSensors: Array<Sensor> = [];
     sensors: Array<Sensor> = [];
 
+    changedSensorList: Array<ChangedDataInfo> = [];
+
     sensorCodeList: Array<any> = [];
     commandList: Array<any> = [];
     displayPowerList: Array<any> = [];
     levelCodes: Array<any> = [];
+
+    isDisabledAllButton: boolean = true;
 
     refetchSensors() {
         this.$apollo.queries.dbSensors.refetch();
@@ -240,6 +261,7 @@ export default class AssetPanelSensor extends Vue {
 
     reset() {
         this.sensors.splice(0, this.sensors.length);
+        this.changedSensorList.splice(0, this.changedSensorList.length);
     }
 
     apolloFetch(sensors: Array<Sensor>) {
@@ -250,21 +272,27 @@ export default class AssetPanelSensor extends Vue {
         }
     }
 
+    onChangeSensorCard({ ID, IS_EDIT }: any) {
+        const changed_sensor = this.changedSensorList.find(
+            (s: ChangedDataInfo) => s.ID === ID
+        );
+        if (changed_sensor === undefined) {
+            this.changedSensorList.push({ ID, IS_EDIT });
+        } else {
+            changed_sensor.IS_EDIT = IS_EDIT;
+        }
+
+        const is_changed = this.changedSensorList.some(
+            (s: ChangedDataInfo) => s.IS_EDIT === true
+        );
+        this.isDisabledAllButton = !is_changed;
+    }
+
     onSaveSensor(
         is_analog: boolean,
         { NODE_ID, NAME }: any,
         { SENSOR_ID, SENSOR, THRESHOLD_AI, THRESHOLD_DI }: any
     ) {
-        console.info(
-            is_analog,
-            NAME,
-            NODE_ID,
-            SENSOR_ID,
-            SENSOR,
-            THRESHOLD_AI,
-            THRESHOLD_DI
-        );
-
         if (Object.keys(SENSOR).length > 0) {
             this.saveSensor({ ID: SENSOR_ID, NODE_ID, NAME }, SENSOR);
         }
@@ -454,6 +482,176 @@ export default class AssetPanelSensor extends Vue {
             .finally(() => {
                 this.$nuxt.$loading.finish();
             });
+    }
+
+    onCopySensor({ SENSOR, THRESHOLD_AI, THRESHOLD_DI }: any) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation (
+                        $SENSOR: cn_sensor_input!
+                        $THRESHOLD_AI: cn_sensor_threshold_ai_input
+                        $THRESHOLD_DI: cn_sensor_threshold_di_input
+                    ) {
+                        CopySensor(
+                            SENSOR: $SENSOR
+                            THRESHOLD_AI: $THRESHOLD_AI
+                            THRESHOLD_DI: $THRESHOLD_DI
+                        )
+                    }
+                `,
+                variables: {
+                    SENSOR,
+                    THRESHOLD_AI,
+                    THRESHOLD_DI
+                }
+            })
+            .then(() => {
+                this.refetchSensors();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '수집항목 복사 완료',
+                    detail: `수집항목: ${SENSOR.NAME} 복사`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '수집항목 복사 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    onDeleteSensor({ NODE_ID, SENSOR_ID, NAME }: any) {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation {
+                        DeleteSensor(SENSOR_ID: ${SENSOR_ID})
+                    }
+                `
+            })
+            .then(() => {
+                this.refetchSensors();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '수집항목 삭제 완료',
+                    detail: `[INDEX: ${NODE_ID}] ${NAME} 수집항목을 삭제했습니다`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.info(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: `[INDEX: ${NODE_ID}] ${NAME} 수집항목 삭제 실패`,
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    saveAll() {
+        const changeSensorList = this.changedSensorList
+            .filter((s: ChangedDataInfo) => s.IS_EDIT === true)
+            .map((s: ChangedDataInfo) => {
+                const sensor_card: SensorCard = this.$refs[
+                    `sensorCard_${s.ID}`
+                ] as SensorCard;
+
+                if (sensor_card) {
+                    return {
+                        ID: Number(sensor_card.sensor.ID),
+                        SENSOR: sensor_card.changedSensorData,
+                        THRESHOLD_AI: sensor_card.isAnalog
+                            ? sensor_card.changedAiThresholdData
+                            : {},
+                        THRESHOLD_DI: !sensor_card.isAnalog
+                            ? sensor_card.changedDiThresholdData
+                            : {}
+                    };
+                } else {
+                    return {};
+                }
+            });
+
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation ($SENSORS: [sensorInput!]!) {
+                        UpdateAssetSensors(SENSORS: $SENSORS)
+                    }
+                `,
+                variables: {
+                    SENSORS: changeSensorList
+                }
+            })
+            .then(({ data: { UpdateAssetSensors } }) => {
+                if (UpdateAssetSensors) {
+                    this.refetchSensors();
+
+                    // by shkoh 20220714: 복수의 센서정보가 업데이트 될 때, 센서정보와 함께, 그와 상응하는 임계치 정보도 함께 새로 읽어야함
+                    for (const change_s of changeSensorList) {
+                        const { ID, THRESHOLD_AI, THRESHOLD_DI } = change_s;
+                        if (Object.keys(THRESHOLD_AI).length > 0 && ID) {
+                            this.refetchThreshold(ID.toString());
+                        }
+
+                        if (Object.keys(THRESHOLD_DI).length > 0 && ID) {
+                            this.refetchThreshold(ID.toString());
+                        }
+                    }
+
+                    this.$toast.add({
+                        severity: 'info',
+                        summary: '수집항목 적용 완료',
+                        detail: `${changeSensorList.length}개의 수집항목이 갱신되었습니다`,
+                        life: 2000
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '수집항목 적용 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    addSensor() {
+        this.$toast.add({
+            severity: 'error',
+            summary: '수집항목 추가',
+            detail: `아직 미구현 항목입니다`,
+            life: 2000
+        });
     }
 }
 </script>

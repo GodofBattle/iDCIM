@@ -326,7 +326,6 @@ export class AssetResolver {
                 if(threshold && sensor_code.TYPE === 'A') {
                     const c_s_t_a_result = await getRepository(cn_sensor_threshold_ai).insert({
                         SENSOR_ID: c_s_result.identifiers[0].ID,
-                        NAME: threshold.NAME,
                         HOLD_TIME: threshold.HOLD_TIME,
                         VALID_MIN: (threshold as pd_sensor_threshold_ai).VALID_MIN,
                         VALID_MAX: (threshold as pd_sensor_threshold_ai).VALID_MAX,
@@ -345,7 +344,6 @@ export class AssetResolver {
                 } else if(threshold && sensor_code.TYPE === 'D') {
                     const c_s_t_d_result = await getRepository(cn_sensor_threshold_di).insert({
                         SENSOR_ID: c_s_result.identifiers[0].ID,
-                        NAME: threshold.NAME,
                         HOLD_TIME: threshold.HOLD_TIME,
                         VALUE_0_LEVEL: (threshold as pd_sensor_threshold_di).VALUE_0_LEVEL,
                         VALUE_0_LABEL: (threshold as pd_sensor_threshold_di).VALUE_0_LABEL,

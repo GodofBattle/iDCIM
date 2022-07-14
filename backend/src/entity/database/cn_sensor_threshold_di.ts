@@ -1,4 +1,4 @@
-import { Field, ID, Int, ObjectType } from "type-graphql";
+import { Field, ID, InputType, Int, ObjectType } from "type-graphql";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
 
@@ -12,10 +12,6 @@ export class cn_sensor_threshold_di {
     @Field(() => Int, { nullable: true })
     @Column({ type: 'int', nullable: false, unique: true, comment: '연동센서 아이디(cn_sensor.ID)' })
     SENSOR_ID: number;
-
-    @Field(() => String, { nullable: true })
-    @Column({ type: 'varchar', length: 64, nullable: false, comment: '임계치 명' })
-    NAME: string;
 
     @Field(() => Int, { nullable: true })
     @Column({ type: 'int', nullable: false, default: 0, comment: '지속시간(초)' })

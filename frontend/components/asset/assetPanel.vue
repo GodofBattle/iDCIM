@@ -222,7 +222,7 @@ export default class AssetPanel extends Vue {
             type: 'ASSETCONTENT04'
         },
         {
-            header: '수집항목',
+            header: '수집항목 설정',
             disabled: false,
             unvisible: false,
             is_interface: true,

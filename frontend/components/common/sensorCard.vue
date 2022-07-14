@@ -9,7 +9,10 @@
                         :binary="true"
                     />
                     <label :for="`is_use_${nodeId}`" class="i-header-title">
-                        NODE ID: {{ nodeId }}
+                        INDEX: {{ nodeId }}
+                        <span class="i-header-sub-title p-ml-2">{{
+                            sensorTypeName
+                        }}</span>
                     </label>
                 </div>
                 <div class="p-ml-auto p-d-flex">
@@ -84,6 +87,7 @@
                     <Button
                         class="p-button-rounded p-button-text p-button-help"
                         icon="pi pi-copy"
+                        @click="copySensor"
                     />
                     <Button
                         class="p-button-rounded p-button-text"
@@ -94,6 +98,7 @@
                     <Button
                         class="p-button-rounded p-button-text p-button-danger"
                         icon="pi pi-minus"
+                        @click="deleteSensor"
                     />
                 </div>
             </div>
@@ -102,7 +107,7 @@
         <template #content>
             <div class="p-fluid p-formgird p-grid p-input-filled">
                 <div class="p-field p-col-2 p-mb-0">
-                    <label for="sensor-name">NAME</label>
+                    <label for="sensor-name">수집항목 명칭</label>
                     <InputText
                         id="sensor-name"
                         v-model="sensor.NAME"
@@ -111,21 +116,6 @@
                         autocomplete="off"
                         :class="{ 'p-invalid': invalidMessage.NAME }"
                         @input="inputSensorName"
-                    />
-                </div>
-                <div class="p-field p-col-2 p-mb-0">
-                    <label for="sensor-cd">TYPE</label>
-                    <Dropdown
-                        id="sensor-cd"
-                        v-model="sensor.SENSOR_CD"
-                        :options="sensorCodes"
-                        option-label="NAME"
-                        option-value="CODE"
-                        data-key="CODE"
-                        placeholer="Item Type"
-                        empty-filter-message="센서타입이 존재하지 않습니다"
-                        append-to="body"
-                        @input="inputSensorCode"
                     />
                 </div>
                 <div class="p-field p-col-1 p-mb-0">
@@ -139,7 +129,7 @@
                     />
                 </div>
                 <div class="p-field p-col-3 p-mb-0">
-                    <label for="data-address">ADDRESS</label>
+                    <label for="data-address">통신정보</label>
                     <InputText
                         id="data-address"
                         v-model="sensor.DATA_ADDRESS"
@@ -273,21 +263,14 @@
                                     </div>
                                     <div class="p-field p-mb-1">
                                         <label>임계치 상태 지속시간(초)</label>
-                                        <InputNumber
-                                            id="hold-time"
+                                        <i-input-number
                                             v-model="holdingTime"
-                                            mode="decimal"
                                             :min="0"
                                             :max="3600"
                                             :show-buttons="true"
-                                            button-layout="horizontal"
+                                            :auto-focus="true"
                                             :step="1"
-                                            decrement-button-class="p-button-secondary"
-                                            decrement-button-icon="pi pi-minus"
-                                            increment-button-class="p-button-secondary"
-                                            increment-button-icon="pi pi-plus"
-                                            aria-describedby="func-num-help"
-                                            autocomplete="off"
+                                            :max-fraction-digits="0"
                                         />
                                     </div>
                                 </div>
@@ -373,7 +356,6 @@ interface Sensor {
     NAME: string;
     SENSOR_CD: string;
     DATA_ADDRESS: string;
-    NODE_ID: number;
     ADJUST_VALUE: string;
     MC_ID: number;
     CURR_VALUE: number;
@@ -452,6 +434,20 @@ interface DigitalThreshold {
             default: false
         }
     },
+    watch: {
+        saveButtonDisabled(_is_disabled: boolean) {
+            this.$emit('change', {
+                ID: this.$props.initSensorData.ID,
+                IS_EDIT: !(_is_disabled || this.checkDiThreshold)
+            });
+        },
+        checkDiThreshold(_is_disabled: boolean) {
+            this.$emit('change', {
+                ID: this.$props.initSensorData.ID,
+                IS_EDIT: !(this.saveButtonDisabled || this.checkDiThreshold)
+            });
+        }
+    },
     apollo: {
         dbAiThreshold: {
             query: gql`
@@ -473,7 +469,7 @@ interface DigitalThreshold {
                 }
             `,
             fetchPolicy: 'no-cache',
-            prefetch: true,
+            prefetch: false,
             skip() {
                 const id = Number(this.sensor.ID);
 
@@ -514,7 +510,7 @@ interface DigitalThreshold {
                 }
             `,
             fetchPolicy: 'no-cache',
-            prefetch: true,
+            prefetch: false,
             skip() {
                 const id = Number(this.sensor.ID);
 
@@ -556,7 +552,6 @@ export default class SensorCard extends Vue {
         NAME: this.$props.name,
         SENSOR_CD: this.$props.sensorCd,
         DATA_ADDRESS: this.$props.dataAddress,
-        NODE_ID: this.$props.nodeId,
         ADJUST_VALUE: this.$props.adjustValue,
         MC_ID: this.$props.mcId,
         CURR_VALUE: this.$props.currValue,
@@ -705,9 +700,7 @@ export default class SensorCard extends Vue {
         if (this.$props.initSensorData !== null) {
             const keys = [
                 'NAME',
-                'SENSOR_CD',
                 'DATA_ADDRESS',
-                'NODE_ID',
                 'ADJUST_VALUE',
                 'MC_ID',
                 'DISP_POWER',
@@ -850,6 +843,11 @@ export default class SensorCard extends Vue {
         );
     }
 
+    get sensorTypeName(): string {
+        const code = this.sensorCode;
+        return code ? `${code.NAME}` : '';
+    }
+
     get isUnit(): boolean {
         return !!this.sensorCode?.UNIT;
     }
@@ -940,19 +938,6 @@ export default class SensorCard extends Vue {
             : '최대 / 최소값 사용안함';
     }
 
-    inputSensorCode(new_sensor_cd: string) {
-        const new_code: SensorCode = this.$props.sensorCodes.find(
-            (code: SensorCode) => code.CODE === new_sensor_cd
-        );
-
-        if (new_code) {
-            // by shkoh 20220707: 변경될 타입에서 기수 prefix를 사용하지 않는 다면 해당 값을 초기화함
-            if (new_code.IS_DISP_CONV === 0) {
-                this.sensor.DISP_POWER = 0;
-            }
-        }
-    }
-
     deleteDiThresholdItem(index: number) {
         this.diThreshold.DI.splice(index, 1);
     }
@@ -1026,7 +1011,7 @@ export default class SensorCard extends Vue {
             'save',
             this.isAnalog,
             {
-                NODE_ID: this.sensor.NODE_ID,
+                NODE_ID: this.$props.nodeId,
                 NAME: this.sensor.NAME
             },
             {
@@ -1044,12 +1029,79 @@ export default class SensorCard extends Vue {
         );
     }
 
+    copySensor() {
+        this.$emit('copy', {
+            SENSOR: this.copySensorData,
+            THRESHOLD_AI: this.isAnalog ? this.copyAiThresholdData : null,
+            THRESHOLD_DI: !this.isAnalog ? this.copyDiThresholdData : null
+        });
+    }
+
+    get copySensorData(): any {
+        const copy_data = {
+            NODE_ID: this.$props.nodeId
+        };
+
+        [
+            'INTF_ID',
+            'NAME',
+            'SENSOR_CD',
+            'DATA_ADDRESS',
+            'ADJUST_VALUE',
+            'MC_ID',
+            'DISP_POWER',
+            'IS_USE',
+            'IS_EVENT',
+            'IS_MKSTATS'
+        ].forEach((key: string) => {
+            this.$set(copy_data, key, this.sensor[key]);
+        });
+
+        return copy_data;
+    }
+
+    get copyAiThresholdData(): any {
+        const copy_data = {};
+
+        [
+            'HOLD_TIME',
+            'VALID_MIN',
+            'VALID_MAX',
+            'IS_VALID',
+            'POINT_N3',
+            'POINT_N2',
+            'POINT_N1',
+            'POINT_P1',
+            'POINT_P2',
+            'POINT_P3'
+        ].forEach((key: string) => {
+            this.$set(copy_data, key, this.aiThreshold[key]);
+        });
+
+        return copy_data;
+    }
+
+    get copyDiThresholdData(): any {
+        const copy_data = {};
+
+        this.$set(copy_data, 'HOLD_TIME', this.diThreshold.HOLD_TIME);
+
+        const _di: Array<any> = [];
+        for (let idx = 0; idx < this.diThreshold.DI.length; idx++) {
+            const { INDEX, LEVEL, LABEL } = this.diThreshold.DI[idx];
+            _di.push({ INDEX, LEVEL, LABEL });
+        }
+
+        this.$set(copy_data, 'DI', _di);
+
+        return copy_data;
+    }
+
     get changedSensorData(): any {
         const changed_data = {};
 
         [
             'NAME',
-            'SENSOR_CD',
             'DATA_ADDRESS',
             'ADJUST_VALUE',
             'MC_ID',
@@ -1106,6 +1158,25 @@ export default class SensorCard extends Vue {
 
         return changed_data;
     }
+
+    deleteSensor() {
+        this.$confirmDialog.require({
+            group: 'deleteConfirmDialog',
+            message: `[${this.sensor.NAME}] 수집항목을 삭제하시겠습니까?\n수집항목과 관련한 임계치 정보도 함께 삭제됩니다.`,
+            header: `수집항목 - ${this.sensor.NAME} 삭제`,
+            position: 'top',
+            icon: 'pi pi-exclamation-triangle',
+            acceptClass: 'p-button-danger',
+            blockScroll: false,
+            accept: () => {
+                this.$emit('delete', {
+                    NODE_ID: this.$props.nodeId,
+                    SENSOR_ID: this.sensor.ID,
+                    NAME: this.sensor.NAME
+                });
+            }
+        });
+    }
 }
 </script>
 
@@ -1128,6 +1199,12 @@ export default class SensorCard extends Vue {
     .i-header-title {
         font-size: 1.2rem;
         font-weight: bold;
+
+        .i-header-sub-title {
+            font-weight: normal;
+            font-size: 0.8rem;
+            color: var(--text-color-secondary);
+        }
     }
 
     .p-card-header {

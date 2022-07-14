@@ -216,6 +216,7 @@ export default class InterfacePanelSensor extends Vue {
 
     reset() {
         this.sensorList.splice(0, this.sensorList.length);
+        this.editedSensorList.splice(0, this.editedSensorList.length);
     }
 
     apolloFetch(data: Array<Sensor>) {

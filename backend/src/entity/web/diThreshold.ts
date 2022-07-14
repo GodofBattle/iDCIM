@@ -59,3 +59,12 @@ export class PredefineThresholdDIInput {
     @Field(() => [DigitalValueInput], { nullable: true })
     DI: DigitalValueInput[];
 }
+
+@InputType()
+export class cn_sensor_threshold_di_input {
+    @Field(() => Int, { nullable: true })
+    HOLD_TIME: number;
+
+    @Field(() => [DigitalValueInput], { nullable: true })
+    DI: DigitalValueInput[];
+}

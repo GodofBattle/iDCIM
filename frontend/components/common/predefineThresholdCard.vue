@@ -181,10 +181,16 @@ type DigitalThreshold = {
     },
     watch: {
         saveButtonDisabled(is_flag: boolean) {
-            this.$emit('change', is_flag || this.checkThresholdDI);
+            this.$emit('change', {
+                ID: this.$props.id,
+                IS_EDIT: !(is_flag || this.checkThresholdDI)
+            });
         },
         checkThresholdDI(is_flag: boolean) {
-            this.$emit('change', this.saveButtonDisabled || is_flag);
+            this.$emit('change', {
+                ID: this.$props.id,
+                IS_EDIT: !(this.saveButtonDisabled || is_flag)
+            });
         }
     },
     apollo: {
