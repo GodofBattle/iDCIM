@@ -2,10 +2,10 @@ import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-
 import { Arg, Args, Ctx, ID, Int, Mutation, Publisher, PubSub, Query, Resolver, Subscription } from "type-graphql";
 import { getRepository, In, Raw } from "typeorm";
 
-import { ac_asset, ac_asset_args } from "../entity/database/ac_asset";
+import { ac_asset, ac_asset_args, ac_asset_input } from "../entity/database/ac_asset";
 import { ac_user } from "../entity/database/ac_user";
 import { cn_ctrl_cmd } from "../entity/database/cn_ctrl_cmd";
-import { cn_interface } from "../entity/database/cn_interface";
+import { cn_interface, cn_interface_input } from "../entity/database/cn_interface";
 import { cn_modbus_cmd } from "../entity/database/cn_modbus_cmd";
 import { cn_sensor } from "../entity/database/cn_sensor";
 import { cn_sensor_threshold_ai } from "../entity/database/cn_sensor_threshold_ai";
@@ -23,6 +23,75 @@ import { ACTION_CD } from "../enum/ACTION";
 
 @Resolver()
 export class AssetResolver {
+    @Mutation(() => Boolean)
+    async AddAsset(
+        @Arg('ASSET', () => ac_asset_input) asset: ac_asset_input,
+        @Arg('INTERFACE', () => cn_interface_input, { nullable: true }) intf: cn_interface_input,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            console.table(asset);
+            console.table(intf);
+
+            const user = await getRepository(ac_user).findOne({ USER_ID: ctx.user.sub });
+
+            let is_result: number = 0;
+
+            const insert_asset_date = {
+                UPDATE_USER_ID: user.ID,
+                UPDATE_USER_DT: new Date(),
+                ...asset
+            }
+            
+            const asset_result = await getRepository(ac_asset).insert(insert_asset_date);
+            is_result = asset_result.identifiers.length;
+
+            const asset_id = asset_result.identifiers[0].ID;
+            console.info(asset_id);
+
+            if(asset.IS_USE_INTF === 1) {
+                const prod_intf = await getRepository(pd_prod_intf).findOne({ ID: intf.PROD_INTF_ID });
+                const insert_intf_result = await this.InsertInterface(asset_id, prod_intf, user, intf);
+                is_result += insert_intf_result;
+            }
+
+            return is_result > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async DeleteAsset(
+        @Arg('ID', () => Int!) id: number,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void> 
+    ) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+            let is_result: number = 0;
+
+            is_result += await this.DeleteInterface(id);
+            const delete_result = await getRepository(ac_asset).delete({ ID: id });
+            is_result += delete_result.affected;
+
+            return is_result > 0 ? true : false;
+        } catch(err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
     @Query(() => [ac_asset], { nullable: true })
     async Assets(
         @Arg('TYPE', () => String, { nullable: true }) type: string,
@@ -263,14 +332,14 @@ export class AssetResolver {
 
         if(intf_count === 0) {
             // by shkoh 20220527: 해당 자산과 일치하는 cn_interface가 존재하지 않은 경우에는 insert를 수행
-            result += await this.InsertInterface(asset_id, prod_intf, user);
+            result += await this.InsertInterface(asset_id, prod_intf, user, null);
         } else if(intf_count === 1) {
             // by shkoh 20220527: 해당 자산과 일치하는 cn_interface가 존재하는 경우에는 2가지 상황이 발생함
             // by shkoh 20220527: 1. 존재하는 PROD_INTF_ID가 동일한 경우에는 어떤 일도 하지 않지만
             // by shkoh 20220527: 2. 존재하는 PROD_INTF_ID가 다른 경우에는 모두 삭제하여 새로운 PROD_INTF_ID를 가진 데이터들로 부여함
             if(intf[0].PROD_INTF_ID !== prod_intf.ID) {
                 result += await this.DeleteInterface(asset_id);
-                result += await this.InsertInterface(asset_id, prod_intf, user);
+                result += await this.InsertInterface(asset_id, prod_intf, user, null);
             }
         }
 
@@ -283,13 +352,24 @@ export class AssetResolver {
         return result.affected > 0 ? true : false;
     }
 
-    async InsertInterface(asset_id: number, prod_intf: pd_prod_intf, user: ac_user) {
+    async InsertInterface(asset_id: number, prod_intf: pd_prod_intf, user: ac_user, intf_info: cn_interface_input | null) {
         // by shkoh 20220530: interface insert 과정
         try {
             let result: number = 0;
+
+            let intf_data = {
+                ID: asset_id,
+                PROD_INTF_ID: prod_intf.ID,
+                UPDATE_USER_ID: user.ID,
+                UPDATE_USER_DT: new Date()
+            }
+            
+            if(intf_info) {
+                intf_data = { ...intf_data, ... intf_info };
+            }
             
             // by shkoh 20220530: Step1. cn_interface 추가
-            const c_i_result = await getRepository(cn_interface).insert({ ID: asset_id, PROD_INTF_ID: prod_intf.ID, UPDATE_USER_ID: user.ID, UPDATE_USER_DT: new Date() });
+            const c_i_result = await getRepository(cn_interface).insert(intf_data);
             result += c_i_result.identifiers.length;
 
             // by shkoh 20220530: Step2. cn_sensor 추가 cn_sensor 추가 후에 cn_sensor_threshold_xx 도 추가함

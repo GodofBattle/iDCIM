@@ -1,4 +1,4 @@
-import { ArgsType, Field, ID, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, ID, InputType, Int, ObjectType } from "type-graphql";
 import { TypeormLoader } from "type-graphql-dataloader";
 import { Column, Entity, JoinColumn, JoinTable, ManyToOne, OneToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
@@ -137,4 +137,46 @@ export class ac_asset_args {
 
     @Field(() => Int, { nullable: true })
     IMAGE_FILE_ID: number;
+}
+
+@InputType()
+export class ac_asset_input {
+    @Field(() => Int)
+    PRODUCT_ID: number;
+
+    @Field(() => String)
+    NAME: string;
+
+    @Field(() => String, { nullable: true })
+    SERIAL: string;
+
+    @Field(() => Int)
+    CUST_HIER_ID_C: number;
+
+    @Field(() => Int)
+    CUST_HIER_ID_P: number;
+
+    @Field(() => Int, { nullable: true })
+    OP_ID_M: number;
+
+    @Field(() => Int, { nullable: true })
+    OP_ID_S: number;
+
+    @Field(() => Int, { nullable: true })
+    MA_USER_ID: number;
+
+    @Field(() => nullableDate, { nullable: true })
+    INSTALL_DATE: Date;
+
+    @Field(() => nullableDate, { nullable: true })
+    MA_START_DATE: Date;
+
+    @Field(() => nullableDate, { nullable: true })
+    MA_END_DATE: Date;
+
+    @Field(() => String, { nullable: true })
+    INSPECT_INFO: string;
+
+    @Field(() => Int)
+    IS_USE_INTF: number;
 }

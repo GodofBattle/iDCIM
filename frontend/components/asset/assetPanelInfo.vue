@@ -852,30 +852,50 @@ export default class AssetPanelInfo extends Vue {
         this.overlayTreePanelMode = '';
     }
 
-    setTreeLabel(type: string) {
+    setTreeLabel(mode: string) {
         const root_node =
-            type === 'custom' ? this.treeHier01[0] : this.treeHier02[0];
+            mode === 'custom' ? this.treeHier01[0] : this.treeHier02[0];
 
         if (root_node) {
-            this.findTreeNode(
-                type,
-                root_node,
-                `ach_${
-                    type === 'custom'
-                        ? this.asset.CUST_HIER_ID_C
-                        : this.asset.CUST_HIER_ID_P
-                }`
-            );
+            const target_key =
+                mode === 'custom'
+                    ? this.asset.CUST_HIER_ID_C
+                    : this.asset.CUST_HIER_ID_P;
 
-            if (type === 'custom') {
-                this.customTreeLabel = `${root_node.label} >> ${this.customTreeLabel}`;
-            } else if (type === 'position') {
-                this.positionTreeLabel = `${root_node.label} >> ${this.positionTreeLabel}`;
+            switch (mode) {
+                case 'custom': {
+                    let label = '';
+                    if (target_key === null) {
+                        label = '기본트리를 선택하세요';
+                    } else if (target_key === 0) {
+                        label = `${root_node.label}`;
+                    } else if (target_key > 0) {
+                        this.findTreeNode(mode, root_node, `ach_${target_key}`);
+                        label = `${root_node.label} >> ${this.customTreeLabel}`;
+                    }
+
+                    this.customTreeLabel = label;
+                    break;
+                }
+                case 'position': {
+                    let label = '';
+                    if (target_key === null) {
+                        label = '위치를 선택하세요';
+                    } else if (target_key === 0) {
+                        label = `${root_node.label}`;
+                    } else if (target_key > 0) {
+                        this.findTreeNode(mode, root_node, `ach_${target_key}`);
+                        label = `${root_node.label} >> ${this.positionTreeLabel}`;
+                    }
+
+                    this.positionTreeLabel = label;
+                    break;
+                }
             }
         }
     }
 
-    findTreeNode(type: string, node: any, target_key: string): boolean {
+    findTreeNode(mode: string, node: any, target_key: string): boolean {
         if (node.children.length === 0) return false;
 
         const target_node = node.children.filter(
@@ -886,14 +906,14 @@ export default class AssetPanelInfo extends Vue {
             let has_target = false;
 
             for (const child of node.children) {
-                has_target = this.findTreeNode(type, child, target_key);
+                has_target = this.findTreeNode(mode, child, target_key);
 
                 if (has_target) {
-                    if (type === 'custom') {
+                    if (mode === 'custom') {
                         this.customTreeLabel = `${child.label} >> ${this.customTreeLabel}`;
-                    } else if (type === 'position') {
+                    } else if (mode === 'position') {
                         this.positionTreeLabel = `${child.label} >> ${this.positionTreeLabel}`;
-                    } else if (type === 'assetCode') {
+                    } else if (mode === 'assetCode') {
                         this.assetCodeTreeLabel = `${child.label} | ${this.assetCodeTreeLabel}`;
                     }
                     break;
@@ -902,11 +922,11 @@ export default class AssetPanelInfo extends Vue {
 
             return has_target;
         } else {
-            if (type === 'custom') {
+            if (mode === 'custom') {
                 this.customTreeLabel = target_node.label;
-            } else if (type === 'position') {
+            } else if (mode === 'position') {
                 this.positionTreeLabel = target_node.label;
-            } else if (type === 'assetCode') {
+            } else if (mode === 'assetCode') {
                 this.assetCodeTreeLabel = target_node.label;
             }
             return true;

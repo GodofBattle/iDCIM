@@ -1,4 +1,4 @@
-import { ArgsType, Field, ID, Int, ObjectType } from "type-graphql";
+import { ArgsType, Field, ID, InputType, Int, ObjectType } from "type-graphql";
 import { Column, Entity, getRepository, JoinColumn, OneToOne, PrimaryColumn } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
 import { ac_asset } from "./ac_asset";
@@ -118,6 +118,36 @@ export class cn_interface_args {
     @Field(() => String, { nullable: true })
     ODBC_QUERY: string;
     
+    @Field(() => Int, { nullable: true })
+    IS_USE: number;
+}
+
+@InputType()
+export class cn_interface_input {
+    @Field(() => Int)
+    PROD_INTF_ID: number;
+
+    @Field(() => String, { nullable: true })
+    IP_ADDR: string;
+
+    @Field(() => Int, { nullable: true })
+    PORT: number;
+
+    @Field(() => Int, { nullable: true })
+    DEVICE_ID: number;
+
+    @Field(() => Int, { nullable: true })
+    POLL_INTERVAL: number;
+
+    @Field(() => Int, { nullable: true })
+    TIMEOUT: number;
+
+    @Field(() => Int, { nullable: true })
+    RETRY: number;
+
+    @Field(() => String, { nullable: true })
+    ACCESS_INFO: string;
+
     @Field(() => Int, { nullable: true })
     IS_USE: number;
 }

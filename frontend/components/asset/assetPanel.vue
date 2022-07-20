@@ -15,6 +15,7 @@
                 <Button
                     class="p-button-rounded p-button-text p-button-danger"
                     icon="pi pi-trash"
+                    @click="deleteAsset"
                 ></Button>
             </div>
         </div>
@@ -80,6 +81,7 @@ import AssetPanelInterface from './assetPanelInterface.vue';
 import AssetPanelManager from './assetPanelManager.vue';
 import AssetPanelInfo from './assetPanelInfo.vue';
 import Component from '@/plugins/nuxt-class-component';
+import { eventBus } from '~/plugins/vueEventBus';
 
 type TabItem = {
     [index: string]: string | boolean;
@@ -299,6 +301,60 @@ export default class AssetPanel extends Vue {
 
     get showSaveButton(): boolean {
         return this.assetTabList[this.tabIndex].show_save_button;
+    }
+
+    deleteAsset() {
+        this.$confirmDialog.require({
+            group: 'deleteConfirmDialog',
+            message: `[${this.$props.item.NAME}] 자산을 삭제하시겠습니까?\n관련된 모든 항목들이 삭제됩니다.\n삭제된 자산은 복구가 불가능하니 신중하게 삭제하시기 바랍니다(일부 미구현)`,
+            header: `인터페이스 ${this.$props.item.NAME} 삭제`,
+            position: 'top',
+            icon: 'pi pi-exclamation-triangle',
+            acceptClass: 'p-button-danger',
+            blockScroll: false,
+            accept: () => {
+                this.delete();
+            }
+        });
+    }
+
+    delete() {
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                mutation {
+                    DeleteAsset(ID: ${this.$props.item.ID})
+                }
+            `
+            })
+            .then(({ data: { DeleteAsset } }) => {
+                if (DeleteAsset) {
+                    this.$toast.add({
+                        severity: 'success',
+                        summary: '인터페이스 삭제',
+                        detail: `[${this.$props.item.NAME}] 자산이 정상적으로 삭제되었습니다`,
+                        life: 2000
+                    });
+
+                    eventBus.$emit('refreshAssetTable');
+                    this.$emit('reset');
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '자산 삭제 실패',
+                    detail: error.graphQLErrors[0].message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
     }
 }
 </script>

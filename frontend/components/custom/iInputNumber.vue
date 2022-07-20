@@ -81,8 +81,14 @@ export default class IInputNumber extends Vue {
     }
 
     get formattedValue(): string {
-        const _val = this.convertFractionDigit(this.$props.value.toString());
-        return _val;
+        if (typeof this.$props.value === 'number') {
+            const _val = this.convertFractionDigit(
+                this.$props.value.toString()
+            );
+            return _val;
+        } else {
+            return '0';
+        }
     }
 
     get filled(): boolean {

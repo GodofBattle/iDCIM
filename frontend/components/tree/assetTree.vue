@@ -12,7 +12,7 @@
             >
             </i-moveable-tree>
         </div>
-        <div v-if="!is_overlay_panel" class="i-tree-navigation">
+        <div v-if="!isOverlayPanel" class="i-tree-navigation">
             <client-only>
                 <tab-header-list
                     :tabs="tabList"
@@ -41,7 +41,7 @@ type TabItem = {
     fetchOnServer: false,
     fetchKey: 'AssetTree' + new Date().getUTCMilliseconds(),
     props: {
-        is_overlay_panel: {
+        isOverlayPanel: {
             type: Boolean,
             default: false
         }

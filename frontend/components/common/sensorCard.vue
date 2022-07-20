@@ -1007,6 +1007,7 @@ export default class SensorCard extends Vue {
     }
 
     saveSensor() {
+        console.info('save');
         this.$emit(
             'save',
             this.isAnalog,
@@ -1024,7 +1025,7 @@ export default class SensorCard extends Vue {
                 THRESHOLD_DI:
                     !this.isAnalog && this.isDiffDiThreshold
                         ? this.changedDiThresholdData
-                        : { DI: [] }
+                        : {}
             }
         );
     }
@@ -1149,6 +1150,7 @@ export default class SensorCard extends Vue {
         }
 
         const _di: Array<any> = [];
+        console.info('di');
         for (let idx = 0; idx < this.diThreshold.DI.length; idx++) {
             const { INDEX, LEVEL, LABEL } = this.diThreshold.DI[idx];
             _di.push({ INDEX, LEVEL, LABEL });

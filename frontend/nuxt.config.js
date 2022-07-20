@@ -162,6 +162,7 @@ export default {
             'SelectButton',
             'Skeleton',
             'Slider',
+            'Steps',
             'Tag',
             'TabMenu',
             'TabPanel',

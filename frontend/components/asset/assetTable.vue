@@ -14,13 +14,22 @@
             :selection.sync="selectedRow"
         >
             <template #header>
-                <div class="p-d-flex p-jc-end">
-                    <span class="p-input-icon-right">
-                        <i class="pi pi-search"></i>
-                        <InputText
-                            v-model="assetFilterData['NAME'].value"
-                        ></InputText>
-                    </span>
+                <div class="p-d-flex">
+                    <div class="p-as-center">
+                        <Button
+                            icon="pi pi-plus"
+                            class="p-button-text p-button-rounded"
+                            @click="showAssetAddDialog"
+                        />
+                    </div>
+                    <div class="p-as-center p-ml-auto">
+                        <span class="p-input-icon-right">
+                            <i class="pi pi-search"></i>
+                            <InputText
+                                v-model="assetFilterData['NAME'].value"
+                            ></InputText>
+                        </span>
+                    </div>
                 </div>
             </template>
 
@@ -67,6 +76,7 @@
                 </template>
             </Column>
         </DataTable>
+        <asset-add-dialog :visible.sync="showAddAsset" />
     </div>
 </template>
 
@@ -146,6 +156,8 @@ export default class AssetTable extends Vue {
         NAME: { value: null, matchMode: FilterMatchMode.CONTAINS }
     };
 
+    showAddAsset: boolean = false;
+
     mounted() {
         timerId = setInterval(() => {
             this.$apollo.queries.assetList.refetch();
@@ -153,7 +165,7 @@ export default class AssetTable extends Vue {
 
         eventBus.$on('refreshAssetTable', (id: number) => {
             this.$apollo.queries.assetList.refetch().then(() => {
-                const row_id = id || this.selectedRow.ID;
+                const row_id = id || this?.selectedRow?.ID;
 
                 this.selectedRow = this.assetList.find(
                     (asset: any) => asset.ID === row_id
@@ -166,6 +178,10 @@ export default class AssetTable extends Vue {
         clearInterval(timerId);
 
         eventBus.$off('refreshAssetTable');
+    }
+
+    showAssetAddDialog() {
+        this.showAddAsset = true;
     }
 
     reloadAssetList() {

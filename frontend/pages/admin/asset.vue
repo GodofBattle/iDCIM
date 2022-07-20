@@ -1,13 +1,6 @@
 <template>
     <div id="admin-asset">
         <icomer-toolbar class="p-pl-2 p-pr-2" :title="title"></icomer-toolbar>
-        <!-- <div class="p-d-flex p-px-2 p-jc-end" style="padding-top: 20px">
-            <Button
-                icon="pi pi-plus"
-                label="자산추가"
-                class="p-field p-button-outlined p-button-secondary"
-            ></Button>
-        </div> -->
         <div
             class="p-d-flex p-pr-2 i-asset-content"
             :style="{ 'padding-top': '20px' }"
@@ -32,6 +25,7 @@
                     v-else
                     :item.sync="selectedAsset"
                     :style="{ height: '100%' }"
+                    @reset="onReset"
                 ></asset-panel>
             </div>
         </div>
@@ -72,6 +66,10 @@ export default class AdminAsset extends Vue {
         } else {
             return false;
         }
+    }
+
+    onReset() {
+        this.selectedAsset = null;
     }
 }
 </script>

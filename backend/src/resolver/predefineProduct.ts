@@ -148,7 +148,7 @@ export class PredefinedProductResolver {
         }
 
         try {
-            return (await getRepository(pd_product).findOne({ where: { ID: product_id } }));
+            return (await getRepository(pd_product).findOne({ where: { ID: product_id }, relations: ['MANUFACTURER'] }));
         } catch (err) {
             throw new SchemaError(err.message);
         }
@@ -370,6 +370,26 @@ export class PredefinedProductResolver {
             }
 
             return is_result > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => [pd_product])
+    async ProductsByAssetCode(
+        @Arg('ASSET_CD', () => String, { nullable: true }) asset_cd: string,
+        @Ctx() ctx: any
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            if(asset_cd === 'ALL_PRODUCT') {
+                return await getRepository(pd_product).find({ relations: ['MANUFACTURER'], order: { NAME: 'ASC' } });
+            } else {
+                return await getRepository(pd_product).find({ where: { ASSET_CD: asset_cd }, relations: ['MANUFACTURER'], order: { NAME: 'ASC' } });
+            }
         } catch (err) {
             throw new SchemaError(err.message);
         }
