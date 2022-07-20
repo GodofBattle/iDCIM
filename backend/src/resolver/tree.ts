@@ -64,7 +64,7 @@ export class TreeResolver {
                     name: asset.NAME,
                     alias: asset.ALIAS === null ? '' : asset.ALIAS,
                     order: asset.ORDER,
-                    parent_key: `pah_${asset.PD_ASSET_HIER_ID}`,
+                    parent_key: asset.PD_ASSET_HIER_ID === 0 ? `root_0` : `pah_${asset.PD_ASSET_HIER_ID}`,
                     type: asset.TYPE,
                     manipulable: true
                 })
