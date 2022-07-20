@@ -41,7 +41,8 @@ export class AccountCustomResolver {
             const user = await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } });
             const last_tree_id = await getRepository(ac_cust_hier).findOne({ where: { TYPE: TYPE }, order: { TID: 'DESC' } });
 
-            const result = await getRepository(ac_cust_hier).insert({ TYPE, TID: last_tree_id.TID + 1, NAME, P_TID, ORDER, UPDATE_USER_ID: user.ID, UPDATE_USER_DT: new Date() });
+            let tid: number = last_tree_id ? last_tree_id.TID + 1 : 1;
+            const result = await getRepository(ac_cust_hier).insert({ TYPE, TID: tid, NAME, P_TID, ORDER, UPDATE_USER_ID: user.ID, UPDATE_USER_DT: new Date() });
             return result.identifiers.length > 0 ? true : false;
         } catch (err) {
             throw new SchemaError(err.message);
