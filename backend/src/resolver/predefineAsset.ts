@@ -52,10 +52,10 @@ export class PredefinedAssetResolver {
         try {
             await publish();
 
-            if (!CODE) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
-            if (!NAME) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
-            if (!PD_ASSET_HIER_ID) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
-            if (!ORDER) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            if (CODE === undefined) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            if (NAME === undefined) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            if (PD_ASSET_HIER_ID === undefined) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            if (ORDER === undefined) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
 
             const insert_data = {};
             for (const [key, value] of Object.entries({ CODE, NAME, ALIAS, PD_ASSET_HIER_ID, ORDER })) {
@@ -158,9 +158,9 @@ export class PredefinedAssetResolver {
         try {
             await publish();
 
-            if (!NAME) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
-            if (!P_ID) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
-            if (!ORDER) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            if (NAME === undefined) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            if (P_ID === undefined) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            if (ORDER === undefined) throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
 
             const result = await getRepository(pd_asset_hier).insert({ NAME, P_ID, ORDER });
             return result.identifiers.length > 0 ? true : false;
