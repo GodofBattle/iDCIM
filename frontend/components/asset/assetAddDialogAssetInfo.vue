@@ -285,6 +285,7 @@
         <i-overlay-panel
             ref="treePanel"
             :show-close-icon="true"
+            append-to="body"
             :style="{ width: '16vw', height: '42vh' }"
         >
             <i-moveable-tree

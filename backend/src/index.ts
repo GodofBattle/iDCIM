@@ -26,6 +26,7 @@ import { ManagerResolver } from "./resolver/manager";
 import { AssetResolver } from './resolver/asset';
 import { InterfaceResolver } from './resolver/interface';
 import { SensorResolver } from "./resolver/sensor";
+import { AlarmResolver } from './resolver/alarm';
 
 import Auth from './utils/auth';
 
@@ -48,7 +49,8 @@ const schemas = buildSchemaSync({
         ManagerResolver,
         AssetResolver,
         InterfaceResolver,
-        SensorResolver
+        SensorResolver,
+        AlarmResolver
     ],
 });
 

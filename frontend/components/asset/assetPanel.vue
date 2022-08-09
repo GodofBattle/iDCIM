@@ -61,9 +61,10 @@
             <div v-else-if="tabIndex === 6">
                 <h1>통신로그</h1>
             </div>
-            <div v-else-if="tabIndex === 7">
-                <h1>알람정보</h1>
-            </div>
+            <asset-panel-alert
+                v-else-if="tabIndex === 7"
+                :asset-item.sync="item"
+            />
             <div v-else-if="tabIndex === 8">
                 <h1>{{ assetTabList[tabIndex].header }}</h1>
             </div>
@@ -251,7 +252,7 @@ export default class AssetPanel extends Vue {
             type: 'ASSETCONTENT07'
         },
         {
-            header: '알람정보',
+            header: '알람이력',
             disabled: false,
             unvisible: false,
             is_interface: true,
