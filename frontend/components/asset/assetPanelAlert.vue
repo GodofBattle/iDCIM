@@ -1,16 +1,11 @@
 <template>
     <div class="p-d-flex p-flex-column" :style="{ height: '100%' }">
-        <i-chart
-            type="bar"
-            :data="chartData"
-            :options="barChartOptions"
-            width="100%"
-            height="20%"
-        />
+        <bar-chart :data="chartData" width="100%" height="20%" />
+        <Divider />
         <i-scroll-panel
             id="i-asset-panel-alert"
             class="p-px-2 p-py-4"
-            :style="{ height: '80%' }"
+            :style="{ height: 'calc(80% - 24px)' }"
         >
             <Timeline :value="alertList">
                 <template #marker="slotProps">
@@ -210,13 +205,23 @@ export default class AssetPanelAlert extends Vue {
     levelCode: Array<CODE> = [];
     alertListCount: number = 0;
 
+    fontColor: string = window
+        .getComputedStyle(document.documentElement)
+        .getPropertyValue('--text-color');
+
+    borderColor: string = window
+        .getComputedStyle(document.documentElement)
+        .getPropertyValue('--surface-border');
+
     chartData = {
-        labels: [] as Array<string>,
-        datasets: [] as any
+        labels: [] as Array<Date>,
+        datasets: [] as Array<any>
     };
 
     barChartOptions = {
         responsive: true,
+        barPercentage: 0.5,
+        color: this.fontColor,
         layout: {
             padding: {
                 left: 20,
@@ -224,13 +229,36 @@ export default class AssetPanelAlert extends Vue {
                 top: 10,
                 bottom: 10
             }
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false,
+                    borderColor: this.borderColor
+                },
+                ticks: {
+                    color: this.fontColor
+                }
+            },
+            y: {
+                display: false,
+                ticks: {
+                    display: false
+                },
+                grid: {
+                    display: false
+                }
+            }
+        },
+        plugins: {
+            zoom: {
+                pan: {
+                    enabled: true,
+                    mode: 'x'
+                }
+            }
         }
     };
-
-    get chartHeight(): number {
-        console.info(this.$el.clientHeight * 0.2);
-        return this.$el.clientHeight * 0.2;
-    }
 
     get showMoreData(): boolean {
         return this.alertList.length < this.alertListCount;
@@ -239,15 +267,18 @@ export default class AssetPanelAlert extends Vue {
     apolloFetchStaticsLogAlarm(data: Array<LogAlarmCountType>) {
         const datasets = {
             label: '월별 알람건수',
-            data: [] as Array<number>
+            data: [] as Array<number>,
+            backgroundColor: '#41A4D3'
         };
 
+        this.chartData.labels.splice(0, this.chartData.labels.length);
+
         data.forEach((d: LogAlarmCountType) => {
-            this.chartData.labels.push(d.DT);
+            this.chartData.labels.push(new Date(d.DT));
             datasets.data.push(d.ALARM_COUNT);
         });
 
-        this.chartData.datasets.push(datasets);
+        this.chartData.datasets.splice(0, 1, datasets);
     }
 
     initAlertList() {

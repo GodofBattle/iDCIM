@@ -84,7 +84,9 @@ export default class IScrollPanel extends Vue {
         }
 
         if (!this.documentMouseUpListener) {
-            this.documentMouseUpListener = (event: MouseEvent) => {};
+            this.documentMouseUpListener = (event: MouseEvent) => {
+                this.onDocumentMouseUp(event);
+            };
 
             document.addEventListener('mouseup', this.documentMouseUpListener);
         }

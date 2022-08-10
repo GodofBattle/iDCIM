@@ -64,13 +64,13 @@ export class AlarmResolver {
         try {
             const result = await getManager().query(`
                 SELECT
-                    DATE_FORMAT(la.OCCUR_DT, "%Y년 %m월") AS DT,
+                    DATE_FORMAT(la.OCCUR_DT, "%Y-%m-%d") AS DT,
                     COUNT(1) AS ALARM_COUNT
                 FROM lg_alarm la
                 WHERE
                     la.ASSET_ID = ${asset_id}
                 GROUP BY DT
-                ORDER BY la.OCCUR_DT DESC;
+                ORDER BY la.OCCUR_DT;
             `);
 
             return result;

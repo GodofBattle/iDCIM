@@ -47,6 +47,7 @@ export default {
         '@/plugins/primevue.toastService.ts',
         '@/plugins/vueEventBus.ts',
         { src: '@/plugins/primevue.confirmEventBus.ts', mode: 'client' },
+        { src: '@/plugins/vue.plugin.chart.js', mode: 'client' },
         { src: '@/plugins/primevue.theme.ts', mode: 'all' }
     ],
 
@@ -67,6 +68,7 @@ export default {
             '@/components/threshold',
             '@/components/tree',
             '@/components/user',
+            '@/components/chart',
         ]
     },
 
