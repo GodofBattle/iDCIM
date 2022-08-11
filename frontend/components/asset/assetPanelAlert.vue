@@ -1,6 +1,11 @@
 <template>
     <div class="p-d-flex p-flex-column" :style="{ height: '100%' }">
-        <bar-chart :data="chartData" width="100%" height="20%" />
+        <bar-chart
+            :data="chartData"
+            width="100%"
+            height="20%"
+            @select="onSelectChart"
+        />
         <Divider />
         <i-scroll-panel
             id="i-asset-panel-alert"
@@ -23,7 +28,7 @@
                 <template #opposite="slotProps">
                     <Card v-if="slotProps.item.FLAG === 1" class="p-mb-3">
                         <template #title>
-                            {{ alertTitle(slotProps.item) }}
+                            {{ alertTitle(slotProps.item, slotProps.index) }}
                         </template>
                         <template #subtitle>
                             <div class="i-alert-date">
@@ -42,7 +47,7 @@
                 <template #content="slotProps">
                     <Card v-if="slotProps.item.FLAG === 2" class="p-mb-3">
                         <template #title>
-                            {{ alertTitle(slotProps.item) }}
+                            {{ alertTitle(slotProps.item, slotProps.index) }}
                         </template>
                         <template #subtitle>
                             <div class="i-alert-date">
@@ -68,7 +73,7 @@
             <Button
                 v-if="showMoreData"
                 class="p-mt-3"
-                label="더보기"
+                :label="showMoreButtonLabel"
                 :style="{ width: '100%' }"
                 @click="onClickShowMoreAlert"
             />
@@ -113,8 +118,12 @@ interface LogAlarmCountType {
     apollo: {
         alertList: {
             query: gql`
-                query ($ASSET_ID: Int!, $OFFSET: Int) {
-                    LogAlarm(ASSET_ID: $ASSET_ID, OFFSET: $OFFSET) {
+                query ($ASSET_ID: Int!, $OFFSET: Int, $CONDITION: String) {
+                    LogAlarm(
+                        ASSET_ID: $ASSET_ID
+                        OFFSET: $OFFSET
+                        CONDITION: $CONDITION
+                    ) {
                         ID
                         SENSOR_ID
                         SENSOR_NAME
@@ -137,15 +146,16 @@ interface LogAlarmCountType {
             variables() {
                 return {
                     ASSET_ID: Number(this.$props.assetItem.ID),
-                    OFFSET: 0
+                    OFFSET: 0,
+                    CONDITION: this.alertListCondition
                 };
             },
             update: ({ LogAlarm }) => LogAlarm
         },
         alertListCount: {
             query: gql`
-                query ($ASSET_ID: Int!) {
-                    CountLogAlarm(ASSET_ID: $ASSET_ID)
+                query ($ASSET_ID: Int!, $CONDITION: String) {
+                    CountLogAlarm(ASSET_ID: $ASSET_ID, CONDITION: $CONDITION)
                 }
             `,
             skip() {
@@ -153,7 +163,8 @@ interface LogAlarmCountType {
             },
             variables() {
                 return {
-                    ASSET_ID: Number(this.$props.assetItem.ID)
+                    ASSET_ID: Number(this.$props.assetItem.ID),
+                    CONDITION: this.alertListCondition
                 };
             },
             update: ({ CountLogAlarm }) => CountLogAlarm
@@ -204,68 +215,25 @@ export default class AssetPanelAlert extends Vue {
     alertStat: Array<LogAlarmCountType> = [];
     levelCode: Array<CODE> = [];
     alertListCount: number = 0;
-
-    fontColor: string = window
-        .getComputedStyle(document.documentElement)
-        .getPropertyValue('--text-color');
-
-    borderColor: string = window
-        .getComputedStyle(document.documentElement)
-        .getPropertyValue('--surface-border');
+    alertListCondition = '';
 
     chartData = {
         labels: [] as Array<Date>,
         datasets: [] as Array<any>
     };
 
-    barChartOptions = {
-        responsive: true,
-        barPercentage: 0.5,
-        color: this.fontColor,
-        layout: {
-            padding: {
-                left: 20,
-                right: 20,
-                top: 10,
-                bottom: 10
-            }
-        },
-        scales: {
-            x: {
-                grid: {
-                    display: false,
-                    borderColor: this.borderColor
-                },
-                ticks: {
-                    color: this.fontColor
-                }
-            },
-            y: {
-                display: false,
-                ticks: {
-                    display: false
-                },
-                grid: {
-                    display: false
-                }
-            }
-        },
-        plugins: {
-            zoom: {
-                pan: {
-                    enabled: true,
-                    mode: 'x'
-                }
-            }
-        }
-    };
-
     get showMoreData(): boolean {
         return this.alertList.length < this.alertListCount;
     }
 
+    get showMoreButtonLabel(): string {
+        return `더보기(${this.alertList.length} / ${this.alertListCount})`;
+    }
+
     apolloFetchStaticsLogAlarm(data: Array<LogAlarmCountType>) {
         const datasets = {
+            barPercentage: 0.8,
+            categoryPercentage: 0.5,
             label: '월별 알람건수',
             data: [] as Array<number>,
             backgroundColor: '#41A4D3'
@@ -283,7 +251,11 @@ export default class AssetPanelAlert extends Vue {
 
     initAlertList() {
         this.alertListOffset = 0;
+        this.alertListCondition = '';
+        this.scrollTop();
+    }
 
+    scrollTop() {
         const scroll_element = this.$el.querySelector('.p-scrollpanel-content');
         scroll_element?.scroll({
             top: 0,
@@ -294,14 +266,16 @@ export default class AssetPanelAlert extends Vue {
     formatDateTime(date: string) {
         const d = new Date(date);
         return `${d.getFullYear()}.${('0' + (d.getMonth() + 1)).slice(-2)}.${(
-            '0' + d.getDay()
+            '0' + d.getDate()
         ).slice(-2)} ${('0' + d.getHours()).slice(-2)}:${(
             '0' + d.getMinutes()
         ).slice(-2)}:${('0' + d.getSeconds()).slice(-2)}`;
     }
 
-    alertTitle(item: any): string {
-        return item.SENSOR_ID === -1 ? '통신장애' : item.SENSOR_NAME;
+    alertTitle(item: any, index: number): string {
+        return item.SENSOR_ID === -1
+            ? `${index + 1}: 통신장애`
+            : `${index + 1}: ${item.SENSOR_NAME}`;
     }
 
     alertDateFormat(item: any): string {
@@ -383,6 +357,15 @@ export default class AssetPanelAlert extends Vue {
                 };
             }
         });
+    }
+
+    onSelectChart({ x }: { x: Date }) {
+        this.alertListCondition = `${x.getFullYear()}-${(
+            '0' +
+            (x.getMonth() + 1)
+        ).slice(-2)}`;
+
+        this.scrollTop();
     }
 }
 </script>

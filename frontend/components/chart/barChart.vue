@@ -5,6 +5,7 @@
         :width="width"
         :height="height"
         :options="options"
+        @select="onChartSelect"
     />
 </template>
 
@@ -43,11 +44,39 @@ export default class BarChart extends Vue {
         scales: {
             xAxis: {
                 type: 'time',
+                suggestedMin: this.suggestMinMax.min,
+                suggestedMax: this.suggestMinMax.max,
+                time: {
+                    unit: 'month',
+                    displayFormats: {
+                        year: 'yyyy년',
+                        quater: 'yyyy년 MM월',
+                        month: 'yyyy년 MM월',
+                        week: 'yyyy년 MM월'
+                    },
+                    tooltipFormat: 'yyyy년 MM월',
+                    stepSize: 1
+                },
                 ticks: {
-                    color: this.fontColor
+                    color: this.fontColor,
+                    autoSkip: true,
+                    autoSkipPadding: 50,
+                    maxRotation: 0
                 },
                 grid: {
-                    borderColor: this.borderColor
+                    borderColor: this.borderColor,
+                    display: false
+                }
+            },
+            yAxis: {
+                type: 'linear',
+                grace: '10%',
+                ticks: {
+                    precision: 0
+                },
+                grid: {
+                    display: false,
+                    drawBorder: false
                 }
             }
         },
@@ -62,11 +91,39 @@ export default class BarChart extends Vue {
                     mode: 'x'
                 },
                 zoom: {
-                    enabled: true,
+                    wheel: {
+                        enabled: true
+                    },
                     mode: 'x'
+                },
+                limits: {
+                    xAxis: {
+                        minRange: 1000 * 60 * 60 * 24 * 30
+                    }
                 }
             }
         }
     };
+
+    get suggestMinMax(): any {
+        const now = new Date();
+        const year = now.getFullYear();
+
+        const _min = now.setFullYear(year, 0, 1);
+        const _max = now.setFullYear(year + 1, 0, 1);
+
+        return {
+            min: _min,
+            max: _max
+        };
+    }
+
+    onChartSelect({ element }: any) {
+        const xy_data = element.element.$context.parsed;
+        this.$emit('select', {
+            x: new Date(xy_data.x),
+            y: xy_data.y
+        });
+    }
 }
 </script>

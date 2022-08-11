@@ -71,6 +71,7 @@ export default {
         },
         reinit() {
             this.initChart();
+            this.resetZoom();
         },
         getCanvas() {
             return this.$canvas;
@@ -84,6 +85,11 @@ export default {
         refresh() {
             if (this.chart) {
                 this.chart.update();
+            }
+        },
+        resetZoom() {
+            if (this.chart && this.chart.isZoomedOrPanned()) {
+                this.chart.resetZoom();
             }
         },
         generateLegend() {
