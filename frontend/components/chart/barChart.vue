@@ -98,7 +98,9 @@ export default class BarChart extends Vue {
                 },
                 limits: {
                     xAxis: {
-                        minRange: 1000 * 60 * 60 * 24 * 30
+                        min: this.zoomMinMax.min,
+                        max: this.zoomMinMax.max,
+                        minRange: 1000 * 60 * 60 * 24 * 182
                     }
                 }
             }
@@ -111,6 +113,19 @@ export default class BarChart extends Vue {
 
         const _min = now.setFullYear(year, 0, 1);
         const _max = now.setFullYear(year + 1, 0, 1);
+
+        return {
+            min: _min,
+            max: _max
+        };
+    }
+
+    get zoomMinMax(): any {
+        const now = new Date();
+        const year = now.getFullYear();
+
+        const _min = new Date('2010-01-01');
+        const _max = now.setFullYear(year, 11, 31);
 
         return {
             min: _min,

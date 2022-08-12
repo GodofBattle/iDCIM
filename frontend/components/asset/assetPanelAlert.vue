@@ -9,10 +9,10 @@
         <Divider />
         <i-scroll-panel
             id="i-asset-panel-alert"
-            class="p-px-2 p-py-4"
-            :style="{ height: 'calc(80% - 24px)' }"
+            class="p-p-2"
+            :style="{ height: 'calc(80% - 24px - 12px)' }"
         >
-            <Timeline :value="alertList">
+            <Timeline :value="alertListToRender">
                 <template #marker="slotProps">
                     <div class="p-timeline-event-connector" />
                     <Tag
@@ -26,7 +26,7 @@
                     />
                 </template>
                 <template #opposite="slotProps">
-                    <Card v-if="slotProps.item.FLAG === 1" class="p-mb-3">
+                    <Card v-if="slotProps.item.FLAG === 1" class="p-my-2">
                         <template #title>
                             {{ alertTitle(slotProps.item, slotProps.index) }}
                         </template>
@@ -45,7 +45,7 @@
                     </Card>
                 </template>
                 <template #content="slotProps">
-                    <Card v-if="slotProps.item.FLAG === 2" class="p-mb-3">
+                    <Card v-if="slotProps.item.FLAG === 2" class="p-my-2">
                         <template #title>
                             {{ alertTitle(slotProps.item, slotProps.index) }}
                         </template>
@@ -230,6 +230,12 @@ export default class AssetPanelAlert extends Vue {
         return `더보기(${this.alertList.length} / ${this.alertListCount})`;
     }
 
+    get alertListToRender(): Array<any> {
+        return this.alertList.filter((alert, index) => {
+            return index <= this.alertListOffset + 100;
+        });
+    }
+
     apolloFetchStaticsLogAlarm(data: Array<LogAlarmCountType>) {
         const datasets = {
             barPercentage: 0.8,
@@ -366,6 +372,7 @@ export default class AssetPanelAlert extends Vue {
         ).slice(-2)}`;
 
         this.scrollTop();
+        this.alertListOffset = 0;
     }
 }
 </script>

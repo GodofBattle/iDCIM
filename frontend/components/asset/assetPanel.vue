@@ -55,20 +55,24 @@
                 :asset-item.sync="item"
                 :has-comm="hasCommandList"
             />
-            <div v-else-if="tabIndex === 5">
+            <asset-panel-sensor-list
+                v-else-if="tabIndex === 5"
+                :asset-item.sync="item"
+            />
+            <div v-else-if="tabIndex === 6">
                 <h1>제어항목</h1>
             </div>
-            <div v-else-if="tabIndex === 6">
+            <div v-else-if="tabIndex === 7">
                 <h1>통신로그</h1>
             </div>
             <asset-panel-alert
-                v-else-if="tabIndex === 7"
+                v-else-if="tabIndex === 8"
                 :asset-item.sync="item"
             />
-            <div v-else-if="tabIndex === 8">
+            <div v-else-if="tabIndex === 9">
                 <h1>{{ assetTabList[tabIndex].header }}</h1>
             </div>
-            <div v-else-if="tabIndex === 9">
+            <div v-else-if="tabIndex === 10">
                 <h1>{{ assetTabList[tabIndex].header }}</h1>
             </div>
         </div>
@@ -234,8 +238,17 @@ export default class AssetPanel extends Vue {
             type: 'ASSETCONTENT05'
         },
         {
-            header: '제어항목',
+            header: '수집항목',
             disabled: false,
+            unvisible: false,
+            is_interface: true,
+            is_virtual: false,
+            show_save_button: false,
+            type: 'ASSETCONTENT11'
+        },
+        {
+            header: '제어항목',
+            disabled: true,
             unvisible: false,
             is_interface: true,
             is_virtual: false,

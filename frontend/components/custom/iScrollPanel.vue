@@ -193,11 +193,16 @@ export default class IScrollPanel extends Vue {
                         'p-scrollpanel-hidden'
                     );
 
+                    const y_bar_height = Math.max(this.scrollYRatio * 100, 10);
+                    const y_bar_top = Math.max(
+                        0,
+                        (this.$refs.content.scrollTop / totalHeight) * 100 -
+                            y_bar_height
+                    );
+
                     this.$refs.yBar.style.cssText = `
-                        height: ${Math.max(this.scrollYRatio * 100, 10)}%;
-                        top: calc(${
-                            (this.$refs.content.scrollTop / totalHeight) * 100
-                        }% - ${this.$refs.xBar.clientHeight}px);
+                        height: ${y_bar_height}%;
+                        top: calc(${y_bar_top}% - ${this.$refs.xBar.clientHeight}px);
                         right: ${right}px;
                     `;
                 }
