@@ -61,7 +61,7 @@
                 >
                     자산도입일
                 </label>
-                <div class="p-col-2 i-form-value">
+                <div class="p-col-3 i-form-value">
                     <i-calendar
                         v-model="asset.INSTALL_DATE"
                         class="p-ml-2"
@@ -119,7 +119,7 @@
                     >
                         유지보수 시작일
                     </label>
-                    <div class="p-col-2 i-form-value">
+                    <div class="p-col-3 i-form-value">
                         <i-calendar
                             v-model="asset.MA_START_DATE"
                             :class="[
@@ -153,7 +153,7 @@
                     >
                         유지보수 종료일
                     </label>
-                    <div class="p-col-2 i-form-value">
+                    <div class="p-col-3 i-form-value">
                         <i-calendar
                             v-model="asset.MA_END_DATE"
                             :class="[

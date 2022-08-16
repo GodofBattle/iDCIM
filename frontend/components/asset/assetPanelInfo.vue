@@ -1281,7 +1281,7 @@ export default class AssetPanelInfo extends Vue {
     }
 
     .i-model-value {
-        flex-basis: 50%;
+        flex-basis: 100%;
         max-width: 70%;
     }
 

@@ -118,7 +118,7 @@
                         @input="inputSensorName"
                     />
                 </div>
-                <div class="p-field p-col-1 p-mb-0">
+                <div class="p-field p-col-2 p-mb-0">
                     <label for="adjust-value">표현식</label>
                     <InputText
                         id="adjust-value"
@@ -294,7 +294,7 @@
                         :p3.sync="aiThreshold.POINT_P3"
                         :min.sync="aiThreshold.VALID_MIN"
                         :max.sync="aiThreshold.VALID_MAX"
-                        :disabled="false"
+                        :disabled="!is_event"
                     />
                 </div>
                 <i-scroll-panel
@@ -1007,7 +1007,6 @@ export default class SensorCard extends Vue {
     }
 
     saveSensor() {
-        console.info('save');
         this.$emit(
             'save',
             this.isAnalog,
@@ -1134,6 +1133,7 @@ export default class SensorCard extends Vue {
             'POINT_P2',
             'POINT_P3'
         ].forEach((key: string) => {
+            console.info(this.aiThreshold, this.dbAiThreshold);
             if (this.aiThreshold[key] !== this.dbAiThreshold[key]) {
                 this.$set(changed_data, key, this.aiThreshold[key]);
             }
@@ -1150,7 +1150,6 @@ export default class SensorCard extends Vue {
         }
 
         const _di: Array<any> = [];
-        console.info('di');
         for (let idx = 0; idx < this.diThreshold.DI.length; idx++) {
             const { INDEX, LEVEL, LABEL } = this.diThreshold.DI[idx];
             _di.push({ INDEX, LEVEL, LABEL });

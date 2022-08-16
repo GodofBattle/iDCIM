@@ -74,7 +74,6 @@ export default class IOverlayPanel extends Vue {
 
     show(event: Event) {
         this.visible = true;
-        console.info(event);
         this.target = (event.currentTarget || event.target) as HTMLElement;
     }
 

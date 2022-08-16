@@ -1,6 +1,7 @@
-import { Field, ID, InputType, Int, ObjectType } from "type-graphql";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Field, ID, Int, ObjectType } from "type-graphql";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, RelationId } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
+import { cn_sensor } from "./cn_sensor";
 
 @ObjectType()
 @Entity({ synchronize: false })
@@ -11,6 +12,7 @@ export class cn_sensor_threshold_di {
 
     @Field(() => Int, { nullable: true })
     @Column({ type: 'int', nullable: false, unique: true, comment: '연동센서 아이디(cn_sensor.ID)' })
+    @RelationId((di: cn_sensor_threshold_di) => di.SENSOR)
     SENSOR_ID: number;
 
     @Field(() => Int, { nullable: true })
@@ -268,4 +270,9 @@ export class cn_sensor_threshold_di {
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256, nullable: true, default: null, comment: '설명' })
     REMARK?: string;
+
+    @Field(() => cn_sensor, { nullable: true })
+    @OneToOne(() => cn_sensor, (sensor: cn_sensor) => sensor.THRESHOLD_DI, { primary: true, cascade: false, createForeignKeyConstraints: false })
+    @JoinColumn({ name: 'SENSOR_ID', referencedColumnName: 'ID' })
+    SENSOR: cn_sensor;
 }

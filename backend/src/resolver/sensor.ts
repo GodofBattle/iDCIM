@@ -22,7 +22,7 @@ export class SensorResolver {
         try {
             if(!intf_id) throw new UserInputError('전달된 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
 
-            return await getRepository(cn_sensor).find({ where: { INTF_ID: intf_id }, order: { NODE_ID: 'ASC' } });
+            return await getRepository(cn_sensor).find({ where: { INTF_ID: intf_id }, relations: ['THRESHOLD_DI'], order: { NODE_ID: 'ASC' } });
         } catch (err) {
             throw new SchemaError(err.message);
         }

@@ -581,12 +581,16 @@ export default class AssetPanelSensor extends Vue {
                     return {
                         ID: Number(sensor_card.sensor.ID),
                         SENSOR: sensor_card.changedSensorData,
-                        THRESHOLD_AI: sensor_card.isAnalog
-                            ? sensor_card.changedAiThresholdData
-                            : {},
-                        THRESHOLD_DI: !sensor_card.isAnalog
-                            ? sensor_card.changedDiThresholdData
-                            : {}
+                        THRESHOLD_AI:
+                            sensor_card.isAnalog &&
+                            sensor_card.isDiffAiThreshold
+                                ? sensor_card.changedAiThresholdData
+                                : {},
+                        THRESHOLD_DI:
+                            !sensor_card.isAnalog &&
+                            sensor_card.isDiffDiThreshold
+                                ? sensor_card.changedDiThresholdData
+                                : {}
                     };
                 } else {
                     return {};
