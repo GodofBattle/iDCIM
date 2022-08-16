@@ -54,7 +54,7 @@
                     <span>알림자산</span>
                 </template>
 
-                <h1>자산에 대한 알람을 설정할 것입니다</h1>
+                <operator-alert-asset :operator-id="operatorId" />
             </TabPanel>
             <TabPanel>
                 <template #header>
@@ -87,7 +87,7 @@ type Operator = {
 @Component<OperatorPanel>({
     props: {
         operatorId: Number,
-        operatorName: String,
+        operatorName: String
     },
     apollo: {
         operatorData: {
@@ -104,14 +104,14 @@ type Operator = {
             prefetch: false,
             variables(): any {
                 return {
-                    ID: this.operatorId ? this.operatorId : -1,
+                    ID: this.operatorId ? this.operatorId : -1
                 };
             },
             update: ({ Operator }) => {
                 return Operator;
-            },
-        },
-    },
+            }
+        }
+    }
 })
 export default class OperatorPanel extends Vue {
     $refs!: {
@@ -122,8 +122,8 @@ export default class OperatorPanel extends Vue {
     operatorData: Operator = {
         NAME: '',
         COMPANY: {
-            NAME: '',
-        },
+            NAME: ''
+        }
     };
 
     applyButtonDisabled = true;
@@ -171,9 +171,9 @@ export default class OperatorPanel extends Vue {
                     severity: 'error',
                     summary: ' 미구현',
                     detail: `아직 삭제 처리는 구현되지 않았습니다`,
-                    life: 2000,
+                    life: 2000
                 });
-            },
+            }
         });
     }
 }
