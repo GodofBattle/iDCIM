@@ -262,53 +262,6 @@ export default class AssetTable extends Vue {
             width: 0.8rem;
             height: 0.8rem;
         }
-
-        .i-comm00 {
-            background-color: var(--comm00-color);
-        }
-
-        .i-comm01 {
-            animation: blink;
-            animation-duration: 1.5s;
-            animation-iteration-count: infinite;
-            background-color: var(--comm01-color);
-        }
-
-        .i-comm04 {
-            background-color: var(--comm04-color);
-        }
-
-        .i-comm05 {
-            background-color: var(--comm05-color);
-            width: 0.9rem;
-            height: 0.9rem;
-            border: 1px solid var(--surface-border);
-        }
-    }
-
-    .i-lvl-null {
-        background: transparent;
-        border: 1px solid var(--surface-border);
-    }
-
-    .i-lvl00 {
-        background: transparent;
-        border: 1px solid var(--surface-border);
-    }
-
-    .i-lvl01 {
-        background-color: var(--warning);
-        color: var(--text-alert-warning-color);
-    }
-
-    .i-lvl02 {
-        background-color: var(--major);
-        color: var(--text-alert-color);
-    }
-
-    .i-lvl03 {
-        background-color: var(--critical);
-        color: var(--text-alert-color);
     }
 }
 </style>

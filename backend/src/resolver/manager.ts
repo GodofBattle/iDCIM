@@ -1,9 +1,10 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
-import { Arg, Args, Ctx, ID, Mutation, Publisher, PubSub, Query, Resolver } from "type-graphql";
+import { Arg, Args, Ctx, ID, Int, Mutation, Publisher, PubSub, Query, Resolver } from "type-graphql";
 import { getRepository, In } from "typeorm";
 
 import { ac_asset_operator, ac_asset_operator_args } from "../entity/database/ac_asset_operator";
 import { ac_company, ac_company_args } from "../entity/database/ac_company";
+import { ac_op_noti_asset } from "../entity/database/ac_op_noti_asset";
 import { ac_user } from "../entity/database/ac_user";
 
 @Resolver()
@@ -268,6 +269,22 @@ export class ManagerResolver {
 
             const result = await getRepository(ac_asset_operator).update({ ID: Number(node_id) }, { COMPANY_ID: Number(p_node_id) });
             return result.affected > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => [ac_op_noti_asset])
+    async OperatorNotificationAsset(
+        @Arg('OP_ID', () => Int) op_id: number,
+        @Ctx() ctx: any
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return await getRepository(ac_op_noti_asset).find({ OP_ID: op_id });
         } catch (err) {
             throw new SchemaError(err.message);
         }

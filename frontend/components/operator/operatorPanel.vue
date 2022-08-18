@@ -54,7 +54,11 @@
                     <span>알림자산</span>
                 </template>
 
-                <operator-alert-asset :operator-id="operatorId" />
+                <operator-alert-asset
+                    ref="operatorAlertAssetRef"
+                    :operator-id="operatorId"
+                    :apply-button-disabled.sync="applyButtonDisabled"
+                />
             </TabPanel>
             <TabPanel>
                 <template #header>
@@ -71,6 +75,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
+import OperatorAlertAsset from './operatorAlertAsset.vue';
 import Component from '@/plugins/nuxt-class-component';
 
 type Company = {
@@ -117,6 +122,7 @@ export default class OperatorPanel extends Vue {
     $refs!: {
         operatorPanelInfoRef: any;
         operatorPanelNotifyRef: any;
+        operatorAlertAssetRef: OperatorAlertAsset;
     };
 
     operatorData: Operator = {
@@ -149,6 +155,10 @@ export default class OperatorPanel extends Vue {
             }
             case 1: {
                 this.$refs.operatorPanelNotifyRef.updateOperatorNotify();
+                break;
+            }
+            case 2: {
+                this.$refs.operatorAlertAssetRef.updateOperatorAlertAsset();
                 break;
             }
         }

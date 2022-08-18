@@ -14,7 +14,6 @@ import { pd_product } from "../entity/database/pd_product";
 import { ac_asset } from "../entity/database/ac_asset";
 import { cn_interface } from "../entity/database/cn_interface";
 import { pd_manufacturer } from "../entity/database/pd_manufacturer";
-import { ac_company } from "../entity/database/ac_company";
 
 @Resolver()
 export class TreeResolver {

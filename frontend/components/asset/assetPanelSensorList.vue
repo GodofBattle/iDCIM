@@ -403,29 +403,5 @@ export default class AssetPanelSensorList extends Vue {
     .i-not-used {
         opacity: 0.4;
     }
-
-    .i-lvl-null {
-        background: transparent;
-    }
-
-    .i-lvl00 {
-        background: transparent;
-        border: 1px solid var(--surface-border);
-    }
-
-    .i-lvl01 {
-        background-color: var(--warning);
-        color: var(--text-alert-warning-color);
-    }
-
-    .i-lvl02 {
-        background-color: var(--major);
-        color: var(--text-alert-color);
-    }
-
-    .i-lvl03 {
-        background-color: var(--critical);
-        color: var(--text-alert-color);
-    }
 }
 </style>

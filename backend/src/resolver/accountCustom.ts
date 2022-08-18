@@ -7,6 +7,22 @@ import { ac_user } from "../entity/database/ac_user";
 
 @Resolver()
 export class AccountCustomResolver {
+    @Query(() => [ac_cust_hier])
+    async AccountCustomHiers(
+        @Args() { TYPE }: ac_cust_hier_args,
+        @Ctx() ctx: any
+    ): Promise<Array<ac_cust_hier>> {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return await getRepository(ac_cust_hier).find({ where: { TYPE } });
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
     @Query(() => ac_cust_hier)
     async AccountCustomHier(
         @Args() { TYPE, TID }: ac_cust_hier_args,

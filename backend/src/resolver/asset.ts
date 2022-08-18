@@ -105,15 +105,15 @@ export class AssetResolver {
         try {
             let result: any;
             if (keys.length === 0) {
-                result = await getRepository(ac_asset).find({ relations: ['INTERFACE', 'PRODUCT'] });
+                result = await getRepository(ac_asset).find({ relations: ['INTERFACE', 'PRODUCT', 'PRODUCT.MANUFACTURER'] });
             } else {
                 switch (type) {
                     case 'HIER01': {
-                        result = await getRepository(ac_asset).find({ where: { CUST_HIER_ID_C: In(keys) }, relations: ['INTERFACE', 'PRODUCT'] });
+                        result = await getRepository(ac_asset).find({ where: { CUST_HIER_ID_C: In(keys) }, relations: ['INTERFACE', 'PRODUCT', 'PRODUCT.MANUFACTURER' ] });
                         break;
                     }
                     case 'HIER02': {
-                        result = await getRepository(ac_asset).find({ where: { CUST_HIER_ID_P: In(keys) }, relations: ['INTERFACE', 'PRODUCT'] });
+                        result = await getRepository(ac_asset).find({ where: { CUST_HIER_ID_P: In(keys) }, relations: ['INTERFACE', 'PRODUCT', 'PRODUCT.MANUFACTURER'] });
                         break;
                     }
                     case 'HIER03': {
@@ -134,6 +134,7 @@ export class AssetResolver {
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
                             .leftJoinAndSelect('asset.PRODUCT', 'product')
+                            .leftJoinAndSelect('product.MANUFACTURER', 'manu')
                             .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where('product.ASSET_CD IN (' + code_query.getQuery() + ')')
                             .getMany();
@@ -153,6 +154,7 @@ export class AssetResolver {
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
                             .leftJoinAndSelect('asset.PRODUCT', 'product')
+                            .leftJoinAndSelect('product.MANUFACTURER', 'manu')
                             .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where(query_where)
                             .getMany();
@@ -172,6 +174,7 @@ export class AssetResolver {
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
                             .leftJoinAndSelect('asset.PRODUCT', 'product')
+                            .leftJoinAndSelect('product.MANUFACTURER', 'manu')
                             .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where(query_where)
                             .getMany();
@@ -206,6 +209,7 @@ export class AssetResolver {
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
                             .leftJoinAndSelect('asset.PRODUCT', 'product')
+                            .leftJoinAndSelect('product.MANUFACTURER', 'manu')
                             .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where(query_where)
                             .getMany();
@@ -217,6 +221,7 @@ export class AssetResolver {
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
                             .leftJoinAndSelect('asset.PRODUCT', 'product')
+                            .leftJoinAndSelect('product.MANUFACTURER', 'manu')
                             .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where(`product.MANUFACTURER_ID = ${manufacturer_id}`)
                             .getMany();
@@ -227,6 +232,7 @@ export class AssetResolver {
                         result = await getRepository(ac_asset)
                             .createQueryBuilder('asset')
                             .leftJoinAndSelect('asset.PRODUCT', 'product')
+                            .leftJoinAndSelect('product.MANUFACTURER', 'manu')
                             .leftJoinAndSelect('asset.INTERFACE', 'intf')
                             .where(`asset.PRODUCT_ID = ${product_id}`)
                             .getMany();
