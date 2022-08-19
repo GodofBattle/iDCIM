@@ -337,8 +337,6 @@ export class PredefinedProductResolver {
 
             let is_result: number = 0;
 
-            console.info(input);
-
             const delete_id: Array<number> = [];
             const insert_intf_id: Array<pd_prod_intf> = [];
             input.forEach((prod_intf: pd_prod_intf_input) => {

@@ -1,8 +1,9 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
-import { Args, Ctx, Mutation, PubSub, Resolver, Publisher, Query, Int } from "type-graphql";
-import { DeleteResult, getRepository, MoreThan } from "typeorm";
+import { Args, Ctx, Mutation, PubSub, Resolver, Publisher, Query, Int, Arg } from "type-graphql";
+import { DeleteResult, getRepository, In, MoreThan } from "typeorm";
 
 import { ac_cust_hier, ac_cust_hier_args } from "../entity/database/ac_cust_hier";
+import { ac_op_noti_asset, ac_op_noti_asset_input } from "../entity/database/ac_op_noti_asset";
 import { ac_user } from "../entity/database/ac_user";
 
 @Resolver()
@@ -116,6 +117,74 @@ export class AccountCustomResolver {
             }
 
             return has_children_hier > 0 ? -1 : result.affected;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async AddOperatorNotiAssets(
+        @Arg('ADD', () => [ac_op_noti_asset_input], { nullable: true }) assets: Array<ac_op_noti_asset_input>,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            const user = await getRepository(ac_user).findOne({ USER_ID: ctx.user.sub });
+
+            const insert_data: Array<ac_op_noti_asset> = [];
+            assets.forEach((asset: ac_op_noti_asset_input) => {
+                insert_data.push({
+                    OP_ID: asset.OP_ID,
+                    ASSET_ID: asset.ASSET_ID,
+                    IS_NOTI_COMM: asset.IS_NOTI_COMM,
+                    UPDATE_USER_ID: user.ID,
+                    UPDATE_USER_DT: new Date()
+                });
+            });
+
+            let is_result = 0;
+            if(insert_data.length > 0) {
+                const insert_result = await getRepository(ac_op_noti_asset).insert(insert_data);
+                is_result += insert_result.identifiers.length;
+            }
+            
+            return is_result > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async DeleteOperatorNotiAssets(
+        @Arg('REMOVE', () => [ac_op_noti_asset_input], { nullable: true }) assets: Array<ac_op_noti_asset_input>,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            const delete_asset_id: Array<number> = [];
+            assets.forEach((asset: ac_op_noti_asset_input) => {
+                delete_asset_id.push(asset.ASSET_ID);
+            });
+            
+            if(delete_asset_id.length > 0) {
+                const op_id = assets[0].OP_ID;
+                const delete_result = await getRepository(ac_op_noti_asset).delete({ OP_ID: op_id, ASSET_ID: In(delete_asset_id) });
+                return delete_result.affected > 0 ? true : false;
+            } else {
+                return false;
+            }
         } catch (err) {
             throw new SchemaError(err.message);
         }

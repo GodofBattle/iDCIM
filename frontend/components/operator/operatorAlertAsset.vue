@@ -1,5 +1,5 @@
 <template>
-    <div id="i-operator-alert-asset" class="p-d-flex">
+    <div v-if="!$apollo.$loading" id="i-operator-alert-asset" class="p-d-flex">
         <div
             class="p-col-fixed"
             :style="{ width: 'var(--tree-width)', height: '100%' }"
@@ -30,6 +30,10 @@
                 :row-hover="true"
                 :select-all="isCheckSelectAll"
                 @filter="onFiltering"
+                @row-select="onSelectAlertAsset"
+                @row-unselect="onUnselectAlertAsset"
+                @row-select-all="onSelectAllAlertAsset"
+                @row-unselect-all="onUnselectAllAlertAsset"
             >
                 <template #empty>
                     <span>선택한 그룹의 자산이 없습니다</span>
@@ -345,6 +349,8 @@ export default class OperatorAlertAsset extends Vue {
     accountCustomHierByPosition: Array<AccountCustomHier> = [];
 
     alertAssetList: Array<OpNotiAsset> = [];
+    insertAssets: Array<OpNotiAsset> = [];
+    deleteAssets: Array<OpNotiAsset> = [];
 
     assetSelection: Array<any> | null = null;
     isCheckSelectAll: boolean | null = null;
@@ -370,14 +376,37 @@ export default class OperatorAlertAsset extends Vue {
         this.addFilterService();
     }
 
+    refreshData() {
+        this.insertAssets.splice(0, this.insertAssets.length);
+        this.deleteAssets.splice(0, this.deleteAssets.length);
+        this.$apollo.queries.alertAssetList.refresh();
+    }
+
     updateOperatorAlertAsset() {
+        console.table(this.insertAssets);
+        console.table(this.deleteAssets);
+
         this.$nuxt.$loading.start();
 
         this.$apollo
             .mutate({
-                mutation: gql``
+                mutation: gql`
+                    mutation (
+                        $ADD: [ac_op_noti_asset_input!]
+                        $REMOVE: [ac_op_noti_asset_input!]
+                    ) {
+                        AddOperatorNotiAssets(ADD: $ADD)
+                        DeleteOperatorNotiAssets(REMOVE: $REMOVE)
+                    }
+                `,
+                variables: {
+                    ADD: this.insertAssets,
+                    REMOVE: this.deleteAssets
+                }
             })
             .then(() => {
+                this.refreshData();
+
                 this.$toast.add({
                     severity: 'info',
                     summary: '담당자 알림자산 설정 완료',
@@ -400,6 +429,87 @@ export default class OperatorAlertAsset extends Vue {
             });
     }
 
+    onSelectAlertAsset({ originalEvent: { originalEvent }, data, type }: any) {
+        if (type === 'checkbox') {
+            // by shkoh 20220819: row 클릭 시, select 기능을 활성화했기 때문에, checkbox를 클릭하면 동시에 row까지 선택이 되어 버리는 문제가 발생하여 해당 기능을 막는다
+            (originalEvent as PointerEvent).stopPropagation();
+        }
+
+        const has_db = this.alertAssetList.some(
+            (l: OpNotiAsset) => l.ASSET_ID === Number(data.ID)
+        );
+        // by shkoh 20220819: 자산 선택 시, DB에는 해당 정보가 없는 경우에 항목 추가
+        if (!has_db) {
+            this.insertOpNoti(Number(data.ID));
+        }
+    }
+
+    onUnselectAlertAsset({
+        originalEvent: { originalEvent },
+        data,
+        type
+    }: any) {
+        if (type === 'checkbox') {
+            // by shkoh 20220819: row 클릭 시, select 기능을 활성화했기 때문에, checkbox를 클릭하면 동시에 row까지 선택이 되어 버리는 문제가 발생하여 해당 기능을 막는다
+            (originalEvent as PointerEvent).stopPropagation();
+        }
+
+        const has_db = this.alertAssetList.some(
+            (l: OpNotiAsset) => l.ASSET_ID === Number(data.ID)
+        );
+        if (!has_db) {
+            this.deleteOpNoti(Number(data.ID));
+        }
+    }
+
+    onSelectAllAlertAsset() {
+        console.info('select-all');
+    }
+
+    onUnselectAllAlertAsset() {
+        console.info('unselect-all');
+    }
+
+    insertOpNoti(id: number) {
+        const has_insert_noti = this.insertAssets.some(
+            (op: OpNotiAsset) => op.ASSET_ID === id
+        );
+        if (!has_insert_noti) {
+            this.insertAssets.push({
+                OP_ID: this.$props.operatorId,
+                ASSET_ID: id,
+                IS_NOTI_COMM: 1
+            });
+        }
+
+        const idx_delete_noti = this.deleteAssets.findIndex(
+            (op: OpNotiAsset) => op.ASSET_ID === id
+        );
+        if (idx_delete_noti !== -1) {
+            this.deleteAssets.splice(idx_delete_noti, 1);
+        }
+    }
+
+    deleteOpNoti(id: number) {
+        const has_delete_noti = this.deleteAssets.some(
+            (op: OpNotiAsset) => op.ASSET_ID === id
+        );
+        if (!has_delete_noti) {
+            this.deleteAssets.push({
+                OP_ID: this.$props.operatorId,
+                ASSET_ID: id,
+                IS_NOTI_COMM: 0
+            });
+        }
+
+        const idx_insert_noti = this.insertAssets.findIndex(
+            (op: OpNotiAsset) => op.ASSET_ID === id
+        );
+        if (idx_insert_noti !== -1) {
+            this.insertAssets.splice(idx_insert_noti, 1);
+        }
+    }
+
     compareAlertSelection(data: Array<any> | null) {
         this.$emit('update:applyButtonDisabled', true);
 
@@ -411,7 +521,7 @@ export default class OperatorAlertAsset extends Vue {
             } else {
                 for (const datum of data) {
                     const is = this.alertAssetList.some(
-                        (a) => a.ASSET_ID === datum.ID
+                        (a) => a.ASSET_ID === Number(datum.ID)
                     );
                     if (!is) {
                         this.$emit('update:applyButtonDisabled', false);
@@ -424,11 +534,14 @@ export default class OperatorAlertAsset extends Vue {
 
     initAssetSelection(list: Array<OpNotiAsset>) {
         const selected_asset = this.assetList.filter((item: any) => {
-            return list.some((l) => l.OP_ID === Number(item.ID));
+            return list.some((l) => l.ASSET_ID === Number(item.ID));
         });
 
-        if (selected_asset.length === 0) this.assetSelection = null;
-        else this.assetSelection = selected_asset;
+        if (selected_asset.length === 0) {
+            this.assetSelection = null;
+        } else {
+            this.assetSelection = selected_asset;
+        }
     }
 
     addFilterService() {
