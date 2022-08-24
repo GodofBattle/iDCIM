@@ -4,6 +4,7 @@ import { DeleteResult, getRepository, In, MoreThan } from "typeorm";
 
 import { ac_cust_hier, ac_cust_hier_args } from "../entity/database/ac_cust_hier";
 import { ac_op_noti_asset, ac_op_noti_asset_input } from "../entity/database/ac_op_noti_asset";
+import { ac_op_noti_except_sensor, ac_op_noti_except_sensor_input } from "../entity/database/ac_op_noti_except_sensor";
 import { ac_user } from "../entity/database/ac_user";
 
 @Resolver()
@@ -181,6 +182,101 @@ export class AccountCustomResolver {
             if(delete_asset_id.length > 0) {
                 const op_id = assets[0].OP_ID;
                 const delete_result = await getRepository(ac_op_noti_asset).delete({ OP_ID: op_id, ASSET_ID: In(delete_asset_id) });
+                return delete_result.affected > 0 ? true : false;
+            } else {
+                return false;
+            }
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async UpdateOperatorNotiAsset(
+        @Arg('ASSET', () => ac_op_noti_asset_input, { nullable: true }) asset: ac_op_noti_asset_input,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if(asset === null) {
+                return false;
+            }
+
+            const update_result = await getRepository(ac_op_noti_asset).update({ OP_ID: asset.OP_ID, ASSET_ID: asset.ASSET_ID }, { IS_NOTI_COMM: asset.IS_NOTI_COMM });
+            return update_result.affected > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async AddOperatorNotiExceptSensors(
+        @Arg('ADD', () => [ac_op_noti_except_sensor_input], { nullable: true }) sensors: Array<ac_op_noti_except_sensor_input>,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            const user = await getRepository(ac_user).findOne({ USER_ID: ctx.user.sub });
+
+            const insert_data: Array<ac_op_noti_except_sensor> = [];
+            sensors.forEach((sensor: ac_op_noti_except_sensor_input) => {
+                insert_data.push({
+                    OP_ID: sensor.OP_ID,
+                    SENSOR_ID: sensor.SENSOR_ID,
+                    UPDATE_USER_ID: user.ID,
+                    UPDATE_USER_DT: new Date()
+                });
+            });
+
+            let is_result = 0;
+            if(insert_data.length > 0) {
+                const insert_result = await getRepository(ac_op_noti_except_sensor).insert(insert_data);
+                is_result += insert_result.identifiers.length;
+            }
+            
+            return is_result > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async DeleteOperatorNotiExceptSensors(
+        @Arg('REMOVE', () => [ac_op_noti_except_sensor_input], { nullable: true }) sensors: Array<ac_op_noti_except_sensor_input>,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if(sensors === undefined) {
+                return false;
+            }
+
+            const delete_sensor_ids: Array<number> = [];
+            sensors.forEach((sensor: ac_op_noti_except_sensor_input) => {
+                delete_sensor_ids.push(sensor.SENSOR_ID);
+            });
+            
+            if(delete_sensor_ids.length > 0) {
+                const op_id = sensors[0].OP_ID;
+                const delete_result = await getRepository(ac_op_noti_except_sensor).delete({ OP_ID: op_id, SENSOR_ID: In(delete_sensor_ids) });
                 return delete_result.affected > 0 ? true : false;
             } else {
                 return false;

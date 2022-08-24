@@ -24,11 +24,12 @@
                 :striped-rows="true"
                 filter-display="row"
                 :filters.sync="filters"
-                :selection.sync="assetSelection"
+                :selection="assetSelection"
                 selection-mode="multiple"
                 :meta-key-selection="false"
                 :row-hover="true"
                 :select-all="isCheckSelectAll"
+                :loading="$apollo.$loading"
                 @filter="onFiltering"
                 @row-select="onSelectAlertAsset"
                 @row-unselect="onUnselectAlertAsset"
@@ -197,11 +198,19 @@
                             :disabled="
                                 isDisabledDetailButton(slotProps.data.ID)
                             "
+                            @click="onShowDetailPanel(slotProps.data)"
                         />
                     </template>
                 </Column>
             </DataTable>
         </div>
+        <operator-alert-sensor-list
+            ref="operatorAlertSensorList"
+            :visible.sync="showDialog"
+            :operator-id="operatorId"
+            :asset-id="detailAssetId"
+            :asset-name="detailAssetName"
+        />
     </div>
 </template>
 
@@ -209,6 +218,7 @@
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import { FilterService, FilterMatchMode } from 'primevue/api';
+import OperatorAlertSensorList from './operatorAlertSensorList.vue';
 import Component from '@/plugins/nuxt-class-component';
 
 interface PredefinedAssetCode {
@@ -231,6 +241,41 @@ interface OpNotiAsset {
     IS_NOTI_COMM: number;
 }
 
+interface INTERFACE {
+    [index: string]: number;
+    ID: number;
+    PROD_INTF_ID: number;
+    CURR_STATUS: number;
+    CURR_LEVEL: number;
+    IS_USE: number;
+}
+
+interface PRODUCT {
+    [index: string]: number | string | MANUFACTURER;
+    MANUFACTURER_ID: number;
+    ASSET_CD: string;
+    NAME: string;
+    MODEL_NAME: string;
+    MANUFACTURER: MANUFACTURER;
+}
+
+interface MANUFACTURER {
+    [index: string]: string;
+    NAME: string;
+}
+
+interface ASSET {
+    [index: string]: number | string | INTERFACE | PRODUCT;
+    ID: number;
+    PRODUCT_ID: number;
+    NAME: string;
+    CUST_HIER_ID_P: number;
+    CUST_HIER_ID_C: number;
+    IS_USE_INTF: number;
+    INTERFACE: INTERFACE;
+    PRODUCT: PRODUCT;
+}
+
 @Component<OperatorAlertAsset>({
     props: {
         operatorId: {
@@ -251,6 +296,7 @@ interface OpNotiAsset {
                         CUST_HIER_ID_C
                         IS_USE_INTF
                         INTERFACE {
+                            ID
                             PROD_INTF_ID
                             CURR_STATUS
                             CURR_LEVEL
@@ -275,7 +321,16 @@ interface OpNotiAsset {
                 };
             },
             update: ({ Assets }) => Assets,
-            prefetch: false
+            prefetch: false,
+            result({ loading, data }) {
+                if (!loading) {
+                    const { Assets } = data;
+
+                    if (Assets) {
+                        this.refreshData();
+                    }
+                }
+            }
         },
         pdAssetCode: {
             query: gql`
@@ -303,7 +358,7 @@ interface OpNotiAsset {
         alertAssetList: {
             query: gql`
                 query ($OP_ID: Int!) {
-                    OperatorNotificationAsset(OP_ID: $OP_ID) {
+                    OperatorNotificationAssets(OP_ID: $OP_ID) {
                         OP_ID
                         ASSET_ID
                         IS_NOTI_COMM
@@ -311,21 +366,23 @@ interface OpNotiAsset {
                 }
             `,
             skip() {
-                return this.$props.operatorId === -1;
+                return (
+                    this.$props.operatorId === -1 || this.assetList.length === 0
+                );
             },
             variables() {
                 return {
                     OP_ID: this.$props.operatorId
                 };
             },
-            update: ({ OperatorNotificationAsset }) =>
-                OperatorNotificationAsset,
+            update: ({ OperatorNotificationAssets }) =>
+                OperatorNotificationAssets,
             result({ loading, data }) {
                 if (!loading) {
-                    const { OperatorNotificationAsset } = data;
+                    const { OperatorNotificationAssets } = data;
 
-                    if (OperatorNotificationAsset) {
-                        this.initAssetSelection(OperatorNotificationAsset);
+                    if (OperatorNotificationAssets) {
+                        this.initAssetSelection(OperatorNotificationAssets);
                     }
                 }
             }
@@ -341,10 +398,14 @@ interface OpNotiAsset {
     }
 })
 export default class OperatorAlertAsset extends Vue {
+    $refs!: {
+        operatorAlertSensorList: OperatorAlertSensorList;
+    };
+
     treeType: string = '';
     treeKeys: Array<any> = [];
 
-    assetList: Array<any> = [];
+    assetList: Array<ASSET> = [];
     pdAssetCode: Array<PredefinedAssetCode> = [];
     accountCustomHierByPosition: Array<AccountCustomHier> = [];
 
@@ -354,6 +415,11 @@ export default class OperatorAlertAsset extends Vue {
 
     assetSelection: Array<any> | null = null;
     isCheckSelectAll: boolean | null = null;
+    filterdAssets: Array<any> = [];
+
+    showDialog: boolean = false;
+    detailAssetId: number = -1;
+    detailAssetName: string = '';
 
     filters = {
         NAME: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -372,19 +438,33 @@ export default class OperatorAlertAsset extends Vue {
         }
     };
 
+    get alertAssetListToRender(): Array<OpNotiAsset> {
+        return this.alertAssetList.filter((l: OpNotiAsset) =>
+            this.assetList.some((a: ASSET) => Number(a.ID) === l.ASSET_ID)
+        );
+    }
+
     mounted() {
         this.addFilterService();
     }
 
     refreshData() {
+        // by shkoh 20220823: 알람자산에서 데이터를 새로 그릴 때마다 초기화해야할 데이터 정보는 많다
+        this.$emit('update:applyButtonDisabled', true);
+
+        this.assetSelection = null;
+        this.filterdAssets = [];
+
         this.insertAssets.splice(0, this.insertAssets.length);
         this.deleteAssets.splice(0, this.deleteAssets.length);
+
         this.$apollo.queries.alertAssetList.refresh();
+
+        this.$refs.operatorAlertSensorList.refreshData();
     }
 
     updateOperatorAlertAsset() {
-        console.table(this.insertAssets);
-        console.table(this.deleteAssets);
+        this.searchingAlertSelection();
 
         this.$nuxt.$loading.start();
 
@@ -435,12 +515,10 @@ export default class OperatorAlertAsset extends Vue {
             (originalEvent as PointerEvent).stopPropagation();
         }
 
-        const has_db = this.alertAssetList.some(
-            (l: OpNotiAsset) => l.ASSET_ID === Number(data.ID)
-        );
-        // by shkoh 20220819: 자산 선택 시, DB에는 해당 정보가 없는 경우에 항목 추가
-        if (!has_db) {
-            this.insertOpNoti(Number(data.ID));
+        if (this.assetSelection) {
+            this.assetSelection.push(data);
+        } else {
+            this.assetSelection = [data];
         }
     }
 
@@ -454,73 +532,59 @@ export default class OperatorAlertAsset extends Vue {
             (originalEvent as PointerEvent).stopPropagation();
         }
 
-        const has_db = this.alertAssetList.some(
-            (l: OpNotiAsset) => l.ASSET_ID === Number(data.ID)
-        );
-        if (!has_db) {
-            this.deleteOpNoti(Number(data.ID));
+        if (this.assetSelection) {
+            const idx = this.assetSelection.findIndex(
+                (s: any) => s.ID === data.ID
+            );
+            this.assetSelection.splice(idx, 1);
+
+            if (this.assetSelection.length === 0) {
+                this.assetSelection = null;
+            }
         }
     }
 
-    onSelectAllAlertAsset() {
-        console.info('select-all');
+    onSelectAllAlertAsset({ data }: any) {
+        if (this.assetSelection) {
+            for (const d of data) {
+                const has = this.assetSelection.includes(d);
+
+                if (!has) {
+                    this.assetSelection.push(d);
+                }
+            }
+        } else {
+            this.assetSelection = [...data];
+        }
     }
 
     onUnselectAllAlertAsset() {
-        console.info('unselect-all');
-    }
+        if (this.assetSelection) {
+            if (this.filterdAssets.length === 0) {
+                this.assetSelection = null;
+            } else {
+                for (const f of this.filterdAssets) {
+                    const idx = this.assetSelection.findIndex(
+                        (s: any) => s.ID === f.ID
+                    );
 
-    insertOpNoti(id: number) {
-        const has_insert_noti = this.insertAssets.some(
-            (op: OpNotiAsset) => op.ASSET_ID === id
-        );
-        if (!has_insert_noti) {
-            this.insertAssets.push({
-                OP_ID: this.$props.operatorId,
-                ASSET_ID: id,
-                IS_NOTI_COMM: 1
-            });
-        }
-
-        const idx_delete_noti = this.deleteAssets.findIndex(
-            (op: OpNotiAsset) => op.ASSET_ID === id
-        );
-        if (idx_delete_noti !== -1) {
-            this.deleteAssets.splice(idx_delete_noti, 1);
-        }
-    }
-
-    deleteOpNoti(id: number) {
-        const has_delete_noti = this.deleteAssets.some(
-            (op: OpNotiAsset) => op.ASSET_ID === id
-        );
-        if (!has_delete_noti) {
-            this.deleteAssets.push({
-                OP_ID: this.$props.operatorId,
-                ASSET_ID: id,
-                IS_NOTI_COMM: 0
-            });
-        }
-
-        const idx_insert_noti = this.insertAssets.findIndex(
-            (op: OpNotiAsset) => op.ASSET_ID === id
-        );
-        if (idx_insert_noti !== -1) {
-            this.insertAssets.splice(idx_insert_noti, 1);
+                    this.assetSelection.splice(idx, 1);
+                }
+            }
         }
     }
 
     compareAlertSelection(data: Array<any> | null) {
         this.$emit('update:applyButtonDisabled', true);
 
-        if (data === null && this.alertAssetList.length > 0) {
+        if (data === null && this.alertAssetListToRender.length > 0) {
             this.$emit('update:applyButtonDisabled', false);
         } else if (Array.isArray(data)) {
-            if (data.length !== this.alertAssetList.length) {
+            if (data.length !== this.alertAssetListToRender.length) {
                 this.$emit('update:applyButtonDisabled', false);
             } else {
                 for (const datum of data) {
-                    const is = this.alertAssetList.some(
+                    const is = this.alertAssetListToRender.some(
                         (a) => a.ASSET_ID === Number(datum.ID)
                     );
                     if (!is) {
@@ -532,8 +596,42 @@ export default class OperatorAlertAsset extends Vue {
         }
     }
 
+    searchingAlertSelection() {
+        // by shkoh 20220822: 선택한 Asset 데이터의 추가
+        if (this.assetSelection) {
+            for (const s of this.assetSelection) {
+                const is = this.alertAssetListToRender.find(
+                    (l: OpNotiAsset) => l.ASSET_ID === Number(s.ID)
+                );
+
+                if (!is) {
+                    this.insertAssets.push({
+                        OP_ID: this.$props.operatorId,
+                        ASSET_ID: Number(s.ID),
+                        IS_NOTI_COMM: 1
+                    });
+                }
+            }
+        }
+
+        // by shkoh 20220822: 기존 선택한 Asset 데이터의 삭제
+        for (const l of this.alertAssetListToRender) {
+            const is = this.assetSelection?.find(
+                (s: any) => Number(s.ID) === l.ASSET_ID
+            );
+
+            if (!is) {
+                this.deleteAssets.push({
+                    OP_ID: this.$props.operatorId,
+                    ASSET_ID: Number(l.ASSET_ID),
+                    IS_NOTI_COMM: 1
+                });
+            }
+        }
+    }
+
     initAssetSelection(list: Array<OpNotiAsset>) {
-        const selected_asset = this.assetList.filter((item: any) => {
+        const selected_asset = this.assetList.filter((item: ASSET) => {
             return list.some((l) => l.ASSET_ID === Number(item.ID));
         });
 
@@ -679,6 +777,14 @@ export default class OperatorAlertAsset extends Vue {
         } else {
             this.isCheckSelectAll = null;
         }
+
+        this.filterdAssets = filteredValue;
+    }
+
+    onShowDetailPanel(data: ASSET) {
+        this.detailAssetId = Number(data.ID);
+        this.detailAssetName = data.NAME;
+        this.showDialog = true;
     }
 }
 </script>

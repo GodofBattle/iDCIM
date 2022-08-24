@@ -29,6 +29,7 @@
                 </template>
 
                 <operator-panel-info
+                    v-if="tabIndex === 0"
                     ref="operatorPanelInfoRef"
                     :operator-id="operatorId"
                     :apply-button-disabled.sync="applyButtonDisabled"
@@ -42,6 +43,7 @@
                 </template>
 
                 <operator-panel-notify
+                    v-if="tabIndex === 1"
                     ref="operatorPanelNotifyRef"
                     :operator-id="operatorId"
                     :operator-label="operatorTitle"
@@ -55,18 +57,11 @@
                 </template>
 
                 <operator-alert-asset
+                    v-if="tabIndex === 2"
                     ref="operatorAlertAssetRef"
                     :operator-id="operatorId"
                     :apply-button-disabled.sync="applyButtonDisabled"
                 />
-            </TabPanel>
-            <TabPanel>
-                <template #header>
-                    <i class="pi pi-database p-mr-2"></i>
-                    <span>알림항목</span>
-                </template>
-
-                <h4>어떤 자산이 문제일지를 확인합니다</h4>
             </TabPanel>
         </TabView>
     </div>

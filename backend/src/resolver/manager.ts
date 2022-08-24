@@ -5,6 +5,7 @@ import { getRepository, In } from "typeorm";
 import { ac_asset_operator, ac_asset_operator_args } from "../entity/database/ac_asset_operator";
 import { ac_company, ac_company_args } from "../entity/database/ac_company";
 import { ac_op_noti_asset } from "../entity/database/ac_op_noti_asset";
+import { ac_op_noti_except_sensor } from "../entity/database/ac_op_noti_except_sensor";
 import { ac_user } from "../entity/database/ac_user";
 
 @Resolver()
@@ -275,7 +276,7 @@ export class ManagerResolver {
     }
 
     @Query(() => [ac_op_noti_asset])
-    async OperatorNotificationAsset(
+    async OperatorNotificationAssets(
         @Arg('OP_ID', () => Int) op_id: number,
         @Ctx() ctx: any
     ) {
@@ -285,6 +286,39 @@ export class ManagerResolver {
 
         try {
             return await getRepository(ac_op_noti_asset).find({ OP_ID: op_id });
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => ac_op_noti_asset, { nullable: true })
+    async OperatorNotificationAsset(
+        @Arg('OP_ID', () => Int) op_id: number,
+        @Arg('ASSET_ID', () => Int) asset_id: number,
+        @Ctx() ctx: any
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return await getRepository(ac_op_noti_asset).findOne({ OP_ID: op_id, ASSET_ID: asset_id });
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => [ac_op_noti_except_sensor])
+    async OperatorNotificationExceptSensors(
+        @Arg('OP_ID', () => Int) op_id: number,
+        @Ctx() ctx: any
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return await getRepository(ac_op_noti_except_sensor).find({ OP_ID: op_id });
         } catch (err) {
             throw new SchemaError(err.message);
         }

@@ -1,4 +1,4 @@
-import { Field, ID, Int, ObjectType } from "type-graphql";
+import { Field, ID, InputType, Int, ObjectType } from "type-graphql";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
 
@@ -7,7 +7,7 @@ import { nullableDate } from "../../scalar/nullableDate";
 export class ac_op_noti_except_sensor {
     @Field(() => ID)
     @PrimaryGeneratedColumn('increment', { type: 'int', comment: '아이디' })
-    ID: number;
+    ID?: number;
 
     @Field(() => Int)
     @Column({ type: 'int', nullable: false, unique: true, comment: '담당자아이디(ac_asset_operator.ID)' })
@@ -27,5 +27,14 @@ export class ac_op_noti_except_sensor {
 
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', length: 256, nullable: true, default: null, comment: '설명' })
-    REMARK: string;
+    REMARK?: string;
+}
+
+@InputType()
+export class ac_op_noti_except_sensor_input {
+    @Field(() => Int)
+    OP_ID: number;
+
+    @Field(() => Int)
+    SENSOR_ID: number;
 }
