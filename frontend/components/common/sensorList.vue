@@ -15,6 +15,7 @@
         :row-hover="true"
         :meta-key-selection="false"
         :selection="selectedItems"
+        :global-filter-fields="['IS_EVENT']"
         @filter="onFiltering"
         @row-select="onRowSelect"
         @row-unselect="onRowUnselect"
@@ -23,6 +24,20 @@
     >
         <template #empty>
             <span>수집항목이 없습니다</span>
+        </template>
+
+        <template v-if="isEventFilter" #header>
+            <div class="p-d-flex">
+                <div class="p-as-center p-field-checkbox p-mb-0">
+                    <InputSwitch
+                        id="is_viewing_event"
+                        v-model="is_viewing_event"
+                    />
+                    <label for="is_viewing_event">{{
+                        viewingSwitchLabel
+                    }}</label>
+                </div>
+            </div>
         </template>
 
         <Column
@@ -116,7 +131,6 @@
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import { FilterService, FilterMatchMode } from 'primevue/api';
-import { load } from 'dotenv';
 import Component from '@/plugins/nuxt-class-component';
 
 interface Threshold_DI {
@@ -199,6 +213,10 @@ interface DisplayPowerCode {
         selectedItems: {
             type: Array,
             default: null
+        },
+        isEventFilter: {
+            type: Boolean,
+            default: false
         }
     },
     apollo: {
@@ -312,7 +330,11 @@ export default class SensorList extends Vue {
 
     filters = {
         NAME: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        SENSOR_CD: { value: null, matchMode: 'SENSOR_TYPE' }
+        SENSOR_CD: { value: null, matchMode: 'SENSOR_TYPE' },
+        IS_EVENT: {
+            value: this.$props.isEventFilter ? 1 : null,
+            matchMode: FilterMatchMode.EQUALS
+        }
     };
 
     mounted() {
@@ -401,7 +423,7 @@ export default class SensorList extends Vue {
             'i-asset-sensor-index p-px-1',
             {
                 'i-not-used': is_use === 0,
-                'i-lvl-null': is_event === 0,
+                'i-lvl-null': this.$props.isEventFilter && is_event === 0,
                 'i-lvl00': is_use === 1 && is_event === 1 && lvl === 0,
                 'i-lvl01': is_use === 1 && is_event === 1 && lvl === 1,
                 'i-lvl02': is_use === 1 && is_event === 1 && lvl === 2,
@@ -414,27 +436,33 @@ export default class SensorList extends Vue {
 
     nameStatus(item: Sensor): Array<object | string> {
         const is_use = item.IS_USE;
+        const is_event = item.IS_EVENT;
         return [
             {
-                'i-not-used': is_use === 0
+                'i-not-used': is_use === 0,
+                'i-lvl-null': this.$props.isEventFilter && is_event === 0
             }
         ];
     }
 
     typeStatus(item: Sensor): Array<object | string> {
         const is_use = item.IS_USE;
+        const is_event = item.IS_EVENT;
         return [
             {
-                'i-not-used': is_use === 0
+                'i-not-used': is_use === 0,
+                'i-lvl-null': this.$props.isEventFilter && is_event === 0
             }
         ];
     }
 
     valueStatus(item: Sensor): Array<object | string> {
         const is_use = item.IS_USE;
+        const is_event = item.IS_EVENT;
         return [
             {
-                'i-not-used': is_use === 0
+                'i-not-used': is_use === 0,
+                'i-lvl-null': this.$props.isEventFilter && is_event === 0
             }
         ];
     }
@@ -470,6 +498,18 @@ export default class SensorList extends Vue {
     onFiltering({ filteredValue }: any) {
         this.filterdSensors = filteredValue;
     }
+
+    get is_viewing_event(): boolean {
+        return this.filters.IS_EVENT.value === 1;
+    }
+
+    set is_viewing_event(_is: boolean) {
+        this.$set(this.filters.IS_EVENT, 'value', _is ? 1 : null);
+    }
+
+    get viewingSwitchLabel(): string {
+        return this.is_viewing_event ? '알림항목만 보기' : '전체항목 보기';
+    }
 }
 </script>
 
@@ -482,6 +522,10 @@ export default class SensorList extends Vue {
     }
 
     .i-not-used {
+        opacity: 0.4;
+    }
+
+    .i-lvl-null {
         opacity: 0.4;
     }
 }

@@ -2,7 +2,7 @@
     <i-dialog
         :visible.sync="showDialog"
         :content-style="{ width: '25vw' }"
-        :modal="false"
+        :modal="true"
         :draggable="true"
         @show="onShow"
         @hide="onHide"
@@ -11,18 +11,17 @@
 
         <div v-if="dbOperatorNotifaction" class="p-fluid p-input-filled p-mt-2">
             <div class="p-field-checkbox">
-                <InputSwitch id="is_comm" v-model="is_comm" />
+                <Checkbox id="is_comm" v-model="is_comm" :binary="true" />
                 <label for="is_comm">통신장애 알림여부</label>
             </div>
         </div>
-
-        <Divider />
 
         <sensor-list
             :interface-id="assetId"
             selection-mode="multiple"
             :selected-items="selectionItems"
             :style="{ width: 'calc(25vw - 3rem)', height: '50vh' }"
+            :is-event-filter="true"
             @loaded="onLoadedSensorList"
             @row-select="onRowSelect"
             @row-unselect="onRowUnselect"

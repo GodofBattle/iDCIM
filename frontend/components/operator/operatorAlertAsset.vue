@@ -808,6 +808,10 @@ export default class OperatorAlertAsset extends Vue {
             width: 0.8rem;
             height: 0.8rem;
         }
+
+        .i-lvl-null {
+            opacity: 0.3;
+        }
     }
 }
 </style>
