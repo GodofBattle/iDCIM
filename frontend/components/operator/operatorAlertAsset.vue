@@ -6,6 +6,7 @@
         >
             <asset-tree
                 :style="{ height: '100%' }"
+                :has-tree-border="false"
                 @select="onSelectAssetTreeNode"
             />
         </div>

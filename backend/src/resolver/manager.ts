@@ -1,12 +1,14 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
 import { Arg, Args, Ctx, ID, Int, Mutation, Publisher, PubSub, Query, Resolver } from "type-graphql";
-import { getRepository, In } from "typeorm";
+import { getManager, getRepository, In } from "typeorm";
 
 import { ac_asset_operator, ac_asset_operator_args } from "../entity/database/ac_asset_operator";
 import { ac_company, ac_company_args } from "../entity/database/ac_company";
 import { ac_op_noti_asset } from "../entity/database/ac_op_noti_asset";
 import { ac_op_noti_except_sensor } from "../entity/database/ac_op_noti_except_sensor";
 import { ac_user } from "../entity/database/ac_user";
+import { AssetTree } from "../entity/web/assetTree";
+import arrayToTree from "../utils/arrayToTree";
 
 @Resolver()
 export class ManagerResolver {
@@ -319,6 +321,91 @@ export class ManagerResolver {
 
         try {
             return await getRepository(ac_op_noti_except_sensor).find({ OP_ID: op_id });
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => [AssetTree])
+    async OperatorsWithNotification(
+        @Arg(`ASSET_ID`, () => Int, { nullable: true }) asset_id: number,
+        @Ctx() ctx: any
+    ): Promise<Array<AssetTree>> {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            let where = ``;
+            if(asset_id > 0) {
+                where = `WHERE aona.ASSET_ID = ${asset_id}`;
+            }
+
+            const operators: Array<any> = await getManager().query(`
+                SELECT
+                    DISTINCT aona.OP_ID, ac.TYPE AS COMPANY_TYPE, ac.NAME AS COMPANY_NAME, aao.NAME OP_NAME
+                FROM ac_op_noti_asset aona
+                JOIN ac_asset_operator aao ON aona.OP_ID = aao.ID
+                JOIN ac_company ac ON aao.COMPANY_ID = ac.ID
+                ${where}
+                ORDER BY ac.NAME, aao.NAME;
+            `);
+
+            const tree_data = new Array();
+
+            operators.forEach((o: any, index: number) => {
+                let p_key = ``;
+                switch(o.COMPANY_TYPE) {
+                    case 'C': p_key = 'hier_customer'; break;
+                    case 'P': p_key = 'hier_partner'; break;
+                    case 'M': p_key = 'hier_operator'; break;
+                }
+
+                tree_data.push({
+                    key: `op_${o.OP_ID}`,
+                    label: `${o.COMPANY_NAME}: ${o.OP_NAME}`,
+                    order: index + 1,
+                    parent_key: p_key,
+                    type: 'OPERATOR',
+                    manipulable: false
+                });
+            });
+
+            if(tree_data.some((item: any) => item.parent_key === 'hier_operator')) {
+                tree_data.push(0, 0, {
+                    key: `hier_operator`,
+                    label: `유지보수사`,
+                    order: 3,
+                    parent_key: null,
+                    type: 'ROOT',
+                    manipulable: false
+                });
+            }
+
+            if(tree_data.some((item: any) => item.parent_key === 'hier_partner')) {
+                tree_data.splice(0, 0, {
+                    key: `hier_partner`,
+                    label: `협력사`,
+                    order: 2,
+                    parent_key: null,
+                    type: 'ROOT',
+                    manipulable: false
+                });
+            }
+
+            if(tree_data.some((item: any) => item.parent_key === 'hier_customer')) {
+                tree_data.splice(0, 0, {
+                    key: `hier_customer`,
+                    label: `고객사`,
+                    order: 1,
+                    parent_key: null,
+                    type: 'ROOT',
+                    manipulable: false
+                });
+            }
+
+            const tree = arrayToTree(tree_data, { id: 'key', p_id: 'parent_key' }) as Array<AssetTree>;
+            return tree;
         } catch (err) {
             throw new SchemaError(err.message);
         }

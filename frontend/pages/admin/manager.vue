@@ -4,9 +4,10 @@
         <div class="p-d-flex i-manager-content">
             <div class="p-col-fixed" style="width: var(--tree-width)">
                 <manager-tree
+                    :style="{ height: 'calc(100% - 38px)' }"
                     @select="onSelectTreeNode"
                     @move="onMoveTreeNode"
-                ></manager-tree>
+                />
             </div>
             <div class="p-col">
                 <div v-if="viewType === 'Company'">

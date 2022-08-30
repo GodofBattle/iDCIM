@@ -8,6 +8,7 @@
                 :expanded-keys.sync="treeExpandedKey"
                 :selection-keys.sync="treeSelectedKey"
                 selection-mode="single"
+                :class="{ 'i-tree-border-none': !hasTreeBorder }"
                 @node-select="onSelectNode"
             >
             </i-moveable-tree>
@@ -44,6 +45,10 @@ type TabItem = {
         isOverlayPanel: {
             type: Boolean,
             default: false
+        },
+        hasTreeBorder: {
+            type: Boolean,
+            default: true
         }
     },
     apollo: {
@@ -191,8 +196,13 @@ export default class AssetTree extends Vue {
         height: calc(100% - 38px);
 
         .p-tree {
-            border: none;
             height: 100%;
+        }
+
+        .i-tree-border-none {
+            .p-tree {
+                border: none;
+            }
         }
 
         .p-tree-container {

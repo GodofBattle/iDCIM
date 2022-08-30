@@ -72,9 +72,10 @@
             <div v-else-if="tabIndex === 9">
                 <h1>{{ assetTabList[tabIndex].header }}</h1>
             </div>
-            <div v-else-if="tabIndex === 10">
-                <h1>{{ assetTabList[tabIndex].header }}</h1>
-            </div>
+            <asset-panel-operator-with-alert
+                v-else-if="tabIndex === 10"
+                :asset-item.sync="item"
+            />
         </div>
     </div>
 </template>
@@ -286,9 +287,9 @@ export default class AssetPanel extends Vue {
             header: '담당자 알림정보',
             disabled: false,
             unvisible: false,
-            is_interface: false,
+            is_interface: true,
             is_vitual: false,
-            show_save_button: true,
+            show_save_button: false,
             type: 'ASSETCONTENT10'
         }
     ];

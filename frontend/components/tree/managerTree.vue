@@ -8,6 +8,8 @@
                 selection-mode="single"
                 :addable-type="addableType"
                 :moveable-type="moveableType"
+                :class="{ 'i-tree-border-none': !hasTreeBorder }"
+                :expanded-keys="expandedKeys"
                 @insert-tree="onInsertNode"
                 @node-select="onNodeSelect"
             >
@@ -82,8 +84,8 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import Component from '@/plugins/nuxt-class-component';
 import gql from 'graphql-tag';
+import Component from '@/plugins/nuxt-class-component';
 
 import { eventBus } from '@/plugins/vueEventBus';
 
@@ -95,6 +97,20 @@ type TabItem = {
 };
 
 @Component<ManagerTree>({
+    props: {
+        hasTreeBorder: {
+            type: Boolean,
+            default: true
+        },
+        isEditing: {
+            type: Boolean,
+            default: true
+        },
+        isExpandCompanyToInit: {
+            type: Boolean,
+            default: false
+        }
+    },
     apollo: {
         companies: {
             query: gql`
@@ -113,7 +129,7 @@ type TabItem = {
             `,
             variables() {
                 return {
-                    TYPE: this.tabList[this.selectedTabIndex].type,
+                    TYPE: this.tabList[this.selectedTabIndex].type
                 };
             },
             manual: false,
@@ -122,15 +138,15 @@ type TabItem = {
             update({ Companies }) {
                 this.apolloFetch(Companies);
                 return Companies;
-            },
-        },
-    },
+            }
+        }
+    }
 })
 export default class ManagerTree extends Vue {
     tabList: Array<TabItem> = [
         { header: '고객사', disabled: false, type: 'C' },
         { header: '협력사', disabled: false, type: 'P' },
-        { header: '유지보수사', disabled: false, type: 'M' },
+        { header: '유지보수사', disabled: false, type: 'M' }
     ];
 
     selectedTabIndex: number = 0;
@@ -144,6 +160,8 @@ export default class ManagerTree extends Vue {
 
     selected_company_id: number | null = null;
     selected_company_name: string | null = null;
+
+    expandedKeys = {};
 
     mounted() {
         eventBus.$on('refreshManagerTree', () => {
@@ -174,7 +192,7 @@ export default class ManagerTree extends Vue {
         this.$emit('select', {
             type: type === 'ac' ? 'Company' : type === 'aao' ? 'Operator' : '',
             id: Number(id),
-            name: label,
+            name: label
         });
     }
 
@@ -190,7 +208,7 @@ export default class ManagerTree extends Vue {
                             parent_key: "${target.parent_key}"
                         )
                     }
-                `,
+                `
             })
             .then(({ MoveOperatorTreeNode }: any) => {
                 if (MoveOperatorTreeNode) {
@@ -198,7 +216,7 @@ export default class ManagerTree extends Vue {
                         severity: 'info',
                         summary: '담당자 위치 변경 완료',
                         detail: `[${target.label}] 담당자는 ${dest.label} 소속으로 변경되었습니다`,
-                        life: 1800,
+                        life: 1800
                     });
                 }
 
@@ -214,7 +232,7 @@ export default class ManagerTree extends Vue {
                     severity: 'error',
                     summary: '담당자 위치 변경 실패',
                     detail: error.message,
-                    life: 2000,
+                    life: 2000
                 });
             })
             .finally(() => {
@@ -232,10 +250,11 @@ export default class ManagerTree extends Vue {
                         value: false,
                         configurable: true,
                         enumerable: true,
-                        writable: true,
+                        writable: true
                     });
 
                     if (
+                        this.$props.isEditing &&
                         !company.children.some(
                             (c: any) => c.type === 'addOperator'
                         )
@@ -245,19 +264,26 @@ export default class ManagerTree extends Vue {
                             selectable: false,
                             manipulable: false,
                             pId: company.key,
-                            pName: company.label,
+                            pName: company.label
                         });
                     }
                     break;
                 }
             }
+
+            if (this.$props.isExpandCompanyToInit) {
+                this.$set(this.expandedKeys, company.key, true);
+            }
         });
 
-        if (!companies.some((company: any) => company.type === 'addCompany')) {
+        if (
+            this.$props.isEditing &&
+            !companies.some((company: any) => company.type === 'addCompany')
+        ) {
             companies.push({
                 type: 'addCompany',
                 selectable: false,
-                manipulable: false,
+                manipulable: false
             });
         }
     }
@@ -284,19 +310,22 @@ export default class ManagerTree extends Vue {
 
 <style lang="scss" scoped>
 #manager-tree::v-deep {
-    height: 100%;
-
     .i-tree-content {
+        height: 100%;
+
         .p-tree {
             border-bottom: none;
             margin-bottom: -2px;
         }
 
+        .i-tree-border-none {
+            .p-tree {
+                border: none;
+            }
+        }
+
         .p-tree-container {
-            height: calc(
-                100vh - 8px - var(--header-height) - 12px - 23px - 8px - 29px -
-                    38px - 8px
-            );
+            height: calc(100% - 2rem);
             margin: 0 0.3rem;
         }
     }

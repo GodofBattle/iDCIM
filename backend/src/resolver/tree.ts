@@ -591,7 +591,7 @@ export class TreeResolver {
         // by shkoh 20220504: 자산을 기준으로 고객사 담당자 및 업체 정보 로드
         const customers = await getManager().query(`
             SELECT
-                ac.NAME AS COMPANY_NAME, ac.TYPE AS COMPANY_TYPE, aao.ID,  aao.NAME AS OP_NAME
+                ac.NAME AS COMPANY_NAME, ac.TYPE AS COMPANY_TYPE, aao.ID, aao.NAME AS OP_NAME
             FROM ac_asset_operator aao
             JOIN ac_company ac ON aao.COMPANY_ID = ac.ID
             ORDER BY aao.NAME
@@ -619,7 +619,7 @@ export class TreeResolver {
     }
 
     private async getTreeItemsByHIER07(root: object) {
-        // by shkoh 20220502: HIER07 Asset Tree
+        // by shkoh 20220502: HIER07 Manufacturer Tree
         const trees = new Array(root);
 
         // by shkoh 20220502: 현행 자산의 제품 리스트를 추출함
@@ -650,7 +650,7 @@ export class TreeResolver {
     }
 
     private async getTreeItemsByHIER08(root: object) {
-        // by shkoh 20220415: HIER04 Asset Tree
+        // by shkoh 20220415: HIER08 Product Model Tree
         const trees = new Array(root);
 
         // by shkoh 20220502: 현행 자산의 제품 리스트를 추출함
