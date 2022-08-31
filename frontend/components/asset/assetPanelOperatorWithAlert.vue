@@ -10,7 +10,49 @@
                     icon="pi pi-plus"
                     label="담당자 추가"
                     class="p-button-rounded p-button-info p-button-text p-mr-1"
+                    @click="onAddOperator"
                 />
+                <i-overlay-panel
+                    ref="overlayPanel"
+                    :show-close-icon="true"
+                    append-to="body"
+                    :style="{ width: '16vw', height: '42vh' }"
+                >
+                    <i-moveable-tree
+                        :value="operatorsWithoutNotificationToRender"
+                        :moveable="false"
+                        :filter="true"
+                        :style="{ height: 'calc(42vh - 2rem)' }"
+                        :expanded-keys="treeExpandedKey"
+                        selection-mode="single"
+                        @node-select="onSelectAddedOperator"
+                    >
+                        <template #ROOT="slotProps">
+                            <div class="p-d-flex">
+                                <i
+                                    class="pi pi-building p-p-1 p-mr-1"
+                                    style="font-size: 1.2rem"
+                                />
+                                <div class="p-p-1">
+                                    {{ slotProps.node.label }}
+                                </div>
+                            </div>
+                        </template>
+                        <template #OPERATOR="slotProps">
+                            <div class="p-d-flex" :style="{ width: '100%' }">
+                                <div class="p-d-flex p-ai-center">
+                                    <i
+                                        class="pi pi-user p-p-1"
+                                        style="font-size: 1.2rem"
+                                    />
+                                    <div class="p-p-1">
+                                        {{ slotProps.node.label }}
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </i-moveable-tree>
+                </i-overlay-panel>
             </div>
             <div class="p-ml-auto">
                 <Button
@@ -58,6 +100,7 @@
                                 <Button
                                     icon="pi pi-minus"
                                     class="p-button-rounded p-button-text p-button-danger"
+                                    @click="removeOperator(slotProps.node)"
                                 />
                             </div>
                         </div>
@@ -99,6 +142,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import gql from 'graphql-tag';
+import IOverlayPanel from '../custom/iOverlayPanel.vue';
 import Component from '@/plugins/nuxt-class-component';
 
 interface Threshold_DI {
@@ -206,6 +250,41 @@ interface OpNotiExceptSensor {
             prefetch: true,
             update: ({ OperatorsWithNotification }) => OperatorsWithNotification
         },
+        operatorsWithoutNotification: {
+            query: gql`
+                fragment treeFields on AssetTree {
+                    key
+                    label
+                    order
+                    parent_key
+                    type
+                    manipulable
+                }
+
+                query ($ASSET_ID: Int) {
+                    OperatorsWithoutNotification(ASSET_ID: $ASSET_ID) {
+                        ...treeFields
+                        children {
+                            ...treeFields
+                            children {
+                                ...treeFields
+                            }
+                        }
+                    }
+                }
+            `,
+            skip() {
+                return this.$props.assetItem === null;
+            },
+            variables() {
+                return {
+                    ASSET_ID: Number(this.$props.assetItem.ID)
+                };
+            },
+            prefetch: true,
+            update: ({ OperatorsWithoutNotification }) =>
+                OperatorsWithoutNotification
+        },
         dbOperatorNotifaction: {
             query: gql`
                 query ($OP_ID: Int!, $ASSET_ID: Int!) {
@@ -286,6 +365,10 @@ interface OpNotiExceptSensor {
     }
 })
 export default class AssetPanelOperatorWithAlert extends Vue {
+    $refs!: {
+        overlayPanel: IOverlayPanel;
+    };
+
     operator_id: number = -1;
     operator_label: string = '';
 
@@ -293,6 +376,7 @@ export default class AssetPanelOperatorWithAlert extends Vue {
     selectionItems: Array<Sensor> = [];
 
     operatorsWithNotification: Array<any> = [];
+    operatorsWithoutNotification: Array<any> = [];
     treeExpandedKey = {
         hier_customer: true,
         hier_partner: true,
@@ -315,6 +399,19 @@ export default class AssetPanelOperatorWithAlert extends Vue {
         const tree: Array<any> = [];
 
         this.operatorsWithNotification.forEach((node: any) => {
+            if (node.children.length > 0 && node.type === 'ROOT') {
+                this.$set(node, 'selectable', false);
+                tree.push(node);
+            }
+        });
+
+        return tree;
+    }
+
+    get operatorsWithoutNotificationToRender(): Array<any> {
+        const tree: Array<any> = [];
+
+        this.operatorsWithoutNotification.forEach((node: any) => {
             if (node.children.length > 0 && node.type === 'ROOT') {
                 this.$set(node, 'selectable', false);
                 tree.push(node);
@@ -599,6 +696,132 @@ export default class AssetPanelOperatorWithAlert extends Vue {
                 this.$toast.add({
                     severity: 'error',
                     summary: '알림자산 상세설정 변경 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    removeOperator(op: any) {
+        console.info(op);
+
+        this.$confirmDialog.require({
+            group: 'deleteConfirmDialog',
+            message: `자산 [${this.$props.assetItem.NAME}]의 설정된 담당자(${op.label})의 알림정보를 삭제하시겠습니까?\n해당 자산에 대한 지정 담당자의 알람설정을 해제시킵니다.\n해당 담당자는 알람을 받지 않을 것입니다`,
+            header: `${op.label}에 대한 알림설정 해제`,
+            position: 'top',
+            icon: 'pi pi-exclamation-triangle',
+            acceptClass: 'p-button-danger',
+            blockScroll: false,
+            accept: () => {
+                const [type, id] = op.key.split('_');
+                this.remove(Number(id), op.label);
+            }
+        });
+    }
+
+    remove(id: number, label: string) {
+        const deleteAsset: Array<OpNotiAsset> = [];
+        deleteAsset.push({
+            OP_ID: id,
+            ASSET_ID: Number(this.$props.assetItem.ID),
+            IS_NOTI_COMM: this.operatorNotifaction.IS_NOTI_COMM
+        });
+
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation ($REMOVE: [ac_op_noti_asset_input!]) {
+                        DeleteOperatorNotiAssets(REMOVE: $REMOVE)
+                    }
+                `,
+                variables: {
+                    REMOVE: deleteAsset
+                }
+            })
+            .then(() => {
+                this.$apollo.queries.operatorsWithNotification.refresh();
+                this.$apollo.queries.operatorsWithoutNotification.refresh();
+
+                this.initData();
+                this.operator_id = -1;
+                this.operator_label = '';
+
+                this.$toast.add({
+                    severity: 'success',
+                    summary: `${label}의 ${this.$props.assetItem.NAME} 알림설정 해제 완료`,
+                    detail: `자산의 알림항목 상세설정이 변경되었습니다`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '담당자 알림설정 변경 실패',
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    onAddOperator(event: Event) {
+        this.$refs.overlayPanel.toggle(event);
+    }
+
+    onSelectAddedOperator(select_node: any) {
+        console.info(select_node);
+
+        const [type, id] = select_node.key.split('_');
+
+        const addAsset: Array<OpNotiAsset> = [];
+        addAsset.push({
+            OP_ID: Number(id),
+            ASSET_ID: Number(this.$props.assetItem.ID),
+            IS_NOTI_COMM: 1
+        });
+
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation ($ADD: [ac_op_noti_asset_input!]) {
+                        AddOperatorNotiAssets(ADD: $ADD)
+                    }
+                `,
+                variables: {
+                    ADD: addAsset
+                }
+            })
+            .then(() => {
+                this.$apollo.queries.operatorsWithNotification.refresh();
+                this.$apollo.queries.operatorsWithoutNotification.refresh();
+
+                this.$refs.overlayPanel.hide();
+
+                this.$toast.add({
+                    severity: 'success',
+                    summary: `${select_node.label} 알림 담당자 추가 완료`,
+                    detail: `자산의 알림항목 상세설정이 변경되었습니다`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: '알림 담당자 추가 실패',
                     detail: error.message,
                     life: 2000
                 });

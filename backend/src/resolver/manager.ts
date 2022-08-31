@@ -372,7 +372,91 @@ export class ManagerResolver {
             });
 
             if(tree_data.some((item: any) => item.parent_key === 'hier_operator')) {
-                tree_data.push(0, 0, {
+                tree_data.splice(0, 0, {
+                    key: `hier_operator`,
+                    label: `유지보수사`,
+                    order: 3,
+                    parent_key: null,
+                    type: 'ROOT',
+                    manipulable: false
+                });
+            }
+
+            if(tree_data.some((item: any) => item.parent_key === 'hier_partner')) {
+                tree_data.splice(0, 0, {
+                    key: `hier_partner`,
+                    label: `협력사`,
+                    order: 2,
+                    parent_key: null,
+                    type: 'ROOT',
+                    manipulable: false
+                });
+            }
+
+            if(tree_data.some((item: any) => item.parent_key === 'hier_customer')) {
+                tree_data.splice(0, 0, {
+                    key: `hier_customer`,
+                    label: `고객사`,
+                    order: 1,
+                    parent_key: null,
+                    type: 'ROOT',
+                    manipulable: false
+                });
+            }
+
+            const tree = arrayToTree(tree_data, { id: 'key', p_id: 'parent_key' }) as Array<AssetTree>;
+            return tree;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => [AssetTree])
+    async OperatorsWithoutNotification(
+        @Arg(`ASSET_ID`, () => Int, { nullable: true }) asset_id: number,
+        @Ctx() ctx: any
+    ): Promise<Array<AssetTree>> {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            let _asset_id = asset_id ? asset_id : -1;
+
+            const operators: Array<any> = await getManager().query(`
+                SELECT
+                    aao.ID AS OP_ID,
+                    ac.TYPE AS COMPANY_TYPE,
+                    ac.NAME AS COMPANY_NAME,
+                    aao.NAME AS OP_NAME
+                FROM ac_asset_operator aao
+                JOIN ac_company ac ON aao.COMPANY_ID = ac.ID
+                WHERE
+                    aao.ID NOT IN (SELECT aona.OP_ID FROM ac_op_noti_asset aona WHERE aona.ASSET_ID = ${_asset_id});
+            `);
+
+            const tree_data = new Array();
+
+            operators.forEach((o: any, index: number) => {
+                let p_key = ``;
+                switch(o.COMPANY_TYPE) {
+                    case 'C': p_key = 'hier_customer'; break;
+                    case 'P': p_key = 'hier_partner'; break;
+                    case 'M': p_key = 'hier_operator'; break;
+                }
+
+                tree_data.push({
+                    key: `op_${o.OP_ID}`,
+                    label: `${o.COMPANY_NAME}: ${o.OP_NAME}`,
+                    order: index + 1,
+                    parent_key: p_key,
+                    type: 'OPERATOR',
+                    manipulable: false
+                });
+            });
+
+            if(tree_data.some((item: any) => item.parent_key === 'hier_operator')) {
+                tree_data.splice(0, 0, {
                     key: `hier_operator`,
                     label: `유지보수사`,
                     order: 3,
