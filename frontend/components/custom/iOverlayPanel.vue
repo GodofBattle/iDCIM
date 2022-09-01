@@ -87,7 +87,6 @@ export default class IOverlayPanel extends Vue {
 
             const containerOffset = DomHandler.getOffset(this.$refs.container);
             const targetOffset = DomHandler.getOffset(this.target);
-            // const targetOffset = DomHandler.
             const targetRect = this.target.getBoundingClientRect();
             const targetCenter = targetRect.width / 2;
 

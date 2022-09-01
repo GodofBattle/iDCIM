@@ -5,6 +5,7 @@
         :style="{ height: '100%' }"
     >
         <DataTable
+            class="p-datatable-sm"
             :value="commList"
             data-key="MC_ID"
             :scrollable="true"

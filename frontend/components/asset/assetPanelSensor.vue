@@ -6,6 +6,7 @@
         :style="{ height: '100%' }"
     >
         <DataTable
+            class="p-datatable-sm"
             :value="sensors"
             data-key="ID"
             :scrollable="true"

@@ -208,7 +208,7 @@ interface DisplayPowerCode {
         },
         selectionMode: {
             type: String,
-            default: 'none'
+            default: null
         },
         selectedItems: {
             type: Array,

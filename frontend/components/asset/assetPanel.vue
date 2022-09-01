@@ -69,9 +69,10 @@
                 v-else-if="tabIndex === 8"
                 :asset-item.sync="item"
             />
-            <div v-else-if="tabIndex === 9">
-                <h1>{{ assetTabList[tabIndex].header }}</h1>
-            </div>
+            <asset-panel-work
+                v-else-if="tabIndex === 9"
+                :asset-item.sync="item"
+            />
             <asset-panel-operator-with-alert
                 v-else-if="tabIndex === 10"
                 :asset-item.sync="item"
@@ -118,8 +119,10 @@ type TabItem = {
                     }
                 });
 
-                if (this.assetTabList[this.tabIndex].is_interface !== is_used) {
-                    this.tabIndex = 0;
+                if (this.assetTabList[this.tabIndex].is_interface) {
+                    if (!is_used) {
+                        this.tabIndex = 0;
+                    }
                 }
             }
         }
@@ -250,7 +253,7 @@ export default class AssetPanel extends Vue {
         {
             header: '제어항목',
             disabled: true,
-            unvisible: false,
+            unvisible: true,
             is_interface: true,
             is_virtual: false,
             show_save_button: false,
@@ -258,8 +261,8 @@ export default class AssetPanel extends Vue {
         },
         {
             header: '통신로그',
-            disabled: false,
-            unvisible: false,
+            disabled: true,
+            unvisible: true,
             is_interface: true,
             is_virtual: false,
             show_save_button: true,

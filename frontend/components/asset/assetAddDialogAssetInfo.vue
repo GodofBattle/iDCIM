@@ -287,6 +287,7 @@
             :show-close-icon="true"
             append-to="body"
             :style="{ width: '16vw', height: '42vh' }"
+            :base-z-index="1110"
         >
             <i-moveable-tree
                 :value="overlayTreeToRender"
@@ -303,6 +304,7 @@
             :show-close-icon="true"
             append-to="body"
             :style="{ width: '16vw', height: '42vh' }"
+            :base-z-index="1150"
         >
             <i-moveable-tree
                 :value="overlayManagerTreeToRender"
