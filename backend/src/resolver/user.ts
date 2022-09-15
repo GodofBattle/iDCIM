@@ -31,6 +31,21 @@ export class UserResolver {
         }
     }
 
+    @Query(() => [ac_user])
+    async Users(
+        @Ctx() ctx: any
+    ) {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return await getRepository(ac_user).find({ select: [ 'ID', 'NAME', 'PERM_CD', 'USER_ID', 'USER_GROUP_ID' ] });
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
     @Mutation(() => String)
     async UserName(
         @Arg('userId') user_id: string,

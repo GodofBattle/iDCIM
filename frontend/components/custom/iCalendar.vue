@@ -450,6 +450,10 @@ type LocaleSettings = {
             default: null
         },
         dateFormat: String,
+        defaultMinute: {
+            type: Number,
+            default: null
+        },
         disabledDates: {
             type: Array,
             default: null
@@ -2044,8 +2048,15 @@ export default class ICalendar extends Vue {
             this.selectionEnd = this.$refs.input.$el.selectionEnd;
 
             const value = this.parseValue(val);
-            if (this.isValidSelection(value)) {
+            if (typeof value !== 'string' && this.isValidSelection(value)) {
                 this.updateModel(value);
+
+                // by shkoh 20220906: 키보드 input이 발생한 후에 커서를 원래대로 돌려놓는다
+                setTimeout(() => {
+                    (
+                        this.$refs.input.$el as HTMLInputElement
+                    ).setSelectionRange(this.selectionStart, this.selectionEnd);
+                }, 0);
             }
         } catch (err) {
             this.updateModel(val);
@@ -2331,12 +2342,34 @@ export default class ICalendar extends Vue {
             date = new Date();
             this.populateTime(date, parts[0], parts[1]);
         } else {
-            const dateFormat = this.$props.datePattern;
+            const dateFormat = this.datePattern;
             if (this.$props.showTime) {
-                date = this.parseDate(parts[0], dateFormat);
+                // by shkoh 20220902: date format의 형식에서 띄어쓰기가 존재할 경우에는 dateFormat도 함께 확인하여 일치시킴
+                const dateFormatParts = dateFormat.split(' ');
+                if (dateFormatParts.length > 0) {
+                    const pp = parts.reduce(
+                        (previous: string, current: string, idx: number) => {
+                            if (idx < dateFormatParts.length) {
+                                return `${previous} ${current}`;
+                            } else {
+                                return previous;
+                            }
+                        }
+                    );
 
-                if (date) {
-                    this.populateTime(date, parts[1], parts[2]);
+                    date = this.parseDate(pp, dateFormat);
+                    if (date) {
+                        this.populateTime(
+                            date,
+                            parts[dateFormatParts.length],
+                            parts[dateFormatParts.length + 1]
+                        );
+                    }
+                } else {
+                    date = this.parseDate(parts[0], dateFormat);
+                    if (date) {
+                        this.populateTime(date, parts[1], parts[2]);
+                    }
                 }
             } else {
                 date = this.parseDate(text, dateFormat);
@@ -2395,7 +2428,12 @@ export default class ICalendar extends Vue {
                     : match === 'o'
                     ? 3
                     : 2;
-            const minSize = match === 'y' ? size : 1;
+            const minSize =
+                match === 'y' ||
+                (match === 'm' && isDoubled) ||
+                (match === 'd' && isDoubled)
+                    ? size
+                    : 1;
             const digits = new RegExp('^\\d{' + minSize + ',' + size + '}');
             const num = value.substring(iValue).match(digits);
             if (!num) {
@@ -2551,7 +2589,7 @@ export default class ICalendar extends Vue {
         if (
             date &&
             (date.getFullYear() !== year ||
-                date.getMonth() + 1 === month ||
+                date.getMonth() + 1 !== month ||
                 date.getDate() !== day)
         ) {
             throw 'Invalid date';
@@ -2947,6 +2985,7 @@ export default class ICalendar extends Vue {
 
     updateModelTime() {
         this.timePickerChange = true;
+
         let value: Date | Array<Date | null> = this.isComparable()
             ? this.$props.value
             : new Date();
@@ -3126,14 +3165,12 @@ export default class ICalendar extends Vue {
             keydown: (event: KeyboardEvent) => {
                 $vm.isKeydown = true;
 
-                if (event.key === 'ArrowDown' && $vm.$refs.overlay) {
-                    $vm.trapFocus(event);
-                } else if (event.key === 'Escape') {
+                if (event.key === 'Escape') {
                     if ($vm.overlayVisible) {
                         $vm.overlayVisible = false;
                         event.preventDefault();
                     }
-                } else if (event.key === 'Tab') {
+                } else if (event.key === 'Tab' && $vm.$refs.overlay) {
                     DomHandler.getFocusableElements($vm.$refs.overlay).forEach(
                         (el: HTMLElement) => (el.tabIndex = -1)
                     );

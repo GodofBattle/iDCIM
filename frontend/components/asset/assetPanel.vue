@@ -72,6 +72,8 @@
             <asset-panel-work
                 v-else-if="tabIndex === 9"
                 :asset-item.sync="item"
+                :is-add="false"
+                :is-editor="false"
             />
             <asset-panel-operator-with-alert
                 v-else-if="tabIndex === 10"
@@ -325,7 +327,7 @@ export default class AssetPanel extends Vue {
         this.$confirmDialog.require({
             group: 'deleteConfirmDialog',
             message: `[${this.$props.item.NAME}] 자산을 삭제하시겠습니까?\n관련된 모든 항목들이 삭제됩니다.\n삭제된 자산은 복구가 불가능하니 신중하게 삭제하시기 바랍니다(일부 미구현)`,
-            header: `인터페이스 ${this.$props.item.NAME} 삭제`,
+            header: `자산 ${this.$props.item.NAME} 삭제`,
             position: 'top',
             icon: 'pi pi-exclamation-triangle',
             acceptClass: 'p-button-danger',

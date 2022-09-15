@@ -163,6 +163,21 @@ export class ManagerResolver {
         }
     }
 
+    @Query(() => [ac_asset_operator], { nullable: true })
+    async Operators(
+        @Ctx() ctx: any
+    ): Promise<Array<ac_asset_operator>> | undefined {
+        if (!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return await getRepository(ac_asset_operator).find({ join: { alias: 'o', leftJoinAndSelect: { COMPANY: 'o.COMPANY' } }, order: { NAME: 'ASC' } });
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
     @Query(() => ac_asset_operator, { nullable: true })
     async Operator(
         @Arg('ID', () => ID) id: number,
