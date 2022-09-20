@@ -14,6 +14,7 @@ import { pd_product } from "../entity/database/pd_product";
 import { ac_asset } from "../entity/database/ac_asset";
 import { cn_interface } from "../entity/database/cn_interface";
 import { pd_manufacturer } from "../entity/database/pd_manufacturer";
+import { ac_user_group } from "../entity/database/ac_user_group";
 
 @Resolver()
 export class TreeResolver {
@@ -672,5 +673,69 @@ export class TreeResolver {
         });
 
         return trees;
+    }
+
+    @Query(() => [AssetTree])
+    async AccountTreeToSet(
+        @Ctx() ctx: any
+    ): Promise<Array<AssetTree>> {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            const root_manager = {
+                key: `manager`,
+                label: `관리자 계정`,
+                order: 1,
+                parent_key: null,
+                type: 'ROOT_MANAGER',
+                manipulable: false,
+                selectable: false
+            };
+
+            const root_op_group = {
+                key: 'group',
+                label: '운영그룹',
+                order: 2,
+                parent_key: null,
+                type: 'ROOT_GROUP',
+                manipulable: false,
+                selectable: false
+            }
+
+            let trees: Array<any> = [ root_manager, root_op_group ];
+
+            const managers = await getRepository(ac_user).find({ where: { PERM_CD: 'PERM02' }, order: { USER_ID: 'ASC' } });
+            managers.forEach((m: ac_user, idx: number) => {
+                trees.push({
+                    key: `manager_${m.ID}`,
+                    label: m.NAME,
+                    order: idx + 1,
+                    parent_key: 'manager',
+                    type: 'MANAGER',
+                    manipulable: false,
+                    selectable: true
+                });
+            });
+
+            const user_groups = await getRepository(ac_user_group).find({ order: { NAME: 'ASC' } });
+            user_groups.forEach((g: ac_user_group, idx: number) => {
+                trees.push({
+                    key: `group_${g.ID}`,
+                    lable: g.NAME,
+                    order: idx + 1,
+                    parent_key: 'group',
+                    type: 'GROUP',
+                    manipulable: false,
+                    selectable: true
+                });
+            });
+
+            const account_trees: Array<AssetTree> = arrayToTree(trees, { id: 'key', p_id: 'parent_key' }) as Array<AssetTree>;
+            return account_trees;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
     }
 }

@@ -260,6 +260,14 @@ export default {
                         meta: {
                             title: '트리'
                         }
+                    },
+                    {
+                        path: '/account',
+                        name: 'account',
+                        component: 'pages/icomer/account.vue',
+                        meta: {
+                            title: '계정'
+                        }
                     }
                 ]
             },
