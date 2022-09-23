@@ -9,6 +9,7 @@ import { ac_user } from '../entity/database/ac_user';
 import { Account } from '../entity/web/account';
 import { PERM_CD } from '../enum/PERM';
 import { Token } from '../entity/web/token';
+import { ac_user_group } from '../entity/database/ac_user_group';
 
 const PERM = PERM_CD;
 
@@ -41,6 +42,54 @@ export class UserResolver {
 
         try {
             return await getRepository(ac_user).find({ select: [ 'ID', 'NAME', 'PERM_CD', 'USER_ID', 'USER_GROUP_ID' ] });
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => Boolean)
+    async hasUserId(
+        @Arg('USER_ID', () => String, { nullable: true }) user_id: string,
+        @Ctx() ctx: any
+    ): Promise<Boolean> {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            const has_user = await getRepository(ac_user).count({ USER_ID: user_id });
+            return has_user === 1;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async AddManager(
+        @Arg('USER_ID', () => String) user_id: string,
+        @Arg('NAME', () => String) name: string,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKNE') publish: Publisher<void>
+    ): Promise<Boolean> {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            const user = await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } });
+
+            const insert_data = {
+                PERM_CD: 'PERM02',
+                USER_ID: user_id,
+                NAME: name,
+                PASSWD: name,
+                UPDATE_USER_ID: user.ID,
+                UPDATE_USER_DT: new Date()
+            }
+            const insert_result = await getRepository(ac_user).insert(insert_data);
+            return insert_result.identifiers.length === 1;
         } catch (err) {
             throw new SchemaError(err.message);
         }
@@ -91,6 +140,36 @@ export class UserResolver {
             }
         } catch (err) {
             throw new AuthenticationError('로그인 실패');
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async AddOperatorGroup(
+        @Arg('NAME', () => String) name: string,
+        @Arg('REMARK', () => String, { nullable: true }) remark: string,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            const user = await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } });
+
+            const insert_data = {
+                NAME: name,
+                UPDATE_USER_ID: user.ID,
+                UPDATE_USER_DT: new Date(),
+                REMARK: remark
+            };
+
+            const inserst_result = await getRepository(ac_user_group).insert(insert_data);
+            return inserst_result.identifiers.length === 1;
+        } catch (err) {
+            throw new SchemaError(err.message);
         }
     }
 

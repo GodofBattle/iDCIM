@@ -686,6 +686,7 @@ export class TreeResolver {
         try {
             const root_manager = {
                 key: `manager`,
+                name: 'manager_0',
                 label: `관리자 계정`,
                 order: 1,
                 parent_key: null,
@@ -696,6 +697,7 @@ export class TreeResolver {
 
             const root_op_group = {
                 key: 'group',
+                name: 'group_0',
                 label: '운영그룹',
                 order: 2,
                 parent_key: null,
@@ -710,6 +712,7 @@ export class TreeResolver {
             managers.forEach((m: ac_user, idx: number) => {
                 trees.push({
                     key: `manager_${m.ID}`,
+                    name: m.USER_ID,
                     label: m.NAME,
                     order: idx + 1,
                     parent_key: 'manager',
@@ -723,7 +726,8 @@ export class TreeResolver {
             user_groups.forEach((g: ac_user_group, idx: number) => {
                 trees.push({
                     key: `group_${g.ID}`,
-                    lable: g.NAME,
+                    name: g.ID,
+                    label: g.NAME,
                     order: idx + 1,
                     parent_key: 'group',
                     type: 'GROUP',

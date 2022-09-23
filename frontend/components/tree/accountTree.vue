@@ -35,7 +35,7 @@
                         style="font-size: 1.2rem"
                     ></i>
                     <div class="p-p-1">
-                        {{ slotProps.node.label }}
+                        {{ slotProps.node.name }} | {{ slotProps.node.label }}
                     </div>
                 </div>
             </template>
@@ -68,6 +68,7 @@
             </template>
         </Tree>
         <account-tree-add-manager-panel :visible.sync="isVisibleAddManager" />
+        <account-tree-add-op-group-panel :visible.sync="isVisibleAddOpGroup" />
     </div>
 </template>
 
@@ -95,6 +96,7 @@ interface AssetTree {
             query: gql`
                 fragment treeAccountFields on AssetTree {
                     key
+                    name
                     label
                     order
                     parent_key
@@ -129,6 +131,7 @@ export default class AccountTree extends Vue {
     };
 
     isVisibleAddManager: boolean = false;
+    isVisibleAddOpGroup: boolean = false;
 
     mounted() {
         eventBus.$on('refreshAccountTree', () => {
@@ -187,7 +190,7 @@ export default class AccountTree extends Vue {
     }
 
     addGroup(node: AssetTree) {
-        console.info(node);
+        this.isVisibleAddOpGroup = true;
     }
 }
 </script>
