@@ -83,8 +83,8 @@ export default class Login extends Vue {
             title: `iDCIM - 로그인`,
             link: [
                 { rel: 'icon', type: 'image/x-icon', href: 'favicon.ico' },
-                { rel: 'stylesheet', href: `themes/${theme}/theme.css` },
-            ],
+                { rel: 'stylesheet', href: `themes/${theme}/theme.css` }
+            ]
         };
     }
 
@@ -96,7 +96,7 @@ export default class Login extends Vue {
                 severity: 'error',
                 summary: '세션만료',
                 detail: '세션이 만료되어 로그인 페이지로 이동합니다',
-                life: 3000,
+                life: 3000
             });
         }
     }
@@ -122,7 +122,7 @@ export default class Login extends Vue {
                     }
                 }
             `,
-                errorPolicy: 'ignore',
+                errorPolicy: 'ignore'
             })
             .then(
                 async ({
@@ -130,9 +130,9 @@ export default class Login extends Vue {
                         Login: {
                             ROLE,
                             TOKEN: { ACCESS_TOKEN, REFRESH_TOKEN },
-                            USER: { USER_ID, USER_GROUP_ID, NAME },
-                        },
-                    },
+                            USER: { USER_ID, USER_GROUP_ID, NAME }
+                        }
+                    }
                 }) => {
                     await this.$store.dispatch('sessionStorage/SIGNIN', {
                         role: ROLE,
@@ -140,7 +140,7 @@ export default class Login extends Vue {
                         refresh_token: REFRESH_TOKEN,
                         user_id: USER_ID,
                         user_group_id: USER_GROUP_ID,
-                        user_name: NAME,
+                        user_name: NAME
                     });
 
                     return { ROLE };
@@ -172,7 +172,7 @@ export default class Login extends Vue {
                     severity: 'info',
                     summary: '로그인 실패',
                     detail: 'ID 혹은 패스워드를 확인하세요',
-                    life: 1500,
+                    life: 1500
                 });
             });
     }

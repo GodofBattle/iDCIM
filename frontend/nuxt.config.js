@@ -55,6 +55,7 @@ export default {
     components: {
         dirs: [
             '@/components',
+            '@/components/account',
             '@/components/asset',
             '@/components/common',
             '@/components/company',

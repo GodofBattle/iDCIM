@@ -5,6 +5,7 @@
             :expanded-keys.sync="expandedKeys"
             :selection-keys.sync="selectionKeys"
             selection-mode="single"
+            @node-select="onSelect"
         >
             <template #ROOT_MANAGER="slotProps">
                 <div class="p-d-flex">
@@ -81,6 +82,7 @@ import { eventBus } from '~/plugins/vueEventBus';
 interface AssetTree {
     [index: string]: number | string | boolean | null | Array<AssetTree>;
     key: string;
+    name: string;
     label: string;
     order: number;
     parent_key: string;
@@ -155,6 +157,7 @@ export default class AccountTree extends Vue {
             ) {
                 node.children?.push({
                     key: 'addManager',
+                    name: '[관리자] 추가',
                     label: '[관리자] 추가',
                     order: node.children ? node.children.length : 1,
                     parent_key: 'manager',
@@ -171,6 +174,7 @@ export default class AccountTree extends Vue {
             ) {
                 node.children?.push({
                     key: 'addGroup',
+                    name: '[운영그룹] 추가',
                     label: '[운영그룹] 추가',
                     order: node.children ? node.children.length : 1,
                     parent_key: 'group',
@@ -191,6 +195,14 @@ export default class AccountTree extends Vue {
 
     addGroup(node: AssetTree) {
         this.isVisibleAddOpGroup = true;
+    }
+
+    onSelect(node: AssetTree) {
+        const [type, id] = node.key.split('_');
+        this.$emit('select', {
+            type: node.type,
+            id: Number(id)
+        });
     }
 }
 </script>

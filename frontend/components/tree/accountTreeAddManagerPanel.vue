@@ -16,6 +16,7 @@
                 <label for="add-user-id">관리자 ID</label>
                 <InputText
                     id="add-user-id"
+                    ref="managerUserId"
                     v-model="manager.USER_ID"
                     type="text"
                     autocomplete="off"
@@ -80,32 +81,34 @@ import { eventBus } from '@/plugins/vueEventBus';
                 }
             `,
             skip() {
-                return (
-                    this.manager.USER_ID.length < 2 ||
-                    this.manager.USER_ID.length > 32 ||
-                    this.timer_user_id !== null
-                );
+                return !this.isCheckingdUserId;
             },
+            prefetch: false,
             variables() {
                 return {
                     USER_ID: this.manager.USER_ID
                 };
             },
-            update: ({ hasUserId }) => hasUserId
-        }
-    },
-    watch: {
-        hasUserId(_has: boolean) {
-            if (_has) {
-                this.invalidMessage.USER_ID =
-                    '이미 사용 중인 ID입니다. 다른 ID를 지정해 주세요';
-            } else {
-                this.invalidMessage.USER_ID = undefined;
+            update: ({ hasUserId }) => hasUserId,
+            debounce: 300,
+            result({ loading, data }) {
+                if (!loading) {
+                    const { hasUserId } = data;
+                    if (hasUserId === true) {
+                        this.invalidMessage.USER_ID = '이미 사용 중인 ID입니다';
+                    } else {
+                        this.invalidMessage.USER_ID = undefined;
+                    }
+                }
             }
         }
     }
 })
 export default class AccoutTreeAddManagerPanel extends Vue {
+    $refs: {
+        managerUserId: any;
+    };
+
     manager = {
         USER_ID: '',
         NAME: ''
@@ -116,8 +119,7 @@ export default class AccoutTreeAddManagerPanel extends Vue {
         NAME: undefined as string | undefined
     };
 
-    hasUserId: boolean = false;
-    timer_user_id: any = null;
+    isCheckingdUserId: boolean = false;
 
     get showDialog(): boolean {
         return this.$props.visible;
@@ -134,27 +136,47 @@ export default class AccoutTreeAddManagerPanel extends Vue {
         this.invalidMessage.USER_ID = undefined;
         this.invalidMessage.NAME = undefined;
 
-        this.hasUserId = false;
-        this.timer_user_id = null;
+        this.isCheckingdUserId = false;
     }
 
     onInputUserId(input: string) {
-        if (this.timer_user_id) {
+        // by shkoh 20220928: 입력 validation check
+        this.isCheckingdUserId = false;
+
+        // by shkoh 20220928: Step0. 길이가 0인 경우에는 체크하지 않는다
+        if (input.length === 0) {
+            this.invalidMessage.USER_ID = undefined;
+            this.isCheckingdUserId = false;
             return;
         }
 
-        this.timer_user_id = setTimeout(() => {
-            if (input.length < 2) {
-                this.invalidMessage.USER_ID = '관리자 ID는 2자 이상입니다';
-            } else if (input.length > 32) {
-                this.invalidMessage.USER_ID =
-                    '관리자 ID는 최대 32자까지 작성 가능합니다';
-            } else {
-                this.invalidMessage.USER_ID = undefined;
-            }
+        let is_valid = true;
 
-            this.timer_user_id = null;
-        }, 200);
+        // by shkoh 20220928: Step1. 길이 check
+        if (input.length < 2) {
+            this.invalidMessage.USER_ID = '관리자 ID는 2자 이상입니다';
+            is_valid = false;
+        }
+
+        if (input.length > 32) {
+            this.invalidMessage.USER_ID =
+                '관리자 ID는 최대 32자까지 작성 가능합니다';
+            is_valid = false;
+        }
+
+        // by shkoh 20220928: Step2. 영문 및 지정 특수기호 check
+        const accept_reg = /^[A-z0-9_\-@.]+$/g;
+        if (!accept_reg.test(input)) {
+            this.invalidMessage.USER_ID =
+                '관리자 ID는 영문, 숫자, 밑줄(_), 대시(-), 엣(@), 마침표(.)만 허용됩니다';
+            is_valid = false;
+        }
+
+        // by shkoh 20220928: Step3. 위의 상황이 모두 정상 판정되면 db에서 id 중복 check
+        if (is_valid) {
+            this.invalidMessage.USER_ID = undefined;
+            this.isCheckingdUserId = true;
+        }
     }
 
     onInputName(input: string) {

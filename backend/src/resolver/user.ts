@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { privateKey, accessTokenExpiresIn } from '../utils/privatekey';
 
 import { AuthenticationError, SchemaError } from 'apollo-server-express';
-import { Resolver, Arg, Query, Mutation, Ctx, Subscription, Publisher, PubSub } from 'type-graphql';
+import { Resolver, Arg, Query, Mutation, Ctx, Subscription, Publisher, PubSub, Int } from 'type-graphql';
 import { getRepository, Like } from 'typeorm';
 
 import { ac_user } from '../entity/database/ac_user';
@@ -47,6 +47,22 @@ export class UserResolver {
         }
     }
 
+    @Query(() => ac_user)
+    async UserInfo(
+        @Arg('ID', () => Int, { nullable: false }) id: number,
+        @Ctx() ctx: any
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return await getRepository(ac_user).findOne({ ID: id });
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
     @Query(() => Boolean)
     async hasUserId(
         @Arg('USER_ID', () => String, { nullable: true }) user_id: string,
@@ -69,7 +85,7 @@ export class UserResolver {
         @Arg('USER_ID', () => String) user_id: string,
         @Arg('NAME', () => String) name: string,
         @Ctx() ctx: any,
-        @PubSub('REFRESHTOKNE') publish: Publisher<void>
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
     ): Promise<Boolean> {
         if(!ctx.isAuth) {
             throw new AuthenticationError('인증되지 않은 접근입니다');
@@ -84,12 +100,53 @@ export class UserResolver {
                 PERM_CD: 'PERM02',
                 USER_ID: user_id,
                 NAME: name,
-                PASSWD: name,
+                PASSWD: user_id,
                 UPDATE_USER_ID: user.ID,
                 UPDATE_USER_DT: new Date()
             }
             const insert_result = await getRepository(ac_user).insert(insert_data);
             return insert_result.identifiers.length === 1;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async DeleteUser(
+        @Arg('USER_ID', () => String) user_id: string,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ): Promise<Boolean> {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+            
+            const delete_result = await getRepository(ac_user).delete({ USER_ID: user_id });
+            return delete_result.affected > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async ResetPassword(
+        @Arg('USER_ID', () => String) user_id: string,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ): Promise<Boolean> {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+            const user = await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } });
+
+            const update_result = await getRepository(ac_user).update({ USER_ID: user_id }, { PASSWD: user_id, UPDATE_USER_ID: user.ID, UPDATE_USER_DT: new Date() });
+            return update_result.affected > 0 ? true : false;
         } catch (err) {
             throw new SchemaError(err.message);
         }
