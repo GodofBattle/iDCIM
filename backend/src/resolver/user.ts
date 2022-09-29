@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { privateKey, accessTokenExpiresIn } from '../utils/privatekey';
 
-import { AuthenticationError, SchemaError } from 'apollo-server-express';
+import { AuthenticationError, SchemaError, UserInputError } from 'apollo-server-express';
 import { Resolver, Arg, Query, Mutation, Ctx, Subscription, Publisher, PubSub, Int } from 'type-graphql';
 import { getRepository, Like } from 'typeorm';
 
@@ -200,6 +200,22 @@ export class UserResolver {
         }
     }
 
+    @Query(() => ac_user_group)
+    async OperatorGroup(
+        @Arg('ID', () => Int) id: number,
+        @Ctx() ctx: any
+    ): Promise<ac_user_group> {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return await getRepository(ac_user_group).findOne({ ID: id });
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
     @Mutation(() => Boolean)
     async AddOperatorGroup(
         @Arg('NAME', () => String) name: string,
@@ -225,6 +241,72 @@ export class UserResolver {
 
             const inserst_result = await getRepository(ac_user_group).insert(insert_data);
             return inserst_result.identifiers.length === 1;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async UpdateOperatorGroup(
+        @Arg('ID', () => Int) id: number,
+        @Arg('NAME', () => String, { nullable: true }) name: string,
+        @Arg('REMARK', () => String, { nullable: true }) remark: string,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ): Promise<Boolean> {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            if(!id || (!name && !remark)) {
+                throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다')
+            }
+
+            const user = await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } });
+
+            const update_data = {
+                UPDATE_USER_ID: user.ID,
+                UPDATE_USER_DT: new Date()
+            };
+
+            if(name !== undefined) {
+                update_data['NAME'] = name;
+            }
+
+            if(remark !== undefined) {
+                update_data['REMARK'] = remark;
+            }
+            
+            const update_result = await getRepository(ac_user_group).update({ ID: id }, update_data);
+            return update_result.affected > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async DeleteOperatorGroup(
+        @Arg('ID', () => Int) id: number,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ): Promise<Boolean> {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            const has_operator = await getRepository(ac_user).count({ USER_GROUP_ID: id });
+            if(has_operator > 0) {
+                return false;
+            }
+
+            const delete_result = await getRepository(ac_user_group).delete({ ID: id });
+            return delete_result.affected > 0 ? true : false;
         } catch (err) {
             throw new SchemaError(err.message);
         }
