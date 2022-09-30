@@ -54,8 +54,8 @@ import Component from '@/plugins/nuxt-class-component';
 })
 export default class Icomer extends Vue {
     menuItems = [
-        { label: 'HOME' },
-        { separator: true },
+        // { label: 'HOME' },
+        // { separator: true },
         { label: '코드', to: '/icomer/code' },
         { label: '센서코드', to: '/icomer/sensor' },
         { separator: true },
@@ -77,10 +77,10 @@ export default class Icomer extends Vue {
         { separator: true },
         { label: '사이트', to: '/icomer/site' },
         { label: '트리', to: '/icomer/tree' },
-        { label: '운영페이지' },
-        { label: '계정', to: '/icomer/account' },
-        { separator: true },
-        { label: '에디터' }
+        // { label: '운영페이지' },
+        { label: '계정', to: '/icomer/account' }
+        // { separator: true },
+        // { label: '에디터' }
     ];
 
     head() {

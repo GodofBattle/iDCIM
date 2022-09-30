@@ -299,6 +299,14 @@ export default {
                         meta: {
                             title: '자산'
                         }
+                    },
+                    {
+                        path: '/opgroup',
+                        name: 'opgroup',
+                        component: 'pages/admin/opGroup.vue',
+                        meta: {
+                            title: '운영그룹'
+                        }
                     }
                 ]
             }

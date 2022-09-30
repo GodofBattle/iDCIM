@@ -6,18 +6,18 @@
         :visible.sync="showDialog"
         @hide="onHide"
     >
-        <template #header> 관리자 추가 </template>
+        <template #header> {{ title }} </template>
 
         <div class="p-fluid p-input-filled">
             <div class="p-field">
-                <small> 관리자를 추가합니다 </small>
+                <small> {{ who }}를 추가합니다 </small>
             </div>
             <div class="p-field">
-                <label for="add-user-id">관리자 ID</label>
+                <label for="add-user-id">{{ who }} ID</label>
                 <InputText
                     id="add-user-id"
                     ref="managerUserId"
-                    v-model="manager.USER_ID"
+                    v-model="user.USER_ID"
                     type="text"
                     autocomplete="off"
                     aria-describedby="add-user-id-help"
@@ -31,10 +31,10 @@
                 </small>
             </div>
             <div class="p-field">
-                <label for="add-user-name">관리자명</label>
+                <label for="add-user-name">{{ who }}명</label>
                 <InputText
                     id="add-user-name"
-                    v-model="manager.NAME"
+                    v-model="user.NAME"
                     type="text"
                     autocomplete="off"
                     aria-describedby="add-user-name-help"
@@ -67,11 +67,18 @@
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
-import { eventBus } from '@/plugins/vueEventBus';
 
-@Component<AccoutTreeAddManagerPanel>({
+@Component<AddAccountUserPanel>({
     props: {
-        visible: Boolean
+        visible: Boolean,
+        code: {
+            type: String,
+            default: 'PERM02'
+        },
+        userGroupId: {
+            type: Number,
+            default: null
+        }
     },
     apollo: {
         hasUserId: {
@@ -86,7 +93,7 @@ import { eventBus } from '@/plugins/vueEventBus';
             prefetch: false,
             variables() {
                 return {
-                    USER_ID: this.manager.USER_ID
+                    USER_ID: this.user.USER_ID
                 };
             },
             update: ({ hasUserId }) => hasUserId,
@@ -95,7 +102,8 @@ import { eventBus } from '@/plugins/vueEventBus';
                 if (!loading) {
                     const { hasUserId } = data;
                     if (hasUserId === true) {
-                        this.invalidMessage.USER_ID = '이미 사용 중인 ID입니다';
+                        this.invalidMessage.USER_ID =
+                            '이미 사용 중인 계정입니다';
                     } else {
                         this.invalidMessage.USER_ID = undefined;
                     }
@@ -104,12 +112,12 @@ import { eventBus } from '@/plugins/vueEventBus';
         }
     }
 })
-export default class AccoutTreeAddManagerPanel extends Vue {
+export default class AddAccountUserPanel extends Vue {
     $refs: {
         managerUserId: any;
     };
 
-    manager = {
+    user = {
         USER_ID: '',
         NAME: ''
     };
@@ -129,9 +137,29 @@ export default class AccoutTreeAddManagerPanel extends Vue {
         this.$emit('update:visible', _is_show);
     }
 
+    get isManager(): boolean {
+        return this.$props.code === 'PERM02';
+    }
+
+    get isOperator(): boolean {
+        return this.$props.code === 'PERM03';
+    }
+
+    get who(): string {
+        return this.isManager
+            ? '관리자'
+            : this.isOperator
+            ? '운영자'
+            : '사용자';
+    }
+
+    get title(): string {
+        return `${this.who} 계정 추가`;
+    }
+
     onHide() {
-        this.manager.USER_ID = '';
-        this.manager.NAME = '';
+        this.user.USER_ID = '';
+        this.user.NAME = '';
 
         this.invalidMessage.USER_ID = undefined;
         this.invalidMessage.NAME = undefined;
@@ -154,21 +182,19 @@ export default class AccoutTreeAddManagerPanel extends Vue {
 
         // by shkoh 20220928: Step1. 길이 check
         if (input.length < 2) {
-            this.invalidMessage.USER_ID = '관리자 ID는 2자 이상입니다';
+            this.invalidMessage.USER_ID = `${this.who} 계정은 2자 이상입니다`;
             is_valid = false;
         }
 
         if (input.length > 32) {
-            this.invalidMessage.USER_ID =
-                '관리자 ID는 최대 32자까지 작성 가능합니다';
+            this.invalidMessage.USER_ID = `${this.who} 계정은 최대 32자까지 작성 가능합니다`;
             is_valid = false;
         }
 
         // by shkoh 20220928: Step2. 영문 및 지정 특수기호 check
         const accept_reg = /^[A-z0-9_\-@.]+$/g;
         if (!accept_reg.test(input)) {
-            this.invalidMessage.USER_ID =
-                '관리자 ID는 영문, 숫자, 밑줄(_), 대시(-), 엣(@), 마침표(.)만 허용됩니다';
+            this.invalidMessage.USER_ID = `${this.who} 계정은 영문, 숫자, 밑줄(_), 대시(-), 엣(@), 마침표(.)만 허용됩니다`;
             is_valid = false;
         }
 
@@ -181,10 +207,9 @@ export default class AccoutTreeAddManagerPanel extends Vue {
 
     onInputName(input: string) {
         if (input.length < 1) {
-            this.invalidMessage.NAME = '관리자명은 1자 이상입니다';
+            this.invalidMessage.NAME = `${this.who}명은 1자 이상입니다`;
         } else if (input.length > 64) {
-            this.invalidMessage.NAME =
-                '관리자명은 최대 64자까지 작성 가능합니다';
+            this.invalidMessage.NAME = `${this.who}명은 최대 64자까지 작성 가능합니다`;
         } else {
             this.invalidMessage.NAME = undefined;
         }
@@ -197,9 +222,11 @@ export default class AccoutTreeAddManagerPanel extends Vue {
             .mutate({
                 mutation: gql`
                     mutation {
-                        AddManager(
-                            USER_ID: "${this.manager.USER_ID}"
-                            NAME: "${this.manager.NAME}"
+                        AddUser(
+                            USER_ID: "${this.user.USER_ID}"
+                            NAME: "${this.user.NAME}"
+                            PERM_CD: "${this.$props.code}"
+                            USER_GROUP_ID: ${this.$props.userGroupId}
                         )
                     }
                 `
@@ -207,21 +234,26 @@ export default class AccoutTreeAddManagerPanel extends Vue {
             .then(() => {
                 this.$toast.add({
                     severity: 'success',
-                    summary: '관리자 계정 등록',
-                    detail: `[ID: ${this.manager.USER_ID}] 관리자 ${this.manager.NAME}가 등록되었습니다`,
+                    summary: `${this.who} 계정 등록`,
+                    detail: `[계정: ${this.user.USER_ID}] ${this.who} ${this.user.NAME}가 등록되었습니다`,
                     life: 1500
                 });
 
                 this.showDialog = false;
 
-                eventBus.$emit('refreshAccountTree');
+                this.$emit('add', {
+                    USER_ID: this.user.USER_ID,
+                    NAME: this.user.NAME,
+                    PERM_CD: this.$props.code,
+                    USER_GROUP_ID: this.$props.userGroupId
+                });
             })
             .catch((error) => {
                 console.error(error);
 
                 this.$toast.add({
                     severity: 'error',
-                    summary: '관리자 계정 등록 실패',
+                    summary: `${this.who} 계정 등록 실패`,
                     detail: error.message,
                     life: 2000
                 });
@@ -234,7 +266,7 @@ export default class AccoutTreeAddManagerPanel extends Vue {
     get isDisabled(): boolean {
         let is_disabled = false;
 
-        if (this.manager.USER_ID.length < 2 || this.manager.NAME.length < 1) {
+        if (this.user.USER_ID.length < 2 || this.user.NAME.length < 1) {
             is_disabled = true;
         }
 

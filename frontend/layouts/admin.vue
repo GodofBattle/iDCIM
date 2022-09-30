@@ -57,11 +57,11 @@ import Component from '@/plugins/nuxt-class-component';
 })
 export default class Admin extends Vue {
     menuItems = [
-        { label: 'HOME' },
-        { separator: true },
+        // { label: 'HOME' },
+        // { separator: true },
         { label: '관리책임자', to: '/admin/manager' },
         { label: '자산', to: '/admin/asset' },
-        { label: '운영그룹' }
+        { label: '운영그룹', to: '/admin/opGroup' }
     ];
 
     head() {

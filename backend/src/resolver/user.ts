@@ -81,9 +81,11 @@ export class UserResolver {
     }
 
     @Mutation(() => Boolean)
-    async AddManager(
+    async AddUser(
         @Arg('USER_ID', () => String) user_id: string,
         @Arg('NAME', () => String) name: string,
+        @Arg('PERM_CD', () => String) perm_cd: string,
+        @Arg('USER_GROUP_ID', () => Int, { nullable: true }) user_group_id: number | undefined,
         @Ctx() ctx: any,
         @PubSub('REFRESHTOKEN') publish: Publisher<void>
     ): Promise<Boolean> {
@@ -94,13 +96,26 @@ export class UserResolver {
         try {
             await publish();
 
+            if(user_id.length < 2) {
+                throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            }
+
+            if(name.length < 1) {
+                throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            }
+
+            if(perm_cd !== 'PERM02' && perm_cd !== 'PERM03') {
+                throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
+            }
+
             const user = await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } });
 
             const insert_data = {
-                PERM_CD: 'PERM02',
+                PERM_CD: perm_cd,
                 USER_ID: user_id,
                 NAME: name,
                 PASSWD: user_id,
+                USER_GROUP_ID: user_group_id,
                 UPDATE_USER_ID: user.ID,
                 UPDATE_USER_DT: new Date()
             }
@@ -262,7 +277,7 @@ export class UserResolver {
             await publish();
 
             if(!id || (!name && !remark)) {
-                throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다')
+                throw new UserInputError('전달한 인자의 데이터가 잘못됐거나 형식이 틀렸습니다');
             }
 
             const user = await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } });

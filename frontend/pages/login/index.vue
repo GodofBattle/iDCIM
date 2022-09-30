@@ -154,7 +154,7 @@ export default class Login extends Vue {
                         break;
                     }
                     case 'PERM02': {
-                        link = '/admin/home';
+                        link = '/admin/manager';
                         break;
                     }
                 }

@@ -68,7 +68,11 @@
                 />
             </template>
         </Tree>
-        <account-tree-add-manager-panel :visible.sync="isVisibleAddManager" />
+        <add-account-user-panel
+            :visible.sync="isVisibleAddManager"
+            code="PERM02"
+            @add="treeRefresh"
+        />
         <account-tree-add-op-group-panel :visible.sync="isVisibleAddOpGroup" />
     </div>
 </template>

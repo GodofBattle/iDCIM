@@ -742,4 +742,50 @@ export class TreeResolver {
             throw new SchemaError(err.message);
         }
     }
+
+    @Query(() => [AssetTree])
+    async OperatorGroupTree(
+        @Ctx() ctx: any
+    ): Promise<Array<AssetTree>> {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            let trees: Array<any> = [];
+
+            const user_groups = await getRepository(ac_user_group).find({ order: { NAME: 'ASC' } });
+            user_groups.forEach((g: ac_user_group, idx: number) => {
+                trees.push({
+                    key: `group_${g.ID}`,
+                    name: g.ID,
+                    label: g.NAME,
+                    order: idx + 1,
+                    parent_key: null,
+                    type: 'GROUP',
+                    manipulable: false,
+                    selectable: true
+                });
+            });
+
+            const op_users = await getRepository(ac_user).find({ where: { PERM_CD: 'PERM03' }, order: { USER_ID: 'ASC' } });
+            op_users.forEach((o: ac_user, idx: number) => {
+                trees.push({
+                    key: `op_${o.ID}`,
+                    name: o.USER_ID,
+                    label: o.NAME,
+                    order: idx + 1,
+                    parent_key: `group_${o.USER_GROUP_ID}`,
+                    type: 'OPERATOR',
+                    manipulable: false,
+                    selectable: true
+                });
+            });
+
+            const account_trees: Array<AssetTree> = arrayToTree(trees, { id: 'key', p_id: 'parent_key' }) as Array<AssetTree>;
+            return account_trees;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
 }
