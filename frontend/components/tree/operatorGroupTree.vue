@@ -6,6 +6,7 @@
             :filter="true"
             :expanded-keys.sync="expandedKeys"
             :selection-keys.sync="selectionKey"
+            @node-select="onSelect"
         >
             <template #GROUP="slotProps">
                 <div class="p-d-flex">
@@ -51,6 +52,7 @@
 import Vue from 'vue';
 import gql from 'graphql-tag';
 import Component from '@/plugins/nuxt-class-component';
+import { eventBus } from '~/plugins/vueEventBus';
 
 interface Tree {
     [index: string]: number | string | boolean | null | Array<Tree>;
@@ -106,6 +108,16 @@ export default class OperatorGroupTree extends Vue {
 
     groupId: null | number = null;
 
+    mounted() {
+        eventBus.$on('refreshOperatorGroupTree', () => {
+            this.refreshTree();
+        });
+    }
+
+    beforeDestroy() {
+        eventBus.$off('refreshOperatorGroupTree');
+    }
+
     refreshTree() {
         this.$apollo.queries.trees.refresh();
     }
@@ -140,6 +152,18 @@ export default class OperatorGroupTree extends Vue {
         this.groupId = Number(id);
 
         this.isVisibleAddUser = true;
+    }
+
+    onSelect(node: Tree) {
+        const [type, id] = node.key.split('_');
+
+        const p_node = this.trees.find((t: Tree) => t.key === node.parent_key);
+
+        this.$emit('select', {
+            type: node.type,
+            id: Number(id),
+            groupName: p_node?.label
+        });
     }
 }
 </script>

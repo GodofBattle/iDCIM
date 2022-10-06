@@ -10,6 +10,7 @@ import { Account } from '../entity/web/account';
 import { PERM_CD } from '../enum/PERM';
 import { Token } from '../entity/web/token';
 import { ac_user_group } from '../entity/database/ac_user_group';
+import { ac_user_group_asset } from '../entity/database/ac_user_group_asset';
 
 const PERM = PERM_CD;
 
@@ -322,6 +323,22 @@ export class UserResolver {
 
             const delete_result = await getRepository(ac_user_group).delete({ ID: id });
             return delete_result.affected > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Query(() => [ac_user_group_asset])
+    async UserGroupAssets(
+        @Arg('USER_GROUP_ID', () => Int) user_group_id: number,
+        @Ctx() ctx: any
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            return await getRepository(ac_user_group_asset).find({ USER_GROUP_ID: user_group_id });
         } catch (err) {
             throw new SchemaError(err.message);
         }

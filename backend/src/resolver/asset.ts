@@ -10,7 +10,6 @@ import { cn_modbus_cmd } from "../entity/database/cn_modbus_cmd";
 import { cn_sensor } from "../entity/database/cn_sensor";
 import { cn_sensor_threshold_ai } from "../entity/database/cn_sensor_threshold_ai";
 import { cn_sensor_threshold_di } from "../entity/database/cn_sensor_threshold_di";
-import { cn_tcpetc_cmd } from "../entity/database/cn_tcpetc_cmd";
 import { pd_asset_code } from "../entity/database/pd_asset_code";
 import { pd_ctrl_cmd } from "../entity/database/pd_ctrl_cmd";
 import { pd_modbus_cmd } from "../entity/database/pd_modbus_cmd";
@@ -18,7 +17,6 @@ import { pd_prod_intf } from "../entity/database/pd_prod_intf";
 import { pd_sensor } from "../entity/database/pd_sensor";
 import { pd_sensor_threshold_ai } from "../entity/database/pd_sensor_threshold_ai";
 import { pd_sensor_threshold_di } from "../entity/database/pd_sensor_threshold_di";
-import { pd_tcpetc_cmd } from "../entity/database/pd_tcpetc_cmd";
 import { ACTION_CD } from "../enum/ACTION";
 
 @Resolver()
@@ -37,9 +35,6 @@ export class AssetResolver {
         try {
             await publish();
 
-            console.table(asset);
-            console.table(intf);
-
             const user = await getRepository(ac_user).findOne({ USER_ID: ctx.user.sub });
 
             let is_result: number = 0;
@@ -54,7 +49,6 @@ export class AssetResolver {
             is_result = asset_result.identifiers.length;
 
             const asset_id = asset_result.identifiers[0].ID;
-            console.info(asset_id);
 
             if(asset.IS_USE_INTF === 1) {
                 const prod_intf = await getRepository(pd_prod_intf).findOne({ ID: intf.PROD_INTF_ID });
@@ -533,24 +527,6 @@ export class AssetResolver {
                 const c_m_c_result = await getRepository(cn_modbus_cmd).insert(inserted_modbus_cmd);
                 result += c_m_c_result.identifiers.length;
             }
-
-            // by shkoh 20220530: Step5. cn_tcpetc_cmd 추가
-            const inserted_tcpetc_cmd: Array<any> = (await getRepository(pd_tcpetc_cmd).find({ where: { PD_INTF_ID: prod_intf.PD_INTF_ID } })).map((cmd: pd_tcpetc_cmd) => {
-                return {
-                    INTF_ID: asset_id,
-                    CMD_ID: cmd.CMD_ID,
-                    OPT1: cmd.OPT1,
-                    OPT2: cmd.OPT2,
-                    OPT3: cmd.OPT3,
-                    UPDATE_USER_ID: user.ID,
-                    UPDATE_USER_DT: new Date()
-                };
-            });
-
-            if(inserted_tcpetc_cmd.length > 0) {
-                const c_t_c_result = await getRepository(cn_tcpetc_cmd).insert(inserted_tcpetc_cmd);
-                result += c_t_c_result.identifiers.length;
-            }
             
             return result;
         } catch (err) {
@@ -562,10 +538,6 @@ export class AssetResolver {
         // by shkoh 20220531: 자산 인터페이스 삭제 과정(등록과는 역순으로 수행)
         try {
             let result: number = 0;
-            
-            // by shkoh 20220531: Step1. cn_tcpetc_cmd 삭제
-            const d_c_t_c_result = await getRepository(cn_tcpetc_cmd).delete({ INTF_ID: asset_id });
-            result += d_c_t_c_result.affected;
 
             // by shkoh 20220531: Step2. cn_modbus_cmd 삭제
             const d_c_m_c_result = await getRepository(cn_modbus_cmd).delete({ INTF_ID: asset_id });
