@@ -3,14 +3,14 @@ import { privateKey, accessTokenExpiresIn } from '../utils/privatekey';
 
 import { AuthenticationError, SchemaError, UserInputError } from 'apollo-server-express';
 import { Resolver, Arg, Query, Mutation, Ctx, Subscription, Publisher, PubSub, Int } from 'type-graphql';
-import { getRepository, Like } from 'typeorm';
+import { getRepository, In, Like } from 'typeorm';
 
 import { ac_user } from '../entity/database/ac_user';
 import { Account } from '../entity/web/account';
 import { PERM_CD } from '../enum/PERM';
 import { Token } from '../entity/web/token';
 import { ac_user_group } from '../entity/database/ac_user_group';
-import { ac_user_group_asset } from '../entity/database/ac_user_group_asset';
+import { ac_user_group_asset, ac_user_group_asset_input } from '../entity/database/ac_user_group_asset';
 
 const PERM = PERM_CD;
 
@@ -255,8 +255,8 @@ export class UserResolver {
                 REMARK: remark
             };
 
-            const inserst_result = await getRepository(ac_user_group).insert(insert_data);
-            return inserst_result.identifiers.length === 1;
+            const insert_result = await getRepository(ac_user_group).insert(insert_data);
+            return insert_result.identifiers.length === 1;
         } catch (err) {
             throw new SchemaError(err.message);
         }
@@ -339,6 +339,72 @@ export class UserResolver {
 
         try {
             return await getRepository(ac_user_group_asset).find({ USER_GROUP_ID: user_group_id });
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async AddUserGroupAssets(
+        @Arg('ADD', () => [ac_user_group_asset_input], { nullable: true }) assets: Array<ac_user_group_asset_input>,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않은 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            const user = await getRepository(ac_user).findOne({ USER_ID: ctx.user.sub });
+            const insert_data: Array<any> = [];
+            assets.forEach((asset: ac_user_group_asset_input) => {
+                insert_data.push({
+                    ASSET_ID: asset.ASSET_ID,
+                    USER_GROUP_ID: asset.USER_GROUP_ID,
+                    UPDATE_USER_ID: user.ID,
+                    UPDATE_USER_DT: new Date()
+                });
+            });
+
+            let is_result = 0;
+            if(insert_data.length > 0) {
+                const insert_result = await getRepository(ac_user_group_asset).insert(insert_data);
+                is_result += insert_result.identifiers.length;
+            }
+
+            return is_result > 0 ? true : false;
+        } catch (err) {
+            throw new SchemaError(err.message);
+        }
+    }
+
+    @Mutation(() => Boolean)
+    async DeleteUserGroupAssets(
+        @Arg('REMOVE', () => [ac_user_group_asset_input], { nullable: true }) assets: Array<ac_user_group_asset_input>,
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
+    ) {
+        if(!ctx.isAuth) {
+            throw new AuthenticationError('인증되지 않는 접근입니다');
+        }
+
+        try {
+            await publish();
+
+            const delete_asset_id: Array<number> = [];
+            assets.forEach((asset: ac_user_group_asset_input) => {
+                delete_asset_id.push(asset.ASSET_ID);
+            });
+
+            if(delete_asset_id.length > 0) {
+                const { USER_GROUP_ID } = assets[0];
+                const delete_result = await getRepository(ac_user_group_asset).delete({ USER_GROUP_ID, ASSET_ID: In(delete_asset_id) });
+                return delete_result.affected > 0 ? true : false;
+            } else {
+                return false;
+            }
         } catch (err) {
             throw new SchemaError(err.message);
         }

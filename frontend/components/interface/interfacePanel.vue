@@ -68,7 +68,7 @@
                     </interface-panel-sensor>
                 </div>
             </TabPanel>
-            <TabPanel :disabled="isVirtualInterface">
+            <!-- <TabPanel :disabled="isVirtualInterface">
                 <template #header>
                     <i class="pi pi-sliders-v p-mr-2"></i>
                     <span>제어항목</span>
@@ -76,7 +76,7 @@
                 <ScrollPanel class="i-interface-scrollpanel">
                     <div v-if="interfaceTabIndex === 3">미구현 - 3</div>
                 </ScrollPanel>
-            </TabPanel>
+            </TabPanel> -->
         </TabView>
     </div>
 </template>

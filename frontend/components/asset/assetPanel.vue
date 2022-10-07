@@ -157,11 +157,9 @@ type TabItem = {
                     let is_command_list = false;
 
                     if (ProductInterface) {
-                        is_command_list = [
-                            'INTF02',
-                            'INTF06',
-                            'INTF07'
-                        ].includes(ProductInterface.INTERFACE.INTF_CD);
+                        is_command_list = ['INTF06', 'INTF07'].includes(
+                            ProductInterface.INTERFACE.INTF_CD
+                        );
                         this.hasCommandList = is_command_list;
                     } else {
                         this.hasCommandList = false;
@@ -256,7 +254,7 @@ export default class AssetPanel extends Vue {
             header: '제어항목',
             disabled: true,
             unvisible: true,
-            is_interface: true,
+            is_interface: false,
             is_virtual: false,
             show_save_button: false,
             type: 'ASSETCONTENT06'
@@ -265,7 +263,7 @@ export default class AssetPanel extends Vue {
             header: '통신로그',
             disabled: true,
             unvisible: true,
-            is_interface: true,
+            is_interface: false,
             is_virtual: false,
             show_save_button: true,
             type: 'ASSETCONTENT07'

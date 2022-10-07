@@ -59,19 +59,20 @@ export default class Icomer extends Vue {
         { label: '코드', to: '/icomer/code' },
         { label: '센서코드', to: '/icomer/sensor' },
         { separator: true },
-        {
-            label: '제품관리',
-            items: [
-                {
-                    label: '제품',
-                    to: '/icomer/product'
-                },
-                {
-                    label: '가상제품',
-                    to: '/icomer/virtualProduct'
-                }
-            ]
-        },
+        // {
+        //     label: '제품관리',
+        //     items: [
+        //         {
+        //             label: '제품',
+        //             to: '/icomer/product'
+        //         },
+        //         {
+        //             label: '가상제품',
+        //             to: '/icomer/virtualProduct'
+        //         }
+        //     ]
+        // },
+        { label: '제품', to: '/icomer/product' },
         { label: '인터페이스', to: '/icomer/interface' },
         { label: '임계치', to: '/icomer/threshold' },
         { separator: true },

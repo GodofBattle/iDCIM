@@ -11,7 +11,7 @@
             <div class="p-col">
                 <operator-group-asset-panel
                     v-if="viewType === 'GROUP'"
-                    :group-id="id"
+                    :user-group-id="id"
                     @reset="reset"
                 />
                 <operator-account-panel

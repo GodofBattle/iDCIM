@@ -1,4 +1,4 @@
-import { Field, Int, ObjectType } from "type-graphql";
+import { Field, InputType, Int, ObjectType } from "type-graphql";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { nullableDate } from "../../scalar/nullableDate";
 
@@ -28,4 +28,13 @@ export class ac_user_group_asset {
     @Field(() => String, { nullable: true })
     @Column({ type: 'varchar', nullable: true, default: null, comment: '설명' })
     REMARK: string;
+}
+
+@InputType()
+export class ac_user_group_asset_input {
+    @Field(() => Int, { nullable: false })
+    USER_GROUP_ID: number;
+
+    @Field(() => Int, { nullable: false })
+    ASSET_ID: number;
 }

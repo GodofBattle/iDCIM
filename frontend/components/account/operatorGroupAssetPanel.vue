@@ -9,6 +9,7 @@
                     icon="pi pi-check"
                     label="적용"
                     :disabled="isDisabledApplyButton"
+                    @click="onClickApplyButton"
                 />
             </div>
         </div>
@@ -29,7 +30,7 @@
                 :style="{ width: 'calc(100% - var(--tree-width))' }"
             >
                 <DataTable
-                    :value="assetList"
+                    :value="assetListToRender"
                     data-key="ID"
                     class="p-datatable-sm"
                     :scrollable="true"
@@ -177,6 +178,14 @@
                         header="제조사"
                         :show-filter-menu="false"
                     >
+                        <template #filter="{ filterModel, filterCallback }">
+                            <InputText
+                                v-model="filterModel.value"
+                                type="text"
+                                class="p-column-filter"
+                                @input="filterCallback()"
+                            />
+                        </template>
                     </Column>
                     <Column
                         :styles="{
@@ -188,6 +197,14 @@
                         header="제품명"
                         :show-filter-menu="false"
                     >
+                        <template #filter="{ filterModel, filterCallback }">
+                            <InputText
+                                v-model="filterModel.value"
+                                type="text"
+                                class="p-column-filter"
+                                @input="filterCallback()"
+                            />
+                        </template>
                     </Column>
                     <Column
                         :styles="{
@@ -196,15 +213,17 @@
                             'justify-content': 'start'
                         }"
                         header="자산담당자(정/부)"
+                        field="OPERATORS"
+                        filter-field="OPERATORS"
                         :show-filter-menu="false"
                     >
-                        <template #body="slotProps">
-                            {{
-                                managerLabel(
-                                    slotProps.data.OP_ID_M,
-                                    slotProps.data.OP_ID_M
-                                )
-                            }}
+                        <template #filter="{ filterModel, filterCallback }">
+                            <InputText
+                                v-model="filterModel.value"
+                                type="text"
+                                class="p-column-filter"
+                                @input="filterCallback"
+                            />
                         </template>
                     </Column>
                 </DataTable>
@@ -282,14 +301,13 @@ interface ASSET {
 
 interface UserGroupAssetIds {
     [index: string]: number;
-    ID: number;
     USER_GROUP_ID: number;
     ASSET_ID: number;
 }
 
 @Component<OperatorGroupAssetPanel>({
     props: {
-        groupId: Number
+        userGroupId: Number
     },
     apollo: {
         operatorGroup: {
@@ -301,11 +319,11 @@ interface UserGroupAssetIds {
                 }
             `,
             skip() {
-                return this.$props.groupId < 0;
+                return this.$props.userGroupId < 0;
             },
             variables() {
                 return {
-                    ID: this.$props.groupId
+                    ID: this.$props.userGroupId
                 };
             },
             update: ({ OperatorGroup }) => OperatorGroup
@@ -348,7 +366,15 @@ interface UserGroupAssetIds {
                 };
             },
             update: ({ Assets }) => Assets,
-            prefetch: false
+            prefetch: false,
+            result({ loading, data }) {
+                if (!loading) {
+                    const { Assets } = data;
+                    if (Assets) {
+                        this.refreshData();
+                    }
+                }
+            }
         },
         pdAssetCode: {
             query: gql`
@@ -388,18 +414,19 @@ interface UserGroupAssetIds {
             query: gql`
                 query ($USER_GROUP_ID: Int!) {
                     UserGroupAssets(USER_GROUP_ID: $USER_GROUP_ID) {
-                        ID
                         USER_GROUP_ID
                         ASSET_ID
                     }
                 }
             `,
             skip() {
-                return this.$props.groupId < 0 || this.assetList.length === 0;
+                return (
+                    this.$props.userGroupId < 0 || this.assetList.length === 0
+                );
             },
             variables() {
                 return {
-                    USER_GROUP_ID: this.$props.groupId
+                    USER_GROUP_ID: this.$props.userGroupId
                 };
             },
             update: ({ UserGroupAssets }) => UserGroupAssets,
@@ -433,6 +460,8 @@ export default class OperatorGroupAssetPanel extends Vue {
     isCheckSelectAll: boolean | null = null;
 
     userGroupAssets: Array<UserGroupAssetIds> = [];
+    insertUserGroupAssets: Array<UserGroupAssetIds> = [];
+    deleteUserGroupAssets: Array<UserGroupAssetIds> = [];
 
     filters = {
         NAME: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -440,6 +469,18 @@ export default class OperatorGroupAssetPanel extends Vue {
         'PRODUCT.ASSET_CD': {
             value: null,
             matchMode: 'ASSET_TYPE'
+        },
+        'PRODUCT.MANUFACTURER.NAME': {
+            value: null,
+            matchMode: FilterMatchMode.CONTAINS
+        },
+        'PRODUCT.MODEL_NAME': {
+            value: null,
+            matchMode: FilterMatchMode.CONTAINS
+        },
+        OPERATORS: {
+            value: null,
+            matchMode: FilterMatchMode.CONTAINS
         }
     };
 
@@ -513,6 +554,16 @@ export default class OperatorGroupAssetPanel extends Vue {
         }
     }
 
+    refreshData() {
+        this.assetSelection = null;
+        this.filteredAssets = [];
+
+        this.insertUserGroupAssets.splice(0, this.insertUserGroupAssets.length);
+        this.deleteUserGroupAssets.splice(0, this.deleteUserGroupAssets.length);
+
+        this.$apollo.queries.userGroupAssets.refresh();
+    }
+
     onSelectAssetTreeNode({
         type,
         treeKeys
@@ -573,7 +624,15 @@ export default class OperatorGroupAssetPanel extends Vue {
         const m = this.operators.find((o: Operator) => Number(o.ID) === id_m);
         const s = this.operators.find((o: Operator) => Number(o.ID) === id_s);
 
-        return `${m ? m.NAME : ''} / ${s ? s.NAME : ''}`;
+        if (m === undefined && s === undefined) {
+            return ``;
+        } else if (m && s === undefined) {
+            return `${m.NAME}`;
+        } else if (m === undefined && s) {
+            return `${s.NAME}`;
+        } else {
+            return `${m ? m.NAME : ''} / ${s ? s.NAME : ''}`;
+        }
     }
 
     onSelectAsset({ originalEvent: { originalEvent }, data, type }: any) {
@@ -657,14 +716,143 @@ export default class OperatorGroupAssetPanel extends Vue {
         }
     }
 
+    onClickApplyButton() {
+        this.searchingUserGroupAssetSelection();
+
+        this.$nuxt.$loading.start();
+
+        this.$apollo
+            .mutate({
+                mutation: gql`
+                    mutation (
+                        $ADD: [ac_user_group_asset_input!]
+                        $REMOVE: [ac_user_group_asset_input!]
+                    ) {
+                        AddUserGroupAssets(ADD: $ADD)
+                        DeleteUserGroupAssets(REMOVE: $REMOVE)
+                    }
+                `,
+                variables: {
+                    ADD: this.insertUserGroupAssets,
+                    REMOVE: this.deleteUserGroupAssets
+                }
+            })
+            .then(() => {
+                this.refreshData();
+
+                this.$toast.add({
+                    severity: 'info',
+                    summary: '운영자산 설정 완료',
+                    detail: `${this.operatorGroup.NAME} 운영자산 변경`,
+                    life: 2000
+                });
+            })
+            .catch((error) => {
+                this.insertUserGroupAssets.splice(
+                    0,
+                    this.insertUserGroupAssets.length
+                );
+                this.deleteUserGroupAssets.splice(
+                    0,
+                    this.deleteUserGroupAssets.length
+                );
+
+                console.error(error);
+
+                this.$toast.add({
+                    severity: 'error',
+                    summary: `${this.operatorGroup.NAME} 운영자산 설정 실패`,
+                    detail: error.message,
+                    life: 2000
+                });
+            })
+            .finally(() => {
+                this.$nuxt.$loading.finish();
+            });
+    }
+
+    searchingUserGroupAssetSelection() {
+        // by shkoh 20221007: 선택한 UserGroup이 추가할 Asset 데이터 검색 후 등록
+        if (this.assetSelection) {
+            for (const s of this.assetSelection) {
+                const is = this.currentUserGroupAssets.find(
+                    (u: UserGroupAssetIds) => u.ASSET_ID === Number(s.ID)
+                );
+
+                if (!is) {
+                    this.insertUserGroupAssets.push({
+                        USER_GROUP_ID: this.$props.userGroupId,
+                        ASSET_ID: Number(s.ID)
+                    });
+                }
+            }
+        }
+
+        // by shkoh 20221007: 선택한 UserGroup이 삭제할 Asset 데이터 검색 후 등록
+        for (const u of this.currentUserGroupAssets) {
+            const is = this.assetSelection?.find(
+                (s: ASSET) => Number(s.ID) === u.ASSET_ID
+            );
+
+            if (!is) {
+                this.deleteUserGroupAssets.push({
+                    USER_GROUP_ID: this.$props.userGroupId,
+                    ASSET_ID: Number(u.ASSET_ID)
+                });
+            }
+        }
+    }
+
     get title(): string {
         return `${this.operatorGroup.NAME}: 운영자산 설정`;
     }
 
+    get currentUserGroupAssets(): Array<UserGroupAssetIds> {
+        return this.userGroupAssets.filter((u: UserGroupAssetIds) =>
+            this.assetList.some((a: ASSET) => Number(a.ID) === u.ASSET_ID)
+        );
+    }
+
     get isDisabledApplyButton(): boolean {
-        const is_disabled = true;
+        let is_disabled = true;
+
+        if (
+            this.assetSelection === null &&
+            this.currentUserGroupAssets.length > 0
+        ) {
+            is_disabled = false;
+        } else if (Array.isArray(this.assetSelection)) {
+            if (
+                this.assetSelection.length !==
+                this.currentUserGroupAssets.length
+            ) {
+                is_disabled = false;
+            } else {
+                for (const select of this.assetSelection) {
+                    const is = this.currentUserGroupAssets.some(
+                        (a: UserGroupAssetIds) =>
+                            a.ASSET_ID === Number(select.ID)
+                    );
+
+                    if (!is) {
+                        is_disabled = false;
+                        break;
+                    }
+                }
+            }
+        }
 
         return is_disabled;
+    }
+
+    get assetListToRender() {
+        return this.assetList.map((a: ASSET) => {
+            const OPERATORS = this.managerLabel(a.OP_ID_M, a.OP_ID_S);
+            return {
+                OPERATORS,
+                ...a
+            };
+        });
     }
 }
 </script>

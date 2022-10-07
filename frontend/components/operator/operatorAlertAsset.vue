@@ -496,6 +496,9 @@ export default class OperatorAlertAsset extends Vue {
                 });
             })
             .catch((error) => {
+                this.insertAssets.splice(0, this.insertAssets.length);
+                this.deleteAssets.splice(0, this.deleteAssets.length);
+
                 console.error(error);
 
                 this.$toast.add({
