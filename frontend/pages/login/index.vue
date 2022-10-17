@@ -157,6 +157,10 @@ export default class Login extends Vue {
                         link = '/admin/manager';
                         break;
                     }
+                    case 'PERM03': {
+                        link = '/operator/home';
+                        break;
+                    }
                 }
 
                 if (link !== '') {

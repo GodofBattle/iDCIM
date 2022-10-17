@@ -14,6 +14,8 @@ const base_path: Middleware = async ({ $apolloHelpers, route, redirect, store }:
                 redirect({ path: '/icomer/code' });
             } else if (roles === 'PERM02') {
                 redirect({ path: '/admin/home' });
+            } else if (roles === 'PREM03') {
+                redirect({ path: '/operator/home' });
             }
         } catch (error) {
             console.error(error);

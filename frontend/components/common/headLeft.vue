@@ -4,7 +4,7 @@
         <div class="p-mt-1 p-mb-1">
             <Divider></Divider>
         </div>
-        <div class="p-mt-2 p-mb-2">
+        <div v-if="hasMenu" class="p-mt-2 p-mb-2">
             <i-tiered-menu :model="items" style="width: 100%"></i-tiered-menu>
         </div>
         <div class="p-mt-auto">
@@ -49,6 +49,10 @@ export default class HeadLeft extends Vue {
         ).slice(-2)}:${('0' + dt.getMinutes()).slice(-2)}:${(
             '0' + dt.getSeconds()
         ).slice(-2)}`;
+    }
+
+    get hasMenu(): boolean {
+        return this.$props.items ? this.$props.items.length > 0 : false;
     }
 }
 </script>

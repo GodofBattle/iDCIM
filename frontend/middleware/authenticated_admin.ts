@@ -5,7 +5,8 @@ const authenticated_admin: Middleware = async ({ $apolloHelpers, redirect, error
     const token = $apolloHelpers.getToken();
 
     if (token) {
-        const { iDCIM: { roles } }: any = decode(token);
+        const [access_token, refresh_token] = token.split(' ');
+        const { iDCIM: { roles } }: any = decode(access_token);
 
         if (roles !== 'PERM02') {
             error({ statusCode: 404, message: 'This page could not be found' });

@@ -82,7 +82,7 @@ export const actions = {
         { commit },
         { role, access_token, refresh_token, user_id, user_name, user_group_id }
     ) => {
-        $apolloHelper.onLogin(access_token);
+        $apolloHelper.onLogin(`${access_token} ${refresh_token}`);
 
         commit('AUTHENTICATION', true);
         commit('SETAUTH', {

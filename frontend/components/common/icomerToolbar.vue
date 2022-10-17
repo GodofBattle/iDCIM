@@ -10,12 +10,21 @@
                 <div class="i-title p-text-bold">{{ title }}</div>
             </template>
             <template #end>
+                <span v-if="isOperator" class="p-input-icon-left">
+                    <AutoComplete
+                        class="i-toolbar-search-input"
+                        append-to="body"
+                        placeholder="자산명으로 검색"
+                        icon="pi pi-search"
+                    />
+                    <i class="pi pi-search" />
+                </span>
                 <Button
                     :label="userName"
                     class="p-button-link"
                     icon="pi pi-user"
                     @click="toggleUserSetting"
-                ></Button>
+                />
             </template>
         </Toolbar>
         <OverlayPanel ref="userSettingPanel" style="width: 200px">
@@ -52,7 +61,11 @@ import Component from '@/plugins/nuxt-class-component';
 
 @Component<IcomerToolBar>({
     props: {
-        title: String
+        title: String,
+        isOperator: {
+            type: Boolean,
+            default: false
+        }
     }
 })
 export default class IcomerToolBar extends Vue {
@@ -93,9 +106,16 @@ export default class IcomerToolBar extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.i-title {
-    font-size: 1.6rem;
-    color: var(--text-color);
-    width: 20vw;
+#i-toolbar::v-deep {
+    .i-title {
+        font-size: 1.6rem;
+        color: var(--text-color);
+        width: 20vw;
+    }
+
+    .i-toolbar-search-input > .p-inputtext {
+        padding-left: 2rem;
+        width: 10vw;
+    }
 }
 </style>

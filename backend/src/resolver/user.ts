@@ -26,7 +26,7 @@ export class UserResolver {
         }
 
         try {
-            await publish();
+            // await publish(); 
             return (await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } }));
         } catch (err) {
             throw new SchemaError(err.message);
@@ -417,8 +417,11 @@ export class UserResolver {
             throw new AuthenticationError('인증되지 않았습니다');
         }
 
+        console.info(ctx);
+
         const access_token = jwt.sign({ iDCIM: ctx.user.iDCIM }, privateKey, { algorithm: 'HS256', subject: ctx.user.sub, expiresIn: accessTokenExpiresIn });
         const token: Token = new Token({ access_token: access_token });
+
         return token;
     }
 }

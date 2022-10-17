@@ -1,9 +1,11 @@
 import { AuthenticationError, SchemaError, UserInputError } from "apollo-server-express";
+import { Token } from "graphql";
 import { Arg, Args, Ctx, ID, Int, Mutation, Publisher, PubSub, Query, Resolver, Subscription } from "type-graphql";
 import { getRepository, In, Raw } from "typeorm";
 
 import { ac_asset, ac_asset_args, ac_asset_input } from "../entity/database/ac_asset";
 import { ac_user } from "../entity/database/ac_user";
+import { ac_user_group_asset } from "../entity/database/ac_user_group_asset";
 import { cn_ctrl_cmd } from "../entity/database/cn_ctrl_cmd";
 import { cn_interface, cn_interface_input } from "../entity/database/cn_interface";
 import { cn_modbus_cmd } from "../entity/database/cn_modbus_cmd";
@@ -90,15 +92,20 @@ export class AssetResolver {
     async Assets(
         @Arg('TYPE', () => String, { nullable: true }) type: string,
         @Arg('KEYS', () => [String], { nullable: true }) keys: Array<string>,
-        @Ctx() ctx: any
+        @Ctx() ctx: any,
+        @PubSub('REFRESHTOKEN') publish: Publisher<void>
     ) {
         if (!ctx.isAuth) {
             throw new AuthenticationError('인증되지 않은 접근입니다');
         }
 
+        if(ctx.isRefresh) {
+            await publish();
+        }
+
         try {
-            let result: any;
-            if (keys.length === 0) {
+            let result: Array<any>;
+            if (keys === undefined || keys.length === 0) {
                 result = await getRepository(ac_asset).find({ relations: ['INTERFACE', 'PRODUCT', 'PRODUCT.MANUFACTURER'] });
             } else {
                 switch (type) {
@@ -233,6 +240,15 @@ export class AssetResolver {
                         break;
                     }
                 }
+            }
+
+            // by shkoh 20221012: 권한 PERM03 Operator 권한의 경우에는 자산 Group이 허용하는 자산만 전달한다
+            const user = await getRepository(ac_user).findOne({ USER_ID: ctx.user.sub });
+            if(user.PERM_CD === 'PERM03') {
+                const user_group_asset = await getRepository(ac_user_group_asset).find({ USER_GROUP_ID: user.USER_GROUP_ID });
+                result = result.filter((a: ac_asset) => {
+                    return user_group_asset.some((u: ac_user_group_asset) => u.ASSET_ID === a.ID);
+                });
             }
 
             return result;

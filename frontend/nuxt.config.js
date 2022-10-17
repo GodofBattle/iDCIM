@@ -309,6 +309,17 @@ export default {
                         }
                     }
                 ]
+            },
+            {
+                name: 'operator',
+                path: '/operator',
+                children: [
+                    {
+                        path: '/:page',
+                        component: 'pages/opeator/:page.vue',
+                        name: 'page'
+                    }
+                ]
             }
         ]
     },
