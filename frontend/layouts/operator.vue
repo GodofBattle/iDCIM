@@ -4,7 +4,11 @@
             <head-left :items="menuItems" />
         </aside>
         <article class="i-content">
-            <icomer-toolbar class="p-mx-3 p-mt-3" :is-operator="true" />
+            <icomer-toolbar
+                class="p-mx-3 p-mt-3"
+                :is-operator="true"
+                :asset-list.sync="assets"
+            />
             <h2>{{ url }}</h2>
             <Nuxt />
         </article>
@@ -45,8 +49,6 @@ import Component from '@/plugins/nuxt-class-component';
                         RefreshToken: { ACCESS_TOKEN = '', REFRESH_TOKEN = '' }
                     }
                 }) {
-                    console.info(ACCESS_TOKEN);
-
                     // by shkoh 20210729: 토큰이 갱신될 경우에 apollo client와 store에 토큰을 갱신시킴
                     // by shkoh 20210729: 토큰의 갱신방법은 api server에서 갱신 토큰을 구독하는 방법으로 함
                     this.$apolloHelpers
@@ -80,8 +82,9 @@ import Component from '@/plugins/nuxt-class-component';
                     }
                 }
             `,
-            fetchPolicy: 'no-cache',
+            fetchPolicy: 'network-only',
             update: ({ Assets }) => Assets,
+            prefetch: true,
             pollInterval: 10000,
             result({ loading, data }) {
                 if (!loading) {
