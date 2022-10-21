@@ -26,7 +26,7 @@ export class UserResolver {
         }
 
         try {
-            // await publish(); 
+            await publish();
             return (await getRepository(ac_user).findOne({ where: { USER_ID: ctx.user.sub } }));
         } catch (err) {
             throw new SchemaError(err.message);

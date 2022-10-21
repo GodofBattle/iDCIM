@@ -68,6 +68,7 @@
             append-to="body"
             :style="{ width: '24vw', height: '40vh' }"
         >
+            <asset-tree />
         </i-overlay-panel>
     </div>
 </template>
