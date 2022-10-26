@@ -15,6 +15,7 @@ import { ac_asset } from "../entity/database/ac_asset";
 import { cn_interface } from "../entity/database/cn_interface";
 import { pd_manufacturer } from "../entity/database/pd_manufacturer";
 import { ac_user_group } from "../entity/database/ac_user_group";
+import { ac_user_group_asset } from "../entity/database/ac_user_group_asset";
 
 @Resolver()
 export class TreeResolver {
@@ -362,12 +363,12 @@ export class TreeResolver {
             switch (type) {
                 case 'HIER01': { trees = await this.getTreeItemsByHIER01(root_info); break; }
                 case 'HIER02': { trees = await this.getTreeItemsByHIER02(root_info); break; }
-                case 'HIER03': { trees = await this.getTreeItemsByHIER03(root_info); break; }
-                case 'HIER04': { trees = await this.getTreeItemsByHIER04(root_info); break; }
-                case 'HIER05': { trees = await this.getTreeItemsByHIER05(root_info); break; }
+                case 'HIER03': { trees = await this.getTreeItemsByHIER03(root_info, ctx.user.sub); break; }
+                case 'HIER04': { trees = await this.getTreeItemsByHIER04(root_info, ctx.user.sub); break; }
+                case 'HIER05': { trees = await this.getTreeItemsByHIER05(root_info, ctx.user.sub); break; }
                 case 'HIER06': { trees = await this.getTreeItemsByHIER06(root_info); break; }
-                case 'HIER07': { trees = await this.getTreeItemsByHIER07(root_info); break; }
-                case 'HIER08': { trees = await this.getTreeItemsByHIER08(root_info); break; }
+                case 'HIER07': { trees = await this.getTreeItemsByHIER07(root_info, ctx.user.sub); break; }
+                case 'HIER08': { trees = await this.getTreeItemsByHIER08(root_info, ctx.user.sub); break; }
             }
 
             const asset_tres: Array<AssetTree> = arrayToTree(trees, { id: 'key', p_id: 'parent_key' }) as Array<AssetTree>;
@@ -413,16 +414,26 @@ export class TreeResolver {
         return trees;
     }
 
-    private async getTreeItemsByHIER03(root: object) {
+    private async getTreeItemsByHIER03(root: object, user_id: string) {
         // by shkoh 20220415: HIER03 Asset Tree에 ROOT를 추가하면서 시작
         const trees = new Array(root);
 
         // by shkoh 20220426: 현행 자산의 CODE 리스트를 추출함
-        const asset_code_list_query = getRepository(pd_product)
+        let asset_code_list_query = getRepository(pd_product)
             .createQueryBuilder('product')
             .select('product.ASSET_CD')
             .innerJoin(ac_asset, 'asset', 'product.ID = asset.PRODUCT_ID')
             .groupBy('product.ASSET_CD');
+
+        const user = await getRepository(ac_user).findOne({ USER_ID: user_id });
+        if(user.PERM_CD === 'PERM03') {
+            asset_code_list_query = getRepository(pd_product)
+                .createQueryBuilder('product')
+                .select('product.ASSET_CD')
+                .innerJoin(ac_asset, 'asset', 'product.ID = asset.PRODUCT_ID')
+                .innerJoin(ac_user_group_asset, 'auga', `auga.USER_GROUP_ID = ${user.USER_GROUP_ID} AND auga.ASSET_ID = asset.ID`)
+                .groupBy('product.ASSET_CD');
+        }
 
         // by shkoh 20220426: pd_asset_code에서 현재 등록된 자산이 가지고 있는 CODE 리스트만 추출
         const asset_code_tree = await getRepository(pd_asset_code)
@@ -490,14 +501,32 @@ export class TreeResolver {
         this.addAssetHierParentTreeNode(tree_data, hier_list, asset_hier.P_ID);
     }
 
-    private async getTreeItemsByHIER04(root: object) {
+    private async getTreeItemsByHIER04(root: object, user_id: string) {
         // by shkoh 20220415: HIER04 Asset Tree
         const trees = new Array(root);
 
-        const interfaces = await getRepository(cn_interface)
+        let interfaces = await getRepository(cn_interface)
             .createQueryBuilder('intf')
             .groupBy('intf.IP_ADDR')
             .getMany();
+
+        let has_asset = true;
+
+        const user = await getRepository(ac_user).findOne({ USER_ID: user_id });
+        if(user.PERM_CD === 'PERM03') {
+            interfaces = await getRepository(cn_interface)
+                .createQueryBuilder('intf')
+                .innerJoin(ac_user_group_asset, 'auga', `auga.USER_GROUP_ID = ${user.USER_GROUP_ID} AND auga.ASSET_ID = intf.ID`)
+                .groupBy('intf.IP_ADDR')
+                .getMany();
+
+            has_asset = await getRepository(ac_asset)
+                .createQueryBuilder('asset')
+                .innerJoin(ac_user_group_asset, 'auga', `auga.USER_GROUP_ID = ${user.USER_GROUP_ID} AND auga.ASSET_ID = asset.ID`)
+                .innerJoin(cn_interface, 'intf', `intf.ID = asset.ID`)
+                .where(`intf.IP_ADDR IS NULL OR intf.IP_ADDR = ''`)
+                .getCount() > 0;
+        }        
 
         let intf_index = 1;
         interfaces.forEach((intf: cn_interface, index: number) => {
@@ -513,27 +542,48 @@ export class TreeResolver {
             }
         });
 
-        trees.push({
-            key: `ip_null`,
-            label: '일반자산',
-            order: intf_index,
-            parent_key: 'root_0',
-            type: 'IP_ADDR',
-            manipulable: false
-        });
+        if(has_asset) {
+            trees.push({
+                key: `ip_null`,
+                label: '일반자산',
+                order: intf_index,
+                parent_key: 'root_0',
+                type: 'IP_ADDR',
+                manipulable: false
+            });
+        }
 
         return trees;
     }
 
-    private async getTreeItemsByHIER05(root: object) {
+    private async getTreeItemsByHIER05(root: object, user_id: string) {
         // by shkoh 20220415: HIER05 Asset Tree
         const trees = new Array(root);
 
-        const interfaces = await getRepository(cn_interface)
+        let interfaces = await getRepository(cn_interface)
             .createQueryBuilder('intf')
             .groupBy('intf.IP_ADDR')
             .addGroupBy('intf.PORT')
             .getMany();
+
+        let has_asset = true;
+        
+        const user = await getRepository(ac_user).findOne({ USER_ID: user_id });
+        if(user.PERM_CD === 'PERM03') {
+            interfaces = await getRepository(cn_interface)
+                .createQueryBuilder('intf')
+                .innerJoin(ac_user_group_asset, 'auga', `auga.USER_GROUP_ID = ${user.USER_GROUP_ID} AND auga.ASSET_ID = intf.ID`)
+                .groupBy('intf.IP_ADDR')
+                .addGroupBy('intf.PORT')
+                .getMany();
+            
+            has_asset = await getRepository(ac_asset)
+                .createQueryBuilder('asset')
+                .innerJoin(ac_user_group_asset, 'auga', `auga.USER_GROUP_ID = ${user.USER_GROUP_ID} AND auga.ASSET_ID = asset.ID`)
+                .innerJoin(cn_interface, 'intf', `intf.ID = asset.ID`)
+                .where(`intf.IP_ADDR IS NULL OR intf.IP_ADDR = '' OR intf.PORT IS NULL OR intf.PORT = 0`)
+                .getCount() > 0;
+        }
 
         let intf_index = 1;
         interfaces.forEach((intf: cn_interface, index: number) => {
@@ -549,14 +599,16 @@ export class TreeResolver {
             }
         });
 
-        trees.push({
-            key: `ipp_null`,
-            label: '일반자산',
-            order: intf_index,
-            parent_key: 'root_0',
-            type: 'HIER05',
-            manipulable: false
-        });
+        if(has_asset) {
+            trees.push({
+                key: `ipp_null`,
+                label: '일반자산',
+                order: intf_index,
+                parent_key: 'root_0',
+                type: 'HIER05',
+                manipulable: false
+            });
+        }
 
         return trees;
     }
@@ -619,16 +671,26 @@ export class TreeResolver {
         return trees;
     }
 
-    private async getTreeItemsByHIER07(root: object) {
+    private async getTreeItemsByHIER07(root: object, user_id: string) {
         // by shkoh 20220502: HIER07 Manufacturer Tree
         const trees = new Array(root);
 
         // by shkoh 20220502: 현행 자산의 제품 리스트를 추출함
-        const asset_list_query = getRepository(pd_product)
+        let asset_list_query = getRepository(pd_product)
             .createQueryBuilder('product')
             .select('product.MANUFACTURER_ID')
             .innerJoin(ac_asset, 'asset', 'product.ID = asset.PRODUCT_ID')
             .groupBy('product.MANUFACTURER_ID');
+        
+        const user = await getRepository(ac_user).findOne({ USER_ID: user_id });
+        if(user.PERM_CD === 'PERM03') {
+            asset_list_query = getRepository(pd_product)
+                .createQueryBuilder('product')
+                .select('product.MANUFACTURER_ID')
+                .innerJoin(ac_asset, 'asset', 'product.ID = asset.PRODUCT_ID')
+                .innerJoin(ac_user_group_asset, 'auga', `auga.USER_GROUP_ID = ${user.USER_GROUP_ID} AND auga.ASSET_ID = asset.ID`)
+                .groupBy('product.MANUFACTURER_ID');
+        }
 
         // by shkoh 20220502: pd_manufactuere에서 현재 등록된 자산이 가지고 있는 제조사 리스트만 추출
         const manufacturers = await getRepository(pd_manufacturer)
@@ -650,17 +712,28 @@ export class TreeResolver {
         return trees;
     }
 
-    private async getTreeItemsByHIER08(root: object) {
+    private async getTreeItemsByHIER08(root: object, user_id: string) {
         // by shkoh 20220415: HIER08 Product Model Tree
         const trees = new Array(root);
 
         // by shkoh 20220502: 현행 자산의 제품 리스트를 추출함
-        const asset_product_list_query = await getRepository(pd_product)
+        let asset_product_list_query = await getRepository(pd_product)
             .createQueryBuilder('product')
             .innerJoin(ac_asset, 'asset', 'product.ID = asset.PRODUCT_ID')
             .orderBy('product.NAME', 'ASC')
             .groupBy('product.ID')
             .getMany();
+        
+        const user = await getRepository(ac_user).findOne({ USER_ID: user_id });
+        if(user.PERM_CD === 'PERM03') {
+            asset_product_list_query = await getRepository(pd_product)
+                .createQueryBuilder('product')
+                .innerJoin(ac_asset, 'asset', 'product.ID = asset.PRODUCT_ID')
+                .innerJoin(ac_user_group_asset, 'auga', `auga.USER_GROUP_ID = ${user.USER_GROUP_ID} AND auga.ASSET_ID = asset.ID`)
+                .orderBy('product.NAME', 'ASC')
+                .groupBy('product.ID')
+                .getMany();
+        }
 
         asset_product_list_query.forEach((p: pd_product) => {
             trees.push({

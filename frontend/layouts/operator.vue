@@ -3,26 +3,18 @@
         <aside v-show="isSidebar" class="i-head-left">
             <head-left :items="menuItems" />
         </aside>
-        <article class="i-content">
+        <article :class="contentClass">
+            <Nuxt />
+        </article>
+        <Toast position="top-center" />
+        <i-confirm-dialog group="confirmDialog" />
+        <div :class="toolbarClass">
             <icomer-toolbar
                 class="p-mx-3 p-mt-3"
                 :is-operator="true"
                 :asset-list.sync="assets"
             />
-            <h2>{{ url }}</h2>
-            <Nuxt />
-        </article>
-        <!-- <div v-else-if="!isSidebar" class="i-full-screen">
-            <Nuxt />
-            <Button
-                label="Full Screen"
-                class="p-mt-6 float-button"
-                style="width: 10vw"
-                @click="onClick"
-            />
-        </div> -->
-        <Toast position="top-center" />
-        <i-confirm-dialog group="confirmDialog" />
+        </div>
     </div>
 </template>
 
@@ -82,7 +74,7 @@ import Component from '@/plugins/nuxt-class-component';
                     }
                 }
             `,
-            fetchPolicy: 'network-only',
+            fetchPolicy: 'no-cache',
             update: ({ Assets }) => Assets,
             prefetch: true,
             pollInterval: 10000,
@@ -120,6 +112,19 @@ export default class Operator extends Vue {
     get url(): string {
         return this.$route.path;
     }
+
+    get toolbarClass(): Array<string | object> {
+        return [
+            'i-toolbar',
+            {
+                'i-toolbar-no-sidebar': !this.isSidebar
+            }
+        ];
+    }
+
+    get contentClass(): Array<string | object> {
+        return ['i-content'];
+    }
 }
 </script>
 
@@ -135,26 +140,20 @@ export default class Operator extends Vue {
     .i-content {
         flex: 1 0 auto;
         width: 90vw;
+        height: calc(100 - var(--header_height));
+        margin-top: var(--header_height);
+        overflow: hidden;
     }
 
-    .i-full-screen {
+    .i-toolbar {
         position: fixed;
-        background-color: darkolivegreen;
+        width: 90vw;
+        left: 10vw;
+    }
+
+    .i-toolbar-no-sidebar {
+        left: 0vw;
         width: 100vw;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        top: 0;
-        left: 0;
-        transition: none;
-        z-index: 3000;
-    }
-
-    .float-button {
-        position: fixed;
-        right: 10px;
-        bottom: 10px;
-        z-index: 3001;
     }
 }
 </style>

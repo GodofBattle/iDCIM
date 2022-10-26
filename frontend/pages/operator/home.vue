@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div :style="{ width: '100%' }">
         <h1
             class="p-m-0"
             style="font-size: 30rem; height: 100%; background-color: grey"

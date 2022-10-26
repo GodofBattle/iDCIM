@@ -12,10 +12,11 @@
             :striped-rows="true"
             selection-mode="single"
             :selection.sync="selectedRow"
+            @row-select="onRowSelect"
         >
             <template #header>
                 <div class="p-d-flex">
-                    <div class="p-as-center">
+                    <div v-if="showAddButton" class="p-as-center">
                         <Button
                             icon="pi pi-plus"
                             class="p-button-text p-button-rounded"
@@ -94,7 +95,11 @@ let timerId: NodeJS.Timeout;
     props: {
         treeType: String,
         treeKeys: Array,
-        selectedAsset: Object
+        selectedAsset: Object,
+        showAddButton: {
+            type: Boolean,
+            default: true
+        }
     },
     apollo: {
         assetList: {
@@ -238,6 +243,10 @@ export default class AssetTable extends Vue {
 
     set selectedRow(item: any) {
         this.$emit('update:selectedAsset', item);
+    }
+
+    onRowSelect({ data }: any) {
+        this.$emit('select', data);
     }
 }
 </script>

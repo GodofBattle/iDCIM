@@ -4,7 +4,7 @@
             <template #start>
                 <Button
                     icon="pi pi-bars"
-                    class="p-mr-2 p-button-raised p-button-text p-button-secondary"
+                    class="p-mr-3 p-button-text p-button-secondary"
                     @click="toggleSidebar"
                 ></Button>
                 <div class="i-title p-text-bold">{{ title }}</div>
@@ -27,7 +27,7 @@
                 <Button
                     v-if="isOperator"
                     icon="pi pi-search"
-                    class="p-mx-2 p-button-sm p-button-secondary p-button-outlined p-button-raised"
+                    class="p-mx-2 p-button-sm p-button-secondary p-button-outlined"
                     @click="onClickSearchingAssetButton"
                 />
                 <Button
@@ -38,7 +38,11 @@
                 />
             </template>
         </Toolbar>
-        <OverlayPanel ref="userSettingPanel" style="width: 200px">
+        <i-overlay-panel
+            ref="userSettingPanel"
+            style="width: 200px"
+            append-to="body"
+        >
             <div class="p-fluid">
                 <Button
                     label="사용자명 변경"
@@ -60,15 +64,34 @@
                     @click="logout"
                 ></Button>
             </div>
-        </OverlayPanel>
+        </i-overlay-panel>
         <user-setting-panel :visible-user-dialog.sync="showUserDialog" />
         <user-password-setting-panel :visible.sync="showUserPasswordDialog" />
         <i-overlay-panel
             ref="assetSearchingPanel"
             append-to="body"
             :style="{ width: '24vw', height: '40vh' }"
+            @hide="onHideAssetSearchingPanel"
         >
-            <asset-tree />
+            <div class="p-d-flex">
+                <asset-tree
+                    :style="{ width: '11vw', height: 'calc(40vh - 1.5rem)' }"
+                    :has-tree-border="false"
+                    @select="onSelectAssetTreeNode"
+                />
+                <asset-table
+                    class="p-ml-2"
+                    :show-add-button="false"
+                    :style="{
+                        width: '11vw',
+                        height: 'calc(40vh - 2rem)',
+                        'margin-top': '-2px'
+                    }"
+                    :tree-type="treeType"
+                    :tree-keys="treeKeys"
+                    @select="onSelectAsset"
+                />
+            </div>
         </i-overlay-panel>
     </div>
 </template>
@@ -110,6 +133,9 @@ export default class IcomerToolBar extends Vue {
 
     assetItem: string | Asset = '';
     filteredAssetList: null | Array<any> = null;
+
+    treeType: string | null = null;
+    treeKeys: Array<number | string> = [];
 
     get userName(): string {
         const _user_name = this.$store.state.sessionStorage.auth.user.name;
@@ -187,6 +213,20 @@ export default class IcomerToolBar extends Vue {
             // by shkoh 20221020: 검색한 자산이 존재하는 경우에는 해당 자산의 정보를 팝업한다
             console.info('자산을 찾았기 때문에 자산 창을 오픈');
         }
+    }
+
+    onSelectAssetTreeNode({ type, treeKeys, selectedKey }: any) {
+        this.treeType = type;
+        this.treeKeys = treeKeys;
+    }
+
+    onSelectAsset(data: any) {
+        console.info(data);
+    }
+
+    onHideAssetSearchingPanel() {
+        this.treeType = null;
+        this.treeKeys = [];
     }
 }
 </script>

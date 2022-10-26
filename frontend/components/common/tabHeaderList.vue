@@ -192,13 +192,15 @@ export default class TabHeaderList extends Vue {
     updateButtonState() {
         const content = this.$refs.content;
 
-        const { scrollLeft, scrollWidth } = content;
-        const width = DomHandler.getWidth(content);
+        if (content) {
+            const { scrollLeft, scrollWidth } = content;
+            const width = DomHandler.getWidth(content);
 
-        this.backwardIsDisabled = scrollLeft === 0;
+            this.backwardIsDisabled = scrollLeft === 0;
 
-        const scroll_width = scrollWidth - width;
-        this.forwardIsDisabled = scrollLeft >= scroll_width;
+            const scroll_width = scrollWidth - width;
+            this.forwardIsDisabled = scrollLeft >= scroll_width;
+        }
     }
 
     getVisibleButtonWidths() {

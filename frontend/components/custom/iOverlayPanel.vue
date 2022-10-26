@@ -221,6 +221,8 @@ export default class IOverlayPanel extends Vue {
         this.unbindOutsideClickListener();
         this.unbindScrollListener();
         this.unbindResizeListener();
+
+        this.$emit('hide');
     }
 
     restoreAppend() {
