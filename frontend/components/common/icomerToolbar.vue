@@ -181,11 +181,8 @@ export default class IcomerToolBar extends Vue {
     }
 
     onClickSearchingAssetButton(event: PointerEvent) {
-        console.info(this.assetItem);
-
         if (typeof this.assetItem === 'string' && this.assetItem.length === 0) {
             // by shkoh 20221020: 자산명 검색 시, 어떠한 텍스트도 입력이 되지 않는 경우에는 트리에서 자산을 검색할 수 있도록 함
-            console.info('트리 검색 시작');
             this.$refs.assetSearchingPanel.toggle(event);
         } else if (
             typeof this.assetItem === 'string' &&
@@ -199,8 +196,7 @@ export default class IcomerToolBar extends Vue {
             );
 
             if (found_asset && found_asset.ID) {
-                console.info(found_asset);
-                console.info('자산을 찾았기 때문에 자산 창을 오픈');
+                this.$emit('showAsset', found_asset);
             } else {
                 this.$toast.add({
                     severity: 'warn',
@@ -211,7 +207,7 @@ export default class IcomerToolBar extends Vue {
             }
         } else if (typeof this.assetItem === 'object' && this.assetItem.ID) {
             // by shkoh 20221020: 검색한 자산이 존재하는 경우에는 해당 자산의 정보를 팝업한다
-            console.info('자산을 찾았기 때문에 자산 창을 오픈');
+            this.$emit('showAsset', this.assetItem);
         }
     }
 
@@ -221,7 +217,8 @@ export default class IcomerToolBar extends Vue {
     }
 
     onSelectAsset(data: any) {
-        console.info(data);
+        this.$emit('showAsset', data);
+        this.$refs.assetSearchingPanel.hide();
     }
 
     onHideAssetSearchingPanel() {

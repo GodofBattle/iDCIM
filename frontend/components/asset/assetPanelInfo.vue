@@ -11,6 +11,7 @@
                 </label>
                 <div class="p-col-3 i-form-value">
                     <InputText
+                        v-if="isEdit"
                         id="name"
                         v-model="asset.NAME"
                         type="text"
@@ -18,10 +19,16 @@
                         autocomplete="off"
                         :class="{ 'p-invalid': invalidMessage.NAME }"
                         @input="validateAssetName"
-                    >
-                    </InputText>
+                    />
+                    <span v-else class="p-ml-3">
+                        {{ asset.NAME }}
+                    </span>
                 </div>
-                <div class="p-col p-my-2" :style="{ 'align-self': 'center' }">
+                <div
+                    v-if="isEdit"
+                    class="p-col p-my-2"
+                    :style="{ 'align-self': 'center' }"
+                >
                     <small id="name-help" class="p-error">
                         {{ invalidMessage.NAME }}
                     </small>
@@ -33,6 +40,7 @@
                 </label>
                 <div class="p-col-3 i-form-value">
                     <InputText
+                        v-if="isEdit"
                         id="serial"
                         v-model="asset.SERIAL"
                         type="text"
@@ -40,10 +48,16 @@
                         autocomplete="off"
                         :class="{ 'p-invalid': invalidMessage.SERIAL }"
                         @input="validateAssetSerial"
-                    >
-                    </InputText>
+                    />
+                    <span v-else class="p-ml-3">
+                        {{ asset.SERIAL }}
+                    </span>
                 </div>
-                <div class="p-col p-my-2" :style="{ 'align-self': 'center' }">
+                <div
+                    v-if="isEdit"
+                    class="p-col p-my-2"
+                    :style="{ 'align-self': 'center' }"
+                >
                     <small id="serial-help" class="p-error">
                         {{ invalidMessage.SERIAL }}
                     </small>
@@ -58,11 +72,15 @@
                 </label>
                 <div class="p-col i-form-value">
                     <Button
+                        v-if="isEdit"
                         class="p-button-text p-button-info"
                         :label="customTreeLabel"
                         :style="{ 'text-align': 'left' }"
                         @click="showTreePanel($event, 'custom')"
-                    ></Button>
+                    />
+                    <span v-else class="p-ml-3">
+                        {{ customTreeLabel }}
+                    </span>
                 </div>
             </div>
             <div v-if="is_pos_tree" class="p-field p-grid">
@@ -74,17 +92,22 @@
                 </label>
                 <div class="p-col i-form-value">
                     <Button
+                        v-if="isEdit"
                         class="p-button-text p-button-info"
                         :label="positionTreeLabel"
                         :style="{ 'text-align': 'left' }"
                         @click="showTreePanel($event, 'position')"
-                    ></Button>
+                    />
+                    <span v-else class="p-ml-3">
+                        {{ positionTreeLabel }}
+                    </span>
                 </div>
             </div>
         </div>
         <Panel :header="productName" :toggleable="true">
             <template #icons>
                 <button
+                    v-if="isEdit"
                     class="p-panel-header-icon p-link"
                     @click="showInterfaceSettingPanel"
                 >
@@ -209,6 +232,7 @@
                     <Panel header="이미지">
                         <template #icons>
                             <button
+                                v-if="isEdit"
                                 class="p-panel-header-icon p-link"
                                 @click="changeProductImage"
                             >
@@ -289,7 +313,11 @@ type ASSET = {
 @Component<AssetPanelInfo>({
     props: {
         assetItem: Object,
-        applyButtonDisabled: Boolean
+        applyButtonDisabled: Boolean,
+        isEdit: {
+            type: Boolean,
+            default: true
+        }
     },
     apollo: {
         dbAsset: {

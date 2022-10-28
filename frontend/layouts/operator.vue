@@ -13,8 +13,13 @@
                 class="p-mx-3 p-mt-3"
                 :is-operator="true"
                 :asset-list.sync="assets"
+                @showAsset="onShowAsset"
             />
         </div>
+        <asset-dialog
+            :item="assetItem"
+            :visible.sync="is_visible_asset_dialog"
+        />
     </div>
 </template>
 
@@ -77,16 +82,7 @@ import Component from '@/plugins/nuxt-class-component';
             fetchPolicy: 'no-cache',
             update: ({ Assets }) => Assets,
             prefetch: true,
-            pollInterval: 10000,
-            result({ loading, data }) {
-                if (!loading) {
-                    const { Assets } = data;
-                    if (Assets) {
-                        console.info('refrhes');
-                        // this.$apollo.subscriptions.refreshToken.skip = false;
-                    }
-                }
-            }
+            pollInterval: 10000
         }
     }
 })
@@ -94,6 +90,10 @@ export default class Operator extends Vue {
     menuItems = [{ label: 'HOME', to: '/operator/home' }];
 
     assets: Array<any> = [];
+
+    showing_asset_id: number = 0;
+    is_visible_asset_dialog: boolean = false;
+    assetItem: any = null;
 
     head() {
         const theme = this.$store.state.localStorage.theme;
@@ -124,6 +124,11 @@ export default class Operator extends Vue {
 
     get contentClass(): Array<string | object> {
         return ['i-content'];
+    }
+
+    onShowAsset(assetItem: any) {
+        this.assetItem = assetItem;
+        this.is_visible_asset_dialog = true;
     }
 }
 </script>

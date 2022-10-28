@@ -11,11 +11,15 @@
                 </label>
                 <div class="p-col-5 i-form-value">
                     <Button
+                        v-if="isEdit"
                         class="p-button-text p-button-info"
                         :label="opManagerLabel"
                         :style="{ 'text-align': 'left' }"
                         @click="showTreePanel($event, 'CP')"
-                    ></Button>
+                    />
+                    <div v-else :style="{ padding: '0.5rem 1rem' }">
+                        {{ opManagerLabel }}
+                    </div>
                     <Divider
                         v-if="opManagerContactLabel.length > 0"
                         class="p-ml-3 p-my-0"
@@ -37,11 +41,15 @@
                 </label>
                 <div class="p-col-5 i-form-value">
                     <Button
+                        v-if="isEdit"
                         class="p-button-text p-button-info"
                         :label="opManagerSecondLabel"
                         :style="{ 'text-align': 'left' }"
                         @click="showTreePanel($event, 'PC')"
-                    ></Button>
+                    />
+                    <div v-else :style="{ padding: '0.5rem 1rem' }">
+                        {{ opManagerSecondLabel }}
+                    </div>
                     <Divider
                         v-if="opManagerSecondContactLabel.length > 0"
                         class="p-ml-3 p-my-0"
@@ -63,6 +71,7 @@
                 </label>
                 <div class="p-col-3 i-form-value">
                     <i-calendar
+                        v-if="isEdit"
                         v-model="asset.INSTALL_DATE"
                         class="p-ml-2"
                         :panel-style="{ width: '16vw' }"
@@ -72,6 +81,9 @@
                         :show-button-bar="true"
                         :locale="{ clear: '설정안함' }"
                     />
+                    <div v-else class="p-ml-3">
+                        {{ parseDate(asset.INSTALL_DATE) }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,11 +98,15 @@
                     </label>
                     <div class="p-col-5 i-form-value">
                         <Button
+                            v-if="isEdit"
                             class="p-button-text p-button-info"
                             :label="opMAUserLabel"
                             :style="{ 'text-align': 'left' }"
                             @click="showTreePanel($event, 'M')"
-                        ></Button>
+                        />
+                        <div v-else :style="{ padding: '0.5rem 1rem' }">
+                            {{ opMAUserLabel }}
+                        </div>
                         <Divider
                             v-if="
                                 opMAUserContactLabel.length > 0 ||
@@ -121,6 +137,7 @@
                     </label>
                     <div class="p-col-3 i-form-value">
                         <i-calendar
+                            v-if="isEdit"
                             v-model="asset.MA_START_DATE"
                             :class="[
                                 'p-ml-2',
@@ -136,6 +153,9 @@
                             @date-select="onDateSelectMAStart"
                             @clear-click="onDateClearMAStart"
                         />
+                        <div v-else class="p-ml-3">
+                            {{ parseDate(asset.MA_START_DATE) }}
+                        </div>
                     </div>
                     <div
                         class="p-col p-my-2"
@@ -155,6 +175,7 @@
                     </label>
                     <div class="p-col-3 i-form-value">
                         <i-calendar
+                            v-if="isEdit"
                             v-model="asset.MA_END_DATE"
                             :class="[
                                 'p-ml-2',
@@ -170,6 +191,9 @@
                             @date-select="onDateSelectMAEnd"
                             @clear-click="onDateClearMAEnd"
                         />
+                        <div v-else class="p-ml-3">
+                            {{ parseDate(asset.MA_END_DATE) }}
+                        </div>
                     </div>
                     <div
                         class="p-col p-my-2"
@@ -189,6 +213,7 @@
                     </label>
                     <div class="p-col-4 i-form-value">
                         <InputText
+                            v-if="isEdit"
                             id="inspectInfo"
                             v-model="asset.INSPECT_INFO"
                             type="text"
@@ -200,6 +225,9 @@
                             ]"
                             @input="validateInspectInfo"
                         />
+                        <div v-else class="p-ml-3">
+                            {{ asset.INSPECT_INFO }}
+                        </div>
                     </div>
                     <div
                         class="p-col p-my-2"
@@ -303,7 +331,11 @@ type Comany = {
 @Component<AssetPanelManager>({
     props: {
         assetItem: Object,
-        applyButtonDisabled: Boolean
+        applyButtonDisabled: Boolean,
+        isEdit: {
+            type: Boolean,
+            default: false
+        }
     },
     apollo: {
         dbAsset: {
@@ -693,6 +725,18 @@ export default class AssetPanelManager extends Vue {
         } else {
             this.invalidMessage.INSPECT_INFO = undefined;
         }
+    }
+
+    parseDate(date: Date): string {
+        if (date === null) {
+            return ``;
+        }
+
+        const yyyy = date.toLocaleString(undefined, { year: 'numeric' });
+        const mm = date.toLocaleString(undefined, { month: '2-digit' });
+        const dd = date.toLocaleString(undefined, { day: '2-digit' });
+
+        return `${yyyy} ${mm} ${dd}`;
     }
 
     get is_valid(): boolean {
