@@ -311,7 +311,11 @@ type ASSET = {
 @Component<AssetPanelInterface>({
     props: {
         assetItem: Object,
-        applyButtonDisabled: Boolean
+        applyButtonDisabled: Boolean,
+        isEdit: {
+            type: Boolean,
+            default: false
+        }
     },
     apollo: {
         dbAssetInterface: {

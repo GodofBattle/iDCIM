@@ -39,6 +39,11 @@
                     :asset-item.sync="item"
                     :is-edit="false"
                 />
+                <asset-panel-interface
+                    v-else-if="tabIndex === 2"
+                    :asset-item.sync="item"
+                    :is-edit="false"
+                />
             </i-scroll-panel>
         </i-dialog>
     </div>
